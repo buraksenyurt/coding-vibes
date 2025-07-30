@@ -176,6 +176,22 @@ Bu proje eğitim amaçlı geliştirilmiştir.
 
 ---
 
+## Çalışma Zamanından Örnek Görüntüler
+
+### Day01
+
+![Lobi](runtime_00.png)
+
+![Runtime 01](runtime_01.png)
+
+![Runtime 02](runtime_02.png)
+
+![Runtime 03](runtime_03.png)
+
+![Runtime 05](runtime_05.png)
+
+![Runtime 04](runtime_04.png)
+
 **İyi yolculuklar, uzay gezgini!** 🚀✨
 
 > Doküman Claude Sonnet 4 ile oluşturulmuştur.
