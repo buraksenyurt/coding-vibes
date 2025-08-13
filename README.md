@@ -10,10 +10,11 @@
 |**RAM**        |32Gb                                                                               |
 |**VGA**        |Adapter Type Intel(R) Iris(R) Xe Graphics Family, Intel Corporation compatible     |
 |**OS**         |Windows 11                                                                         |
+|**IDE**        |Visual Studio Code                                                                 |
 
 ## Çalışmalar
 
-|**Adı**         |**Tür**   |**Tanım**                                          |**Geliştirici**    |**Dil**    |**Zorluk** |**Süre** |
-|----------------|----------|---------------------------------------------------|-------------------|-----------|-----------|---------|
-|Lunar Landing   |Oyun      |Uzay temalı 2d platform oyunu                      |Sonnet 4.0         |Python     |Orta       |~2 Saat  |
-|Mission Control |Oyun      |Space Invaders benzeri 2d platform oyunu           |GPT 5.0(Preview)   |Rust       |Zor        |         |
+|**Adı**         |**Tür**   |**Tarih**      |**Tanım**                                          |**Geliştirici**    |**Dil**    |**Zorluk** |**Süre** |**Durum**                                                     |
+|----------------|----------|---------------|---------------------------------------------------|-------------------|-----------|-----------|---------|--------------------------------------------------------------|
+|Lunar Landing   |Oyun      |Temmuz 2025    |Uzay temalı 2d platform oyunu                      |Sonnet 4.0         |Python     |Orta       |~2 Saat  |Çalışır bir versiyon yazabildi. Python dilini üst düzey soyutlamaları işini oldukça kolaylaştırdı.                               |
+|Mission Control |Oyun      |Ağustos 2025   |Space Invaders benzeri 2d platform oyunu           |GPT 5.0(Preview)   |Rust       |Zor        |         |GPT 5.0 Preview, ilk derlemede hatalar oluştu. Hata mesajlarını değerlendirip birkaç denemede düzeltmeye çalıştı ancak başarılı olamadı. Düzeltmeler için Sonnet 4.0'a geçildi. Öncelikle Bevy 0.16 API'sini öğrenmeye ve değişiklikleri anlamaya çalıştı. *(Bevy geriye uyumluluk yönünden oldukça zorlayıcı bir paket)* Temel çalışma mantığını anladı ve projeyi derlenebilir hale getirdi.                       |
