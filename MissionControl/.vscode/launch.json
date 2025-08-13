@@ -1,0 +1,12 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Run Mission Control",
+      "program": "${workspaceFolder}/target/debug/mission_control",
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}
