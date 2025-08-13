@@ -14,7 +14,7 @@ Oyun başladıktan sonra ekranın üst kısmındaki rastgele konunlardan `Invade
 
 Oyun süresinde rastgele anlarda nadiren ve periyotlar arası en az 15 saniye olması şartıyla Dünya'ya `Spatula` isimli dörtgenler düşer. `Captain Gadot` bunları yakaladığı andan itibaren 10 saniye boyunca `Seri atış` yapabilir. `Seri atış`, 250 milisaniyede 1 Donut gönderilebilmesi demektir.
 
-Oyuncunun herhangibir anda kullanabileceği tek atımlık `Electromagnetic Donuts Bomb` isimli bir süper silahı da vardır. `Space` tuşuna basıldığında tetiklenir ve her oyunda sadece 1 kere kullanılabilir. Oyun sahasında zamanın 10 saniye boyunca durmasını sağlar. Bu süre zarfında `Captain Gadot` tankını hareket ettirebilir, ateş edebilir ve `Invader Ship`'ler isabet alabilir.
+Oyuncunun herhangibir anda kullanabileceği tek atımlık `Electromagnetic Donuts Bomb` isimli bir süper silahı da vardır. `Space` tuşuna basıldığında tetiklenir ve her oyunda sadece 1 kere kullanılabilir. Oyun sahasında zamanın 10 saniye boyunca durmasını sağlar. Bu süre zarfında `Captain Gadot` tankını hareket ettirebilir, ateş edebilir ve `Invader Ship`'ler isabet alabilir ancak tank dışında hiçbir nesne hareketine devam etmez.
 
 ## Oyunun Kuralları
 
@@ -29,7 +29,7 @@ Oyuncunun herhangibir anda kullanabileceği tek atımlık `Electromagnetic Donut
 
 ## Aktörler
 
-- **Invader Ship:** Uzaylı istila gemisidir. Üç farklı boyutta dikdörtgen formundadır. Dikey ivmeleri `saniyede 1 kare`, `750 milisaniyede 1 kare` ve `500 milisaniyede 1 kare` şeklindedir. Ekranın üst kısmından rastgele konumlardan, belirtilen hızlardan birisi ile giriş yaparlar. Her `Invader Ship` içinde 5 veya 10 asker olur. Bu sayı rastgele belirlenir.
+- **Invader Ship:** Uzaylı istila gemisidir. Üç farklı boyutta dikdörtgen formundadır. Dikey ivmeleri `saniyede 1 kare`, `1 Kare/750ms` ve `1 kare/500ms` şeklindedir. Ekranın üst kısmından rastgele konumlardan, belirtilen hızlardan birisi ile giriş yaparlar. Her `Invader Ship` içinde 5 veya 10 asker olur. Bu sayı rastgele belirlenir.
 - **Captain Gadot:** Oyuncunun kendisidir. Tankı kullanır.
 - **Tank:** Line based vektör olarak çizilmiş bir tank formundadır. Tank topu ekrana diktir ve yukarı yönlü ateş edecek pozisyondadır. Tank `Saniyede 1 kare` hızında yalnızca sola veya sağa doğru hareket eder.
 - **Donut:** Tank mermisidir. İçiçe iki daire ile çizilmiş basit bir donut formundadır. Büyüklüğü `Tank` ve `Invader Ship` ile orantılıdır.
@@ -64,9 +64,23 @@ Oyun ekranı dikeyde üç bloktan oluşur.
 
 Bu ekranda dokümanın `Senaryo` kısmında yazan hikaye AI tarafından zenginleştirilerek sunulur.
 
+### Skorlar(Scores) Ekranı
+
+Skorlar ekranında son 5 oyuna ait skor bilgileri ve tamamlanma süreleri yer alır. Skorlar `game.dat` isimli dosyada aşağıdaki örnek JSON formatında tutulur.
+
+```json
+{ "best": number, "history": [number, ...max5] }
+```
+
 ### Oyun Sonu Ekranı
 
 Oyun oynanırken galibiyet veya yenilgi hallerinde çıkan ekrandır. Bu ekranda oyuncunun puanı, yer yüzüne inen toplam `Donut Lover` sayısı, yenilgi hallerinde oyunda kalınabilen süre bilgileri yer alır.
+
+## UI Akışı ve Durumlar(States)
+
+- **Global State:** MainMenu → Story → Game → GameOver → Scores → MainMenu *(Esc ile geri)*.
+- **HUD:** elapsed/remaining time, score, landed lovers, bomb status *(kullanıldı/kullanılmadı ikon)*, rapid fire kalan süre barı.
+- **Scores:** son 5 oyun skoru ve `en iyi oyun skoru`.
 
 ## Grafik
 
@@ -129,4 +143,8 @@ Oyun kodları `Rust` programlama dili kullanılarak, `Windows 11` sistemde geli�
 
 ## Minimum Sistem Konfigurasyonu
 
-> AI tarafından doldurulması beklenmektedir.
+- OS: Windows 11 22H2+
+- CPU: 2+ çekirdek
+- RAM: 4 GB
+- GPU: Entegre GPU yeterli (Vulkan/DirectX 12 uyumlu)
+- Depolama: <50 MB
