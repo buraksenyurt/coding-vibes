@@ -1,0 +1,94 @@
+@model Friendly.Domain.Entities.Person
+
+@{
+    ViewData["Title"] = "Yeni Arkadaş Ekle";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-user-plus"></i> Yeni Arkadaş Ekle</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="FirstName" class="form-label">Ad</label>
+                                    <input asp-for="FirstName" class="form-control" placeholder="Ad giriniz" />
+                                    <span asp-validation-for="FirstName" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="LastName" class="form-label">Soyad</label>
+                                    <input asp-for="LastName" class="form-control" placeholder="Soyad giriniz" />
+                                    <span asp-validation-for="LastName" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="BirthDate" class="form-label">Doğum Tarihi</label>
+                            <input asp-for="BirthDate" type="date" class="form-control" />
+                            <span asp-validation-for="BirthDate" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="About" class="form-label">Hakkında</label>
+                            <textarea asp-for="About" class="form-control" rows="3" placeholder="Arkadaşınız hakkında kısa bilgi"></textarea>
+                            <span asp-validation-for="About" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Notes" class="form-label">Notlar</label>
+                            <textarea asp-for="Notes" class="form-control" rows="3" placeholder="Özel notlarınız"></textarea>
+                            <span asp-validation-for="Notes" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input asp-for="IsOffended" class="form-check-input" type="checkbox" />
+                            <label asp-for="IsOffended" class="form-check-label">
+                                Darıldı
+                            </label>
+                        </div>
+
+                        <div class="mb-3" id="offendedReasonDiv" style="display: none;">
+                            <label asp-for="OffendedReason" class="form-label">Darılma Nedeni</label>
+                            <textarea asp-for="OffendedReason" class="form-control" rows="2" placeholder="Neden darıldığını açıklayın"></textarea>
+                            <span asp-validation-for="OffendedReason" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Geri Dön
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Kaydet
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('IsOffended').addEventListener('change', function() {
+        var offendedReasonDiv = document.getElementById('offendedReasonDiv');
+        if (this.checked) {
+            offendedReasonDiv.style.display = 'block';
+        } else {
+            offendedReasonDiv.style.display = 'none';
+        }
+    });
+</script>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

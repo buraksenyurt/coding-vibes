@@ -1,0 +1,71 @@
+@model IEnumerable<Friendly.Domain.Entities.Person>
+
+@{
+    ViewData["Title"] = "Arkadaşlarım";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2><i class="fas fa-users"></i> Arkadaşlarım</h2>
+                <a asp-action="Create" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Yeni Arkadaş Ekle
+                </a>
+            </div>
+
+            @if (Model.Any())
+            {
+                <div class="row">
+                    @foreach (var person in Model)
+                    {
+                        <div class="col-md-4 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">
+                                        @person.FullName
+                                        @if (person.IsOffended)
+                                        {
+                                            <span class="badge bg-warning text-dark ms-2">
+                                                <i class="fas fa-heart-broken"></i> Darıldı
+                                            </span>
+                                        }
+                                    </h5>
+                                    
+                                    @if (person.BirthDate.HasValue)
+                                    {
+                                        <p class="card-text">
+                                            <i class="fas fa-birthday-cake"></i> 
+                                            @person.BirthDate.Value.ToString("dd/MM/yyyy")
+                                        </p>
+                                    }
+                                    
+                                    @if (!string.IsNullOrEmpty(person.About))
+                                    {
+                                        <p class="card-text">@person.About</p>
+                                    }
+                                    
+                                    <div class="d-flex justify-content-between">
+                                        <a asp-action="Details" asp-route-id="@person.Id" class="btn btn-info btn-sm">
+                                            <i class="fas fa-eye"></i> Detay
+                                        </a>
+                                        <a asp-action="Edit" asp-route-id="@person.Id" class="btn btn-warning btn-sm">
+                                            <i class="fas fa-edit"></i> Düzenle
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle"></i>
+                    Henüz arkadaş eklenmemiş. İlk arkadaşınızı eklemek için yukarıdaki butona tıklayın.
+                </div>
+            }
+        </div>
+    </div>
+</div>
