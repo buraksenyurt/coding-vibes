@@ -4,13 +4,13 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Friendly.Infrastructure.Data.Configurations;
 
-public class PersonConfiguration : IEntityTypeConfiguration<Person>
+public class PersonConfiguration : BaseEntityConfiguration<Person>
 {
-    public void Configure(EntityTypeBuilder<Person> builder)
+    public override void Configure(EntityTypeBuilder<Person> builder)
     {
-        builder.ToTable("Persons");
+        base.Configure(builder);
         
-        builder.HasKey(p => p.Id);
+        builder.ToTable("Persons");
         
         builder.Property(p => p.FirstName)
             .IsRequired()
@@ -28,6 +28,13 @@ public class PersonConfiguration : IEntityTypeConfiguration<Person>
             
         builder.Property(p => p.OffendedReason)
             .HasMaxLength(500);
+            
+        // Configure nullable DateTime properties
+        builder.Property(p => p.BirthDate)
+            .HasColumnType("timestamp without time zone");
+            
+        builder.Property(p => p.OffendedAt)
+            .HasColumnType("timestamp without time zone");
             
         builder.HasMany(p => p.Details)
             .WithOne(d => d.Person)

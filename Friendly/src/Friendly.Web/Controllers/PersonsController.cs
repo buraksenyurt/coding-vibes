@@ -36,7 +36,7 @@ public class PersonsController : Controller
         if (ModelState.IsValid)
         {
             person.Id = Guid.NewGuid();
-            person.CreatedAt = DateTime.UtcNow;
+            // CreatedAt is automatically set in BaseEntity
             
             _context.Persons.Add(person);
             await _context.SaveChangesAsync();
@@ -86,7 +86,7 @@ public class PersonsController : Controller
 
         if (ModelState.IsValid)
         {
-            person.UpdatedAt = DateTime.UtcNow;
+            person.UpdatedAt = DateTime.Now;
             
             _context.Persons.Update(person);
             await _context.SaveChangesAsync();
