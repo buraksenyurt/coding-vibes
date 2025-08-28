@@ -112,4 +112,15 @@ public class PersonsController : Controller
 
         return RedirectToAction(nameof(Index));
     }
+
+    public async Task<IActionResult> Offended()
+    {
+        var offendedPersons = await _context.Persons
+            .Where(p => p.IsOffended)
+            .OrderBy(p => p.FirstName)
+            .ThenBy(p => p.LastName)
+            .ToListAsync();
+        
+        return View(offendedPersons);
+    }
 }

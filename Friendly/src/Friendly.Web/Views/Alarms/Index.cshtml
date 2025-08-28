@@ -1,0 +1,137 @@
+@model IEnumerable<Friendly.Domain.Entities.Alarm>
+
+@{
+    ViewData["Title"] = "Tüm Alarmlar";
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-bell text-warning"></i> Tüm Alarmlar
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="fas fa-bell-plus"></i> Yeni Alarm Oluştur
+            </a>
+        </div>
+    </div>
+</div>
+
+@if (Model.Any())
+{
+    <div class="row">
+        @foreach (var alarm in Model)
+        {
+            var isUpcoming = alarm.TriggerDate.Date <= DateTime.Now.AddDays(alarm.DaysBefore).Date;
+            var isPast = alarm.TriggerDate.Date < DateTime.Now.Date;
+            
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 @(isPast ? "border-secondary" : isUpcoming ? "border-warning" : "")">
+                    <div class="card-header @(isPast ? "bg-secondary text-white" : isUpcoming ? "bg-warning text-dark" : "bg-light")">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">
+                                <i class="fas fa-@(alarm.Criteria == Friendly.Domain.Enums.AlarmCriteria.Birthday ? "birthday-cake" : alarm.Criteria == Friendly.Domain.Enums.AlarmCriteria.Appointment ? "calendar-check" : "sticky-note")"></i>
+                                @alarm.Name
+                            </h6>
+                            @if (!alarm.IsActive)
+                            {
+                                <span class="badge bg-danger">Pasif</span>
+                            }
+                            @if (alarm.IsRecurring)
+                            {
+                                <span class="badge bg-info">Tekrar</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <p class="card-text">
+                            <strong><i class="fas fa-user"></i> Kişi:</strong> @alarm.Person.FullName
+                        </p>
+                        
+                        <p class="card-text">
+                            <strong><i class="fas fa-calendar"></i> Tarih:</strong> 
+                            @alarm.TriggerDate.ToString("dd MMMM yyyy", new System.Globalization.CultureInfo("tr-TR"))
+                        </p>
+                        
+                        @if (alarm.DaysBefore > 0)
+                        {
+                            <p class="card-text">
+                                <strong><i class="fas fa-clock"></i> Uyarı:</strong> 
+                                @alarm.DaysBefore gün önce
+                            </p>
+                        }
+                        
+                        @if (!string.IsNullOrEmpty(alarm.Description))
+                        {
+                            <p class="card-text flex-grow-1">
+                                <strong><i class="fas fa-info-circle"></i> Açıklama:</strong><br>
+                                @alarm.Description
+                            </p>
+                        }
+                        
+                        @if (isPast)
+                        {
+                            <div class="alert alert-secondary py-2 mb-2">
+                                <small><i class="fas fa-history"></i> Bu alarm geçmişte kaldı</small>
+                            </div>
+                        }
+                        else if (isUpcoming)
+                        {
+                            <div class="alert alert-warning py-2 mb-2">
+                                <small><i class="fas fa-exclamation-triangle"></i> Yaklaşan alarm!</small>
+                            </div>
+                        }
+                        
+                        <div class="d-flex justify-content-between mt-auto">
+                            <a asp-action="Details" asp-route-id="@alarm.Id" class="btn btn-info btn-sm">
+                                <i class="fas fa-eye"></i> Detay
+                            </a>
+                            <a asp-action="Edit" asp-route-id="@alarm.Id" class="btn btn-primary btn-sm">
+                                <i class="fas fa-edit"></i> Düzenle
+                            </a>
+                            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal-@alarm.Id">
+                                <i class="fas fa-trash"></i> Sil
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Delete Modal -->
+            <div class="modal fade" id="deleteModal-@alarm.Id" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Alarmı Sil</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <strong>@alarm.Name</strong> alarmını silmek istediğinden emin misin?
+                            <br><small class="text-danger">Bu işlem geri alınamaz!</small>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                            <form asp-action="Delete" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@alarm.Id" />
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-trash"></i> Evet, Sil
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="text-center py-5">
+        <i class="fas fa-bell-slash fa-5x text-muted mb-3"></i>
+        <h3 class="text-muted">Henüz hiç alarm kurulmamış!</h3>
+        <p class="lead text-muted">İlk alarmını oluşturarak önemli günleri unutma.</p>
+        <a asp-action="Create" class="btn btn-primary btn-lg">
+            <i class="fas fa-bell-plus"></i> İlk Alarmını Oluştur
+        </a>
+    </div>
+}

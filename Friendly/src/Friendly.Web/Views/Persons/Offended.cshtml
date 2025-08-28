@@ -1,0 +1,85 @@
+@model IEnumerable<Friendly.Domain.Entities.Person>
+
+@{
+    ViewData["Title"] = "Darıldıklarım";
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-user-times text-warning"></i> Darıldıklarım
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a asp-action="Index" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> Tüm Arkadaşlar
+            </a>
+        </div>
+    </div>
+</div>
+
+@if (Model.Any())
+{
+    <div class="alert alert-warning" role="alert">
+        <i class="fas fa-exclamation-triangle"></i>
+        <strong>@Model.Count()</strong> arkadaşınla darılmış durumdasın. Belki barışma zamanı gelmiştir? 💔
+    </div>
+
+    <div class="row">
+        @foreach (var person in Model)
+        {
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card border-warning h-100">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="fas fa-heart-broken"></i> @person.FullName
+                        </h5>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        @if (person.OffendedAt.HasValue)
+                        {
+                            <p class="card-text text-muted mb-2">
+                                <i class="fas fa-calendar"></i> 
+                                Darılma Tarihi: @person.OffendedAt.Value.ToString("dd MMMM yyyy", new System.Globalization.CultureInfo("tr-TR"))
+                            </p>
+                        }
+                        
+                        @if (!string.IsNullOrEmpty(person.OffendedReason))
+                        {
+                            <div class="alert alert-light py-2 mb-3">
+                                <strong>Darılma Nedeni:</strong><br>
+                                @person.OffendedReason
+                            </div>
+                        }
+                        
+                        @if (!string.IsNullOrEmpty(person.About))
+                        {
+                            <p class="card-text flex-grow-1">
+                                <i class="fas fa-info-circle"></i> @person.About
+                            </p>
+                        }
+                        
+                        <div class="d-flex justify-content-between mt-auto">
+                            <a asp-action="Details" asp-route-id="@person.Id" class="btn btn-info btn-sm">
+                                <i class="fas fa-eye"></i> Detaylar
+                            </a>
+                            <a asp-action="Edit" asp-route-id="@person.Id" class="btn btn-success btn-sm">
+                                <i class="fas fa-handshake"></i> Barış
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="text-center py-5">
+        <i class="fas fa-smile-beam fa-5x text-success mb-3"></i>
+        <h3 class="text-success">Harika! Kimseyle darılmış değilsin! 🎉</h3>
+        <p class="lead text-muted">Tüm arkadaşlarınla barış içindesin. Bu çok güzel bir şey!</p>
+        <a asp-action="Index" class="btn btn-primary btn-lg">
+            <i class="fas fa-users"></i> Tüm Arkadaşlarını Gör
+        </a>
+    </div>
+}

@@ -10,42 +10,174 @@
     <link rel="stylesheet" href="~/Friendly.Web.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <div class="container-fluid">
-        <div class="row">
+    <div class="container-fluid p-0">
+        <!-- Mobil Navbar -->
+        <nav class="navbar navbar-dark bg-dark d-md-none">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+                    <i class="fas fa-heart text-danger"></i> Friendly
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+            </div>
+        </nav>
+
+        <div class="row g-0">
             <!-- Sol Sidebar -->
-            <nav class="col-md-2 d-none d-md-block bg-primary sidebar">
-                <div class="sidebar-sticky pt-3">
+            <div class="col-md-3 col-lg-2 d-none d-md-block bg-dark" style="min-height: 100vh;">
+                <div class="p-3">
                     <div class="text-center mb-4">
-                        <h4 class="text-white">
-                            <i class="fas fa-heart"></i> Friendly
-                        </h4>
+                        <a asp-controller="Home" asp-action="Index" class="text-decoration-none">
+                            <h4 class="text-white mb-1">
+                                <i class="fas fa-heart text-danger"></i> Friendly
+                            </h4>
+                        </a>
+                        <p class="text-muted small mb-0">Dostluklarını Yönet</p>
                     </div>
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link text-white" asp-controller="Home" asp-action="Index">
-                                <i class="fas fa-home"></i> Ana Sayfa
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-white" asp-controller="Persons" asp-action="Index">
-                                <i class="fas fa-users"></i> Arkadaşlarım
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-white" asp-controller="Alarms" asp-action="Index">
-                                <i class="fas fa-bell"></i> Alarmlarım
-                            </a>
-                        </li>
-                    </ul>
+                    
+                    <!-- Menü İçeriği -->
+                    <div id="sidebarContent">
+                        <!-- Kişiler Menüsü -->
+                        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                            <span>Kişiler</span>
+                        </h6>
+                        <ul class="nav flex-column mb-2">
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-controller="Persons" asp-action="Index">
+                                    <i class="fas fa-users"></i> Tüm Arkadaşlarım
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-controller="Persons" asp-action="Create">
+                                    <i class="fas fa-user-plus"></i> Yeni Arkadaş Ekle
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-controller="Persons" asp-action="Offended">
+                                    <i class="fas fa-user-times text-warning"></i> Darıldıklarım
+                                </a>
+                            </li>
+                        </ul>
+
+                        <!-- Alarmlar Menüsü -->
+                        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                            <span>Alarmlar</span>
+                        </h6>
+                        <ul class="nav flex-column mb-2">
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-controller="Alarms" asp-action="Index">
+                                    <i class="fas fa-bell"></i> Tüm Alarmlar
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-controller="Alarms" asp-action="Create">
+                                    <i class="fas fa-bell-plus"></i> Yeni Alarm
+                                </a>
+                            </li>
+                        </ul>
+
+                        <!-- Diğer Menüsü -->
+                        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                            <span>Diğer</span>
+                        </h6>
+                        <ul class="nav flex-column mb-2">
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-controller="Settings" asp-action="Index">
+                                    <i class="fas fa-cog"></i> Ayarlar
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-controller="Privacy" asp-action="Index">
+                                    <i class="fas fa-shield-alt"></i> Gizlilik
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
-            </nav>
+            </div>
+
+            <!-- Mobil Offcanvas Menu -->
+            <div class="offcanvas offcanvas-start bg-dark d-md-none" tabindex="-1" id="sidebarMenu">
+                <div class="offcanvas-header">
+                    <h5 class="offcanvas-title text-white">
+                        <i class="fas fa-heart text-danger"></i> Friendly
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+                </div>
+                <div class="offcanvas-body p-0">
+                    <div class="p-3">
+                        <p class="text-muted small mb-3">Dostluklarını Yönet</p>
+                        <!-- Aynı menü içeriği buraya da kopyalanacak -->
+                        <div id="sidebarContent">
+                            <!-- Kişiler Menüsü -->
+                            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                                <span>Kişiler</span>
+                            </h6>
+                            <ul class="nav flex-column mb-2">
+                                <li class="nav-item">
+                                    <a class="nav-link text-light" asp-controller="Persons" asp-action="Index">
+                                        <i class="fas fa-users"></i> Tüm Arkadaşlarım
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-light" asp-controller="Persons" asp-action="Create">
+                                        <i class="fas fa-user-plus"></i> Yeni Arkadaş Ekle
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-light" asp-controller="Persons" asp-action="Offended">
+                                        <i class="fas fa-user-times text-warning"></i> Darıldıklarım
+                                    </a>
+                                </li>
+                            </ul>
+
+                            <!-- Alarmlar Menüsü -->
+                            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                                <span>Alarmlar</span>
+                            </h6>
+                            <ul class="nav flex-column mb-2">
+                                <li class="nav-item">
+                                    <a class="nav-link text-light" asp-controller="Alarms" asp-action="Index">
+                                        <i class="fas fa-bell"></i> Tüm Alarmlar
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-light" asp-controller="Alarms" asp-action="Create">
+                                        <i class="fas fa-bell-plus"></i> Yeni Alarm
+                                    </a>
+                                </li>
+                            </ul>
+
+                            <!-- Diğer Menüsü -->
+                            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                                <span>Diğer</span>
+                            </h6>
+                            <ul class="nav flex-column mb-2">
+                                <li class="nav-item">
+                                    <a class="nav-link text-light" asp-controller="Settings" asp-action="Index">
+                                        <i class="fas fa-cog"></i> Ayarlar
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-light" asp-controller="Privacy" asp-action="Index">
+                                        <i class="fas fa-shield-alt"></i> Gizlilik
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- Ana İçerik -->
-            <main class="col-md-10 ms-sm-auto px-md-4">
-                <div class="pt-3 pb-2 mb-3">
+            <div class="col-md-9 col-lg-10">
+                <main class="p-3 p-md-4">
                     @RenderBody()
-                </div>
-            </main>
+                </main>
+            </div>
+        </div>
+    </div>
         </div>
     </div>
 

@@ -1,8 +1,93 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Ana Sayfa";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-heart text-danger"></i> Dostluklarını Keşfet
+    </h1>
+</div>
+
+<!-- Ana Hero Bölümü -->
+<div class="mb-4">
+    <div class="p-4 rounded-3 text-center text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <h1 class="display-6 fw-bold mb-3">Friendly'ye Hoş Geldin! 🎉</h1>
+        <p class="fs-5 mb-4">
+            Arkadaşlarınla olan özel anılarını kaydet, önemli günleri unutma ve dostluklarını güçlendir.
+        </p>
+        
+        <!-- Hızlı Erişim Butonları -->
+        <div class="row g-3">
+            <div class="col-12 col-md-4">
+                <div class="card bg-white text-dark h-100">
+                    <div class="card-body text-center py-3">
+                        <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                        <h6 class="mb-2">Arkadaşlarını Yönet</h6>
+                        <p class="small text-muted mb-2">Tüm arkadaşlarının bilgilerini tek yerde topla</p>
+                        <a asp-controller="Persons" asp-action="Index" class="btn btn-primary btn-sm">Arkadaşlarım</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="card bg-white text-dark h-100">
+                    <div class="card-body text-center py-3">
+                        <i class="fas fa-bell fa-2x text-warning mb-2"></i>
+                        <h6 class="mb-2">Alarmlar Kur</h6>
+                        <p class="small text-muted mb-2">Önemli günleri ve buluşmaları asla unutma</p>
+                        <a asp-controller="Alarms" asp-action="Index" class="btn btn-warning btn-sm">Alarmlarım</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="card bg-white text-dark h-100">
+                    <div class="card-body text-center py-3">
+                        <i class="fas fa-heart fa-2x text-danger mb-2"></i>
+                        <h6 class="mb-2">Anıları Biriktir</h6>
+                        <p class="small text-muted mb-2">Güzel anıları kaydet, kötü günleri geride bırak</p>
+                        <a asp-controller="Persons" asp-action="Create" class="btn btn-success btn-sm">Yeni Arkadaş</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- İstatistikler -->
+<div class="row g-3">
+    <div class="col-6 col-lg-3">
+        <div class="card text-center h-100">
+            <div class="card-body py-3">
+                <i class="fas fa-users fa-2x text-primary"></i>
+                <h5 class="mt-2 mb-1">@ViewBag.TotalFriends</h5>
+                <p class="text-muted small mb-0">Toplam Arkadaş</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card text-center h-100">
+            <div class="card-body py-3">
+                <i class="fas fa-bell fa-2x text-warning"></i>
+                <h5 class="mt-2 mb-1">@ViewBag.TotalAlarms</h5>
+                <p class="text-muted small mb-0">Aktif Alarm</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card text-center h-100">
+            <div class="card-body py-3">
+                <i class="fas fa-birthday-cake fa-2x text-success"></i>
+                <h5 class="mt-2 mb-1">@ViewBag.UpcomingBirthdays</h5>
+                <p class="text-muted small mb-0">Yaklaşan Doğum Günü</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card text-center h-100">
+            <div class="card-body py-3">
+                <i class="fas fa-user-times fa-2x text-danger"></i>
+                <h5 class="mt-2 mb-1">@ViewBag.OffendedFriends</h5>
+                <p class="text-muted small mb-0">Darıldıklarım</p>
+            </div>
+        </div>
+    </div>
 </div>

@@ -1,0 +1,164 @@
+@model Friendly.Domain.Entities.Alarm
+
+@{
+    ViewData["Title"] = "Yeni Alarm Oluştur";
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-bell-plus text-primary"></i> Yeni Alarm Oluştur
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Geri Dön
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-bell"></i> Alarm Bilgileri</h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create" method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="Name" class="form-label">
+                                    <i class="fas fa-tag"></i> Alarm Adı
+                                </label>
+                                <input asp-for="Name" class="form-control" placeholder="Örn: Ahmet'in Doğum Günü" />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="PersonId" class="form-label">
+                                    <i class="fas fa-user"></i> Arkadaş Seç
+                                </label>
+                                <select asp-for="PersonId" class="form-select" asp-items="ViewBag.PersonId">
+                                    <option value="">-- Arkadaş Seçin --</option>
+                                </select>
+                                <span asp-validation-for="PersonId" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="Criteria" class="form-label">
+                                    <i class="fas fa-list"></i> Alarm Türü
+                                </label>
+                                <select asp-for="Criteria" class="form-select" asp-items="ViewBag.AlarmCriteria">
+                                    <option value="">-- Alarm Türü Seçin --</option>
+                                </select>
+                                <span asp-validation-for="Criteria" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="TriggerDate" class="form-label">
+                                    <i class="fas fa-calendar"></i> Alarm Tarihi
+                                </label>
+                                <input asp-for="TriggerDate" type="date" class="form-control" />
+                                <span asp-validation-for="TriggerDate" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label">
+                            <i class="fas fa-info-circle"></i> Açıklama
+                        </label>
+                        <textarea asp-for="Description" class="form-control" rows="3" placeholder="Alarm hakkında detaylı bilgi..."></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label asp-for="DaysBefore" class="form-label">
+                                    <i class="fas fa-clock"></i> Kaç Gün Önce Uyar
+                                </label>
+                                <input asp-for="DaysBefore" type="number" class="form-control" min="0" max="365" value="1" />
+                                <span asp-validation-for="DaysBefore" class="text-danger"></span>
+                                <small class="form-text text-muted">0 = aynı gün, 1 = 1 gün önce</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <div class="form-check mt-4">
+                                    <input asp-for="IsActive" class="form-check-input" checked />
+                                    <label asp-for="IsActive" class="form-check-label">
+                                        <i class="fas fa-toggle-on text-success"></i> Aktif
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <div class="form-check mt-4">
+                                    <input asp-for="IsRecurring" class="form-check-input" />
+                                    <label asp-for="IsRecurring" class="form-check-label">
+                                        <i class="fas fa-repeat text-info"></i> Her Yıl Tekrarla
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> İptal
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Alarmı Oluştur
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-lightbulb"></i> İpuçları</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="fas fa-birthday-cake text-primary"></i>
+                        <strong>Doğum Günü:</strong> Arkadaşların doğum günlerini hatırla
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-calendar-check text-success"></i>
+                        <strong>Randevu:</strong> Buluşma ve etkinlikleri unutma
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-sticky-note text-warning"></i>
+                        <strong>Hatırlatma:</strong> Genel hatırlatıcılar için
+                    </li>
+                </ul>
+                
+                <hr>
+                
+                <h6><i class="fas fa-info-circle"></i> Bilgi</h6>
+                <p class="small text-muted">
+                    Tekrarlayan alarmlar her yıl aynı tarihte otomatik olarak tetiklenecektir.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

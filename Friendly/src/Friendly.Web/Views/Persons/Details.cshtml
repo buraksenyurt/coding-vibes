@@ -1,0 +1,233 @@
+@model Friendly.Domain.Entities.Person
+
+@{
+    ViewData["Title"] = "Arkadaş Detayları";
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-user text-primary"></i> @Model.FullName
+        @if (Model.IsOffended)
+        {
+            <span class="badge bg-warning text-dark ms-2">
+                <i class="fas fa-heart-broken"></i> Darıldı
+            </span>
+        }
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Geri Dön
+            </a>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Düzenle
+            </a>
+            <a asp-controller="Details" asp-action="Create" asp-route-personId="@Model.Id" class="btn btn-success">
+                <i class="fas fa-plus"></i> İletişim Ekle
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Sol Kolon - Temel Bilgiler -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Temel Bilgiler</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Ad Soyad:</dt>
+                    <dd class="col-sm-8">@Model.FullName</dd>
+                    
+                    @if (Model.BirthDate.HasValue)
+                    {
+                        <dt class="col-sm-4">Doğum Tarihi:</dt>
+                        <dd class="col-sm-8">
+                            <i class="fas fa-birthday-cake"></i> 
+                            @Model.BirthDate.Value.ToString("dd MMMM yyyy", new System.Globalization.CultureInfo("tr-TR"))
+                            <small class="text-muted">(@((DateTime.Now.Year - Model.BirthDate.Value.Year)) yaşında)</small>
+                        </dd>
+                    }
+                    
+                    @if (!string.IsNullOrEmpty(Model.About))
+                    {
+                        <dt class="col-sm-4">Hakkında:</dt>
+                        <dd class="col-sm-8">@Model.About</dd>
+                    }
+                    
+                    @if (!string.IsNullOrEmpty(Model.Notes))
+                    {
+                        <dt class="col-sm-4">Notlar:</dt>
+                        <dd class="col-sm-8">@Model.Notes</dd>
+                    }
+                    
+                    <dt class="col-sm-4">Eklenme Tarihi:</dt>
+                    <dd class="col-sm-8">
+                        <i class="fas fa-calendar-plus"></i> 
+                        @Model.CreatedAt.ToString("dd MMMM yyyy HH:mm", new System.Globalization.CultureInfo("tr-TR"))
+                    </dd>
+                </dl>
+                
+                @if (Model.IsOffended)
+                {
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-heart-broken"></i> Darılma Bilgisi</h6>
+                        @if (Model.OffendedAt.HasValue)
+                        {
+                            <p><strong>Darılma Tarihi:</strong> @Model.OffendedAt.Value.ToString("dd MMMM yyyy", new System.Globalization.CultureInfo("tr-TR"))</p>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.OffendedReason))
+                        {
+                            <p><strong>Darılma Nedeni:</strong> @Model.OffendedReason</p>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sağ Kolon - İletişim Bilgileri -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-address-book"></i> İletişim Bilgileri</h5>
+                <a asp-controller="Details" asp-action="Create" asp-route-personId="@Model.Id" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-plus"></i> Ekle
+                </a>
+            </div>
+            <div class="card-body">
+                @if (Model.Details.Any())
+                {
+                    @foreach (var detail in Model.Details.OrderBy(d => d.Type))
+                    {
+                        <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                            <div>
+                                <i class="fas fa-@(detail.Type == Friendly.Domain.Enums.ContactType.Phone ? "phone" : detail.Type == Friendly.Domain.Enums.ContactType.Email ? "envelope" : detail.Type == Friendly.Domain.Enums.ContactType.Address ? "map-marker-alt" : "share-alt")"></i>
+                                <strong>@detail.Type.ToString():</strong>
+                                <span>@detail.Value</span>
+                                @if (!string.IsNullOrEmpty(detail.Label))
+                                {
+                                    <span class="badge bg-secondary ms-1">@detail.Label</span>
+                                }
+                                @if (!string.IsNullOrEmpty(detail.AdditionalInfo))
+                                {
+                                    <br><small class="text-muted">@detail.AdditionalInfo</small>
+                                }
+                            </div>
+                            <div>
+                                <a asp-controller="Details" asp-action="Edit" asp-route-id="@detail.Id" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger ms-1" data-bs-toggle="modal" data-bs-target="#deleteDetailModal-@detail.Id">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Delete Detail Modal -->
+                        <div class="modal fade" id="deleteDetailModal-@detail.Id" tabindex="-1">
+                            <div class="modal-dialog modal-sm">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h6 class="modal-title">İletişim Sil</h6>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Bu iletişim bilgisini silmek istediğinden emin misin?
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">İptal</button>
+                                        <form asp-controller="Details" asp-action="Delete" method="post" class="d-inline">
+                                            <input type="hidden" name="id" value="@detail.Id" />
+                                            <button type="submit" class="btn btn-sm btn-danger">Sil</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-3">
+                        <i class="fas fa-address-book fa-3x text-muted mb-2"></i>
+                        <p class="text-muted">Henüz iletişim bilgisi eklenmemiş.</p>
+                        <a asp-controller="Details" asp-action="Create" asp-route-personId="@Model.Id" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus"></i> İlk İletişimi Ekle
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alarmlar Bölümü -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-bell"></i> Alarmlar</h5>
+                <a asp-controller="Alarms" asp-action="Create" asp-route-personId="@Model.Id" class="btn btn-sm btn-outline-warning">
+                    <i class="fas fa-bell-plus"></i> Alarm Ekle
+                </a>
+            </div>
+            <div class="card-body">
+                @if (Model.Alarms.Any())
+                {
+                    <div class="row">
+                        @foreach (var alarm in Model.Alarms.OrderBy(a => a.TriggerDate))
+                        {
+                            var isUpcoming = alarm.TriggerDate.Date <= DateTime.Now.AddDays(alarm.DaysBefore).Date;
+                            var isPast = alarm.TriggerDate.Date < DateTime.Now.Date;
+                            
+                            <div class="col-md-6 mb-3">
+                                <div class="card @(isPast ? "border-secondary" : isUpcoming ? "border-warning" : "border-light")">
+                                    <div class="card-body">
+                                        <h6 class="card-title">
+                                            <i class="fas fa-@(alarm.Criteria == Friendly.Domain.Enums.AlarmCriteria.Birthday ? "birthday-cake" : alarm.Criteria == Friendly.Domain.Enums.AlarmCriteria.Appointment ? "calendar-check" : "sticky-note")"></i>
+                                            @alarm.Name
+                                            @if (!alarm.IsActive)
+                                            {
+                                                <span class="badge bg-danger">Pasif</span>
+                                            }
+                                        </h6>
+                                        <p class="card-text">
+                                            <small>
+                                                <i class="fas fa-calendar"></i> @alarm.TriggerDate.ToString("dd MMM yyyy", new System.Globalization.CultureInfo("tr-TR"))
+                                                @if (alarm.DaysBefore > 0)
+                                                {
+                                                    <span class="text-muted">(@alarm.DaysBefore gün önce uyar)</span>
+                                                }
+                                            </small>
+                                        </p>
+                                        <div class="d-flex justify-content-end">
+                                            <a asp-controller="Alarms" asp-action="Details" asp-route-id="@alarm.Id" class="btn btn-sm btn-outline-info me-1">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a asp-controller="Alarms" asp-action="Edit" asp-route-id="@alarm.Id" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-3">
+                        <i class="fas fa-bell-slash fa-3x text-muted mb-2"></i>
+                        <p class="text-muted">Henüz alarm kurulmamış.</p>
+                        <a asp-controller="Alarms" asp-action="Create" asp-route-personId="@Model.Id" class="btn btn-warning btn-sm">
+                            <i class="fas fa-bell-plus"></i> İlk Alarmı Kur
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

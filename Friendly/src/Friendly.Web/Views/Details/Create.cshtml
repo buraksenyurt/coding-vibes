@@ -1,0 +1,168 @@
+@model Friendly.Domain.Entities.Detail
+
+@{
+    ViewData["Title"] = "İletişim Bilgisi Ekle";
+    var person = ViewBag.Person as Friendly.Domain.Entities.Person;
+    if (person == null) return;
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-plus text-success"></i> İletişim Bilgisi Ekle
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a asp-controller="Persons" asp-action="Details" asp-route-id="@person.Id" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> @person.FullName'e Dön
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-user"></i> @person.FullName için İletişim Bilgisi
+                </h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create" method="post">
+                    <input type="hidden" asp-for="PersonId" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="Type" class="form-label">
+                                    <i class="fas fa-list"></i> İletişim Türü
+                                </label>
+                                <select asp-for="Type" class="form-select" asp-items="ViewBag.ContactType" id="contactType">
+                                    <option value="">-- İletişim Türü Seçin --</option>
+                                </select>
+                                <span asp-validation-for="Type" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="Label" class="form-label">
+                                    <i class="fas fa-tag"></i> Etiket (Opsiyonel)
+                                </label>
+                                <input asp-for="Label" class="form-control" placeholder="Örn: İş, Ev, Mobil" />
+                                <span asp-validation-for="Label" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label asp-for="Value" class="form-label">
+                            <i class="fas fa-info"></i> <span id="valueLabel">Değer</span>
+                        </label>
+                        <input asp-for="Value" class="form-control" id="valueInput" placeholder="İletişim bilgisini girin" />
+                        <span asp-validation-for="Value" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label asp-for="AdditionalInfo" class="form-label">
+                            <i class="fas fa-comment"></i> Ek Bilgi (Opsiyonel)
+                        </label>
+                        <textarea asp-for="AdditionalInfo" class="form-control" rows="3" placeholder="Bu iletişim bilgisi hakkında ek notlar..."></textarea>
+                        <span asp-validation-for="AdditionalInfo" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input asp-for="IsPrimary" class="form-check-input" />
+                            <label asp-for="IsPrimary" class="form-check-label">
+                                <i class="fas fa-star text-warning"></i> Birincil iletişim bilgisi
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a asp-controller="Persons" asp-action="Details" asp-route-id="@person.Id" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> İptal
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> İletişim Bilgisini Kaydet
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-lightbulb"></i> İpuçları</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="fas fa-phone text-primary"></i>
+                        <strong>Telefon:</strong> +90 5xx xxx xx xx formatında
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-envelope text-success"></i>
+                        <strong>E-posta:</strong> name@example.com formatında
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-map-marker-alt text-danger"></i>
+                        <strong>Adres:</strong> Tam adres bilgisi
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-share-alt text-info"></i>
+                        <strong>Sosyal Medya:</strong> Kullanıcı adı veya profil linki
+                    </li>
+                </ul>
+                
+                <hr>
+                
+                <h6><i class="fas fa-info-circle"></i> Bilgi</h6>
+                <p class="small text-muted">
+                    Birincil iletişim bilgisi, bu kişiyle en çok kullandığınız iletişim yöntemidir.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        document.getElementById('contactType').addEventListener('change', function() {
+            const valueLabel = document.getElementById('valueLabel');
+            const valueInput = document.getElementById('valueInput');
+            
+            switch(this.value) {
+                case '1': // Phone
+                    valueLabel.textContent = 'Telefon Numarası';
+                    valueInput.placeholder = '+90 5xx xxx xx xx';
+                    valueInput.type = 'tel';
+                    break;
+                case '2': // Email
+                    valueLabel.textContent = 'E-posta Adresi';
+                    valueInput.placeholder = 'name@example.com';
+                    valueInput.type = 'email';
+                    break;
+                case '3': // Address
+                    valueLabel.textContent = 'Adres';
+                    valueInput.placeholder = 'Tam adres bilgisi...';
+                    valueInput.type = 'text';
+                    break;
+                case '4': // SocialMedia
+                    valueLabel.textContent = 'Sosyal Medya';
+                    valueInput.placeholder = 'Kullanıcı adı veya profil linki';
+                    valueInput.type = 'text';
+                    break;
+                default:
+                    valueLabel.textContent = 'Değer';
+                    valueInput.placeholder = 'İletişim bilgisini girin';
+                    valueInput.type = 'text';
+            }
+        });
+    </script>
+}
