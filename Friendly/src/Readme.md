@@ -73,4 +73,18 @@ SORU: Ana sayfa tasarımı bu sefer horizontal scroll çıkmasına sebeb oldu. C
 
 ## Çalışma Zamanından Ekran Görüntüleri
 
-// EKLENECEK
+Ana sayfadan bir görünüm.
+
+![Runtime_00](runtime_00.png)
+
+Birkaç arkadaş ekledikten sonraki durum.
+
+![Runtime_01](runtime_01.png)
+
+İletişim bilgisi kaydetme kısmı.
+
+![Runtime_02](runtime_02.png)
+
+Arkadaşımız için yeni alarm oluşturma.
+
+![Runtime_03](runtime_03.png)
