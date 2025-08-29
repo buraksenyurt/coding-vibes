@@ -33,6 +33,6 @@
 <tr>
 <td valign="top"><strong>Friendsly(Web App)</strong></td>
 <td valign="top"><strong>Tarih:</strong> Ağustos 2025<br><strong>Tanım:</strong> 90larda sıkça yazdığımız Fihrist(Telefon Rehberi) uygulamasının AI destekli modern bir versiyonu<br><strong>Geliştirici:</strong> Sonnet 4.0<br><strong>Dil:</strong> C#<br><strong>Zorluk:</strong> Orta Üstü<br><strong>Süre:</strong> ~8 Saat</td>
-<td valign="top">User Story kalitesinden dolayı bazı View'lar eksik kaldı veya yanlış yazdı.<br>Entity Framework için doğru paketi bulamadı.<br>Belirttiğim gibi Web uygulaması ile backend tarafını Web API üzerinden konuşturmak yerine Web App içerisinde doğrudan EF Context nesnelerine gitti.</td>
+<td valign="top">User Story kalitesinden dolayı bazı View'lar eksik kaldı veya yanlış yazdı.<br>Entity Framework için doğru paketi bulamadı.<br>Belirttiğim gibi Web uygulaması ile backend tarafını Web API üzerinden konuşturmak yerine Web App içerisinde doğrudan EF Context nesnelerine gitti.<br>Alarm ekleme fonksiyonelliğindeki hataları düzeltemedi.</td>
 </tr>
 </table>
