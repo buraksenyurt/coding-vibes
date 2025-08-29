@@ -50,6 +50,7 @@ public class PersonsController : Controller
     public async Task<IActionResult> Details(Guid id)
     {
         var person = await _context.Persons
+            .AsSplitQuery()
             .Include(p => p.Details)
             .Include(p => p.Alarms)
             .FirstOrDefaultAsync(p => p.Id == id);
