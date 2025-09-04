@@ -559,3 +559,50 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Go
+# If you prefer Go modules in subdirectories of a git repo, don't forget to add
+# /go.sum.bak for backups or rollbacks
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Build artifacts - common build directories
+**/bin/
+**/build/
+**/dist/
+
+# Go workspace file
+go.work
+
+# Go module proxy cache
+go.sum.bak
+
+# IDEs and editors
+# GoLand
+.idea/
+
+# VS Code
+.vscode/settings.json
+.vscode/tasks.json
+.vscode/launch.json
+.vscode/extensions.json
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
