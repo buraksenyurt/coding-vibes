@@ -4,13 +4,13 @@
 
 ## Test Sistemi
 
-|**Donanım**    |**Özellik**                                                                        |
-|---------------|-----------------------------------------------------------------------------------|
-|**CPU**        |12th Gen Intel Core i7-1255U, 1700 Mhz, 10 Core(s), 12 Logical Processor(s)        |
-|**RAM**        |32Gb                                                                               |
-|**VGA**        |Adapter Type Intel(R) Iris(R) Xe Graphics Family, Intel Corporation compatible     |
-|**OS**         |Windows 11                                                                         |
-|**IDE**        |Visual Studio Code                                                                 |
+| **Donanım** | **Özellik**                                                                    |
+| ----------- | ------------------------------------------------------------------------------ |
+| **CPU**     | 12th Gen Intel Core i7-1255U, 1700 Mhz, 10 Core(s), 12 Logical Processor(s)    |
+| **RAM**     | 32Gb                                                                           |
+| **VGA**     | Adapter Type Intel(R) Iris(R) Xe Graphics Family, Intel Corporation compatible |
+| **OS**      | Windows 11                                                                     |
+| **IDE**     | Visual Studio Code                                                             |
 
 ## Çalışmalar
 
@@ -34,5 +34,10 @@
 <td valign="top"><strong>Friendsly(Web App)</strong></td>
 <td valign="top"><strong>Tarih:</strong> Ağustos 2025<br><strong>Tanım:</strong> 90larda sıkça yazdığımız Fihrist(Telefon Rehberi) uygulamasının AI destekli modern bir versiyonu<br><strong>Geliştirici:</strong> Sonnet 4.0<br><strong>Dil:</strong> C#<br><strong>Zorluk:</strong> Orta Üstü<br><strong>Süre:</strong> ~8 Saat</td>
 <td valign="top">User Story kalitesinden dolayı bazı View'lar eksik kaldı veya yanlış yazdı.<br>Entity Framework için doğru paketi bulamadı.<br>Belirttiğim gibi Web uygulaması ile backend tarafını Web API üzerinden konuşturmak yerine Web App içerisinde doğrudan EF Context nesnelerine gitti.<br>Alarm ekleme fonksiyonelliğindeki hataları düzeltemedi.</td>
+</tr>
+<tr>
+   <td valign="top"><strong>Walkure(Oyun)</strong></td>
+<td valign="top"><strong>Tarih:</strong> Ağustos 2025<br><strong>Tanım:</strong> Ücretsiz assetlerin kullanıldığı 2D Platform oyunu<br><strong>Geliştirici:</strong> Gemini 2.5 Pro<br><strong>Dil:</strong> Go<br><strong>Zorluk:</strong> Orta<br><strong>Süre:</strong> </td>
+<td valign="top"></td> 
 </tr>
 </table>
