@@ -20,7 +20,7 @@ const (
 	screenHeight = 400
 	tankSpeed    = 2.0
 	rotationSpeed = 0.05
-	damageRadius = 12.5  // Adjusted for 0.25 scale (was 50 * 0.25)
+	damageRadius = 50  // Adjusted for 0.25 scale (was 50 * 0.25)
 	maxMines     = 5
 	maxBonuses   = 10
 	maxObstacles = 4
@@ -57,6 +57,7 @@ type Mine struct {
 	timer          time.Time
 	exploding      bool
 	explosionFrame int
+	frameCounter   int  // New: counter to slow down animation
 	img            *ebiten.Image
 }
 
@@ -81,9 +82,9 @@ func (g *Game) Update() error {
 	}
 	if ebiten.IsKeyPressed(ebiten.KeySpace) {
 		g.moving = true
-		// Move forward
-		g.tank.x += math.Cos(g.tank.angle) * tankSpeed
-		g.tank.y += math.Sin(g.tank.angle) * tankSpeed
+		// Move forward (corrected direction - 90 degrees counterclockwise)
+		g.tank.x += math.Cos(g.tank.angle - math.Pi/2) * tankSpeed
+		g.tank.y += math.Sin(g.tank.angle - math.Pi/2) * tankSpeed
 		// Check bounds
 		if g.tank.x < 0 { g.tank.x = 0 }
 		if g.tank.x > screenWidth { g.tank.x = screenWidth }
@@ -92,9 +93,9 @@ func (g *Game) Update() error {
 		// Check obstacles
 		for _, obs := range g.obstacles {
 			if distance(g.tank.x, g.tank.y, obs.x, obs.y) < 7.5 {  // Adjusted for 0.25 scale
-				// Revert move
-				g.tank.x -= math.Cos(g.tank.angle) * tankSpeed
-				g.tank.y -= math.Sin(g.tank.angle) * tankSpeed
+				// Revert move (corrected direction - 90 degrees counterclockwise)
+				g.tank.x -= math.Cos(g.tank.angle - math.Pi/2) * tankSpeed
+				g.tank.y -= math.Sin(g.tank.angle - math.Pi/2) * tankSpeed
 			}
 		}
 	}
@@ -105,16 +106,21 @@ func (g *Game) Update() error {
 		if !mine.exploding && now.After(mine.timer) {
 			mine.exploding = true
 			mine.explosionFrame = 0
+			mine.frameCounter = 0  // Initialize frame counter
+			// Damage tank immediately when mine explodes
+			if distance(g.tank.x, g.tank.y, mine.x, mine.y) < damageRadius {
+				g.armor -= 10
+			}
 		}
 		if mine.exploding {
-			mine.explosionFrame++
+			mine.frameCounter++
+			if mine.frameCounter >= 8 {  // Advance frame every 8 game frames (slows down animation)
+				mine.frameCounter = 0
+				mine.explosionFrame++
+			}
 			if mine.explosionFrame >= len(g.explosionImgs) {
 				// Remove mine
 				g.mines = append(g.mines[:i], g.mines[i+1:]...)
-				// Damage tank if close
-				if distance(g.tank.x, g.tank.y, mine.x, mine.y) < damageRadius {
-					g.armor -= 10
-				}
 				// Add new mine
 				g.addMine()
 				break
@@ -124,7 +130,7 @@ func (g *Game) Update() error {
 
 	// Check bonuses
 	for i, bonus := range g.bonuses {
-		if distance(g.tank.x, g.tank.y, bonus.x, bonus.y) < 5 {  // Adjusted for 0.25 scale
+		if distance(g.tank.x, g.tank.y, bonus.x, bonus.y) < 30 { 
 			g.score++
 			g.bonuses = append(g.bonuses[:i], g.bonuses[i+1:]...)
 			g.addBonus()
@@ -218,7 +224,7 @@ func (g *Game) drawTank(screen *ebiten.Image) {
 		op.GeoM.Translate(-float64(g.tank.exhaustImg.Bounds().Dx())/2, -float64(g.tank.exhaustImg.Bounds().Dy())/2)
 		op.GeoM.Scale(scale, scale)
 		op.GeoM.Rotate(g.tank.angle)
-		op.GeoM.Translate(g.tank.x - math.Cos(g.tank.angle)*5, g.tank.y - math.Sin(g.tank.angle)*5)
+		op.GeoM.Translate(g.tank.x - math.Cos(g.tank.angle - math.Pi/2)*5, g.tank.y - math.Sin(g.tank.angle - math.Pi/2)*5)
 		screen.DrawImage(g.tank.exhaustImg, op)
 	}
 }
