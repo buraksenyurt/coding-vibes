@@ -50,3 +50,33 @@ Bu sorunu giderebilir misin?
 
 Windows 11 sisteminde örnek kullanımlar ve çıktıları aşağıdaki gibidir.
 
+**Base Model**
+
+```bash
+docky generate docker-compose --model base
+```
+
+![runtime_00.png](runtime_00.png)
+
+**Redis'i özel Port ile Base Modele Ekleme**
+
+> Bu kullanımda özet görünümde problem var. Port değeri dosyada 6380 olarak ayarlansa da raporda 6379 olarak görünüyor. Ancak docker-compose dosyasında doğru port ayarlanıyor.
+
+```bash
+docky generate docker-compose --model base --add-redis --redis-port 6380
+```
+
+![runtime_01.png](runtime_01.png)
+
+**Docker Compose Dosya Adını Özelleştirme**
+
+```bash
+docky generate docker-compose --model ai-ml --output docker-compose.ai-ml.yml
+```
+
+![runtime_02.png](runtime_02.png)
+
+## Notlar
+
+- Docker-Compose dosyaları eski stilde oluşturuluyor gibi. Yeni formatlarda dosya başında versiyon bilgisi yer almıyor. Belki güncel docker-compose kuralları da dokümana eklenebilir.
+- Servislerin docker imajlarından bazıları eski sürümleri kullanıyor. Güncel sürümler için bir hub servisinden yararlanılabilir belki de? Yani aracımız aslında bir servis hub'a bağlanıp güncel ve doğrulanmış servis şablonlarını oradan çekebilir.
