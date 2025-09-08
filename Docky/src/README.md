@@ -51,6 +51,30 @@ docky generate docker-compose --model base
 
 # Generate full model (PostgreSQL, PgAdmin, Elasticsearch, Redis, RabbitMQ, Kibana, SonarQube)
 docky generate docker-compose --model full
+
+# Generate microservices model (API Gateway, Service Discovery, Monitoring)
+docky generate docker-compose --model microservices
+
+# Generate AI/ML model (Jupyter, MLflow, MinIO, PostgreSQL, Redis)
+docky generate docker-compose --model ai-ml
+
+# Generate analytics model (Kafka, ClickHouse, Grafana, MinIO, Redis)
+docky generate docker-compose --model analytics
+
+# Generate frontend development model
+docky generate docker-compose --model frontend
+
+# Generate security-focused model
+docky generate docker-compose --model security
+
+# Generate mobile backend model
+docky generate docker-compose --model mobile
+
+# Generate testing environment
+docky generate docker-compose --model testing
+
+# Generate minimal development environment
+docky generate docker-compose --model minimal
 ```
 
 ### Add Additional Services
@@ -97,6 +121,63 @@ docky generate docker-compose --model base --output ./docker/docker-compose.dev.
 - **Redis** (Port: 6379)
 - **RabbitMQ** (Ports: 5672, 15672)
 - **SonarQube** (Port: 9000)
+
+### Microservices Model
+- **PostgreSQL** (Port: 5432)
+- **Redis** (Port: 6379)
+- **RabbitMQ** (Ports: 5672, 15672)
+- **Kong API Gateway** (Ports: 8000, 8001)
+- **Consul** (Port: 8500)
+- **Prometheus** (Port: 9090)
+- **Grafana** (Port: 3000)
+- **Jaeger** (Port: 16686)
+
+### AI-ML Model
+- **Jupyter Notebook** (Port: 8888)
+- **MLflow** (Port: 5000)
+- **MinIO** (Ports: 9000, 9001)
+- **PostgreSQL** (Port: 5432)
+- **Redis** (Port: 6379)
+
+### Frontend Model
+- **Node.js** (Port: 3000)
+- **Redis** (Port: 6379)
+- **Nginx** (Port: 80)
+- **PostgreSQL** (Port: 5432)
+
+### Security Model
+- **HashiCorp Vault** (Port: 8200)
+- **OWASP ZAP** (Port: 8080)
+- **Prometheus** (Port: 9090)
+- **Grafana** (Port: 3000)
+- **PostgreSQL** (Port: 5432)
+
+### Analytics Model
+- **Apache Kafka** (Port: 9092)
+- **Apache Zookeeper** (Port: 2181)
+- **ClickHouse** (Ports: 8123, 9000)
+- **Grafana** (Port: 3000)
+- **MinIO** (Ports: 9000, 9001)
+- **Redis** (Port: 6379)
+
+### Mobile Model
+- **PostgreSQL** (Port: 5432)
+- **Redis** (Port: 6379)
+- **MinIO** (Ports: 9000, 9001)
+- **RabbitMQ** (Ports: 5672, 15672)
+- **Firebase Admin** (Port: 9099)
+
+### Testing Model
+- **Selenium Hub** (Port: 4444)
+- **Selenium Chrome** (Port: 7900)
+- **Selenium Firefox** (Port: 7901)
+- **WireMock** (Port: 8080)
+- **PostgreSQL** (Port: 5432)
+- **Redis** (Port: 6379)
+
+### Minimal Model
+- **Redis** (Port: 6379)
+- **SQLite Web** (Port: 8080)
 
 ## Additional Services
 

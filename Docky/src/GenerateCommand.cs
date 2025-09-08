@@ -13,7 +13,7 @@ public class GenerateCommand : Command<GenerateCommand.Settings>
         public string Type { get; set; } = "docker-compose";
 
         [CommandOption("--model")]
-        [Description("Model type: base or full")]
+        [Description("Model type: base, full, microservices, ai-ml, frontend, security, analytics, mobile, testing, minimal")]
         [DefaultValue("base")]
         public string Model { get; set; } = "base";
 

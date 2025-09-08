@@ -15,6 +15,9 @@ public class Program
                 .WithDescription("Generate docker-compose files")
                 .WithExample(new[] { "generate", "docker-compose", "--model", "base" })
                 .WithExample(new[] { "generate", "docker-compose", "--model", "full" })
+                .WithExample(new[] { "generate", "docker-compose", "--model", "microservices" })
+                .WithExample(new[] { "generate", "docker-compose", "--model", "ai-ml" })
+                .WithExample(new[] { "generate", "docker-compose", "--model", "analytics" })
                 .WithExample(new[] { "generate", "docker-compose", "--model", "base", "--add-redis" });
         });
 
