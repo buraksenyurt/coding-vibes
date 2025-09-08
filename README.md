@@ -37,7 +37,7 @@
    </tr>
    <tr>
       <td valign="top"><strong>Docky(Dotnet Tool)</strong></td>
-      <td valign="top"><strong>Tarih:</strong> Eylül 2025<br><strong>Tanım:</strong> Kolayca docker-compose dosyası oluşturulmasını sağlayan dotnet tool<br><strong>Geliştirici:</strong> Sonnet 4.0<br><strong>Dil:</strong> C#<br><strong>Zorluk:</strong> Orta Altı<br><strong> Ayrılan Süre:</strong> ~2 Saat </td>
-      <td valign="top">Programı ilk seferde yazmayı başardı. Sonrasında farklı modeller önermesi istendi ve buna göre de uygulamayı başarılı bir şekilde geliştirdi. Tool'u sisteme kolayca yükleyebilmek için oluşturduğu shell script'ler başarılı şekilde çalıştı (install.bat ve install.sh). Oluşturulan docker-compose dosyalarında boşluk ve girinti problemleri oluştu ama sonrasında bunları düzeltmek için kodu refactor edebildi. </td> 
+      <td valign="top"><strong>Tarih:</strong> Eylül 2025<br><strong>Tanım:</strong> Kolayca docker-compose dosyası oluşturulmasını sağlayan dotnet tool<br><strong>Geliştirici:</strong> Sonnet 4.0<br><strong>Dil:</strong> C#<br><strong>Zorluk:</strong> Orta<br><strong> Ayrılan Süre:</strong> ~6 Saat </td>
+      <td valign="top">Programı ilk seferde yazmayı başardı. Sonrasında farklı modeller önermesi istendi ve buna göre de uygulamayı başarılı bir şekilde geliştirdi. Tool'u sisteme kolayca yükleyebilmek için oluşturduğu shell script'ler başarılı şekilde çalıştı (install.bat ve install.sh). Oluşturulan docker-compose dosyalarında boşluk ve girinti problemleri oluştu ama sonrasında bunları düzeltmek için kodu refactor edebildi. Version 2.0 kullanımında ise dosya temelli sistemde dosya path'lerini tam ayarlayamadığından verileri genelde gelmedi. SQlite veritabanı sistemine döndürünce servis tarafı düzeldi. </td> 
    </tr>
 </table>
