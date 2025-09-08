@@ -1,0 +1,23 @@
+name: microservices
+description: Microservices architecture with API Gateway, Service Discovery, and Monitoring
+services:
+  - postgresql
+  - redis
+  - rabbitmq
+  - kong-gateway
+  - consul
+  - prometheus
+  - grafana
+  - jaeger
+totalServices: 8
+ports:
+  - "5432"
+  - "6379"
+  - "5672"
+  - "15672"
+  - "8000"
+  - "8001"
+  - "8500"
+  - "9090"
+  - "3000"
+  - "16686"

@@ -19,6 +19,16 @@ public class Program
                 .WithExample(new[] { "generate", "docker-compose", "--model", "ai-ml" })
                 .WithExample(new[] { "generate", "docker-compose", "--model", "analytics" })
                 .WithExample(new[] { "generate", "docker-compose", "--model", "base", "--add-redis" });
+
+            config.AddCommand<ListModelsCommand>("list-models")
+                .WithDescription("List all available models")
+                .WithExample(new[] { "list-models" })
+                .WithExample(new[] { "list-models", "--detailed" });
+
+            config.AddCommand<ListServicesCommand>("list-services")
+                .WithDescription("List all available services")
+                .WithExample(new[] { "list-services" })
+                .WithExample(new[] { "list-services", "--detailed" });
         });
 
         return app.Run(args);

@@ -1,0 +1,27 @@
+name: postgresql
+description: PostgreSQL Database
+ports:
+  - "5432"
+version: "15"
+environment:
+  POSTGRES_DB: docky_db
+  POSTGRES_USER: docky_user
+  POSTGRES_PASSWORD: docky_pass
+volumes:
+  - postgres_data:/var/lib/postgresql/data
+networks:
+  - docky-network
+dockerComposeContent: |
+  image: postgres:15
+  container_name: docky_postgres
+  environment:
+    POSTGRES_DB: docky_db
+    POSTGRES_USER: docky_user
+    POSTGRES_PASSWORD: docky_pass
+  ports:
+    - "5432:5432"
+  volumes:
+    - postgres_data:/var/lib/postgresql/data
+  networks:
+    - docky-network
+  restart: unless-stopped

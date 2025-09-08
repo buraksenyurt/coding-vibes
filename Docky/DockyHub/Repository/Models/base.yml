@@ -1,0 +1,9 @@
+name: base
+description: Basic development environment with PostgreSQL and PgAdmin
+services:
+  - postgresql
+  - pgadmin
+totalServices: 2
+ports:
+  - "5432"
+  - "8080"

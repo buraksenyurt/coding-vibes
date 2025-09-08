@@ -1,0 +1,27 @@
+name: pgadmin
+description: PgAdmin Web Interface
+ports:
+  - "8080"
+version: "latest"
+environment:
+  PGADMIN_DEFAULT_EMAIL: admin@docky.local
+  PGADMIN_DEFAULT_PASSWORD: admin123
+volumes:
+  - pgadmin_data:/var/lib/pgadmin
+networks:
+  - docky-network
+dockerComposeContent: |
+  image: dpage/pgadmin4:latest
+  container_name: docky_pgadmin
+  environment:
+    PGADMIN_DEFAULT_EMAIL: admin@docky.local
+    PGADMIN_DEFAULT_PASSWORD: admin123
+  ports:
+    - "8080:80"
+  volumes:
+    - pgadmin_data:/var/lib/pgadmin
+  networks:
+    - docky-network
+  restart: unless-stopped
+  depends_on:
+    - postgresql

@@ -1,0 +1,17 @@
+name: redis
+description: Redis Cache
+ports:
+  - "6379"
+version: "7-alpine"
+environment: {}
+volumes: []
+networks:
+  - docky-network
+dockerComposeContent: |
+  image: redis:7-alpine
+  container_name: docky_redis
+  ports:
+    - "6379:6379"
+  networks:
+    - docky-network
+  restart: unless-stopped

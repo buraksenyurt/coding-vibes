@@ -1,0 +1,24 @@
+name: rabbitmq
+description: RabbitMQ Message Broker
+ports:
+  - "5672"
+  - "15672"
+version: "3-management-alpine"
+environment:
+  RABBITMQ_DEFAULT_USER: docky_user
+  RABBITMQ_DEFAULT_PASS: docky_pass
+volumes: []
+networks:
+  - docky-network
+dockerComposeContent: |
+  image: rabbitmq:3-management-alpine
+  container_name: docky_rabbitmq
+  environment:
+    RABBITMQ_DEFAULT_USER: docky_user
+    RABBITMQ_DEFAULT_PASS: docky_pass
+  ports:
+    - "5672:5672"
+    - "15672:15672"
+  networks:
+    - docky-network
+  restart: unless-stopped
