@@ -19,14 +19,24 @@ DockyApp is a .NET CLI tool designed to easily generate docker-compose files for
 ### Install as Global Tool
 
 ```bash
-# Build the project
-dotnet pack
+# Step 1: Build and pack the project
+dotnet pack -c Release -o nupkg
 
-# Install globally
+# Step 2: Install globally (Windows)
+dotnet tool install --global docky --add-source .\nupkg
+
+# Step 2: Install globally (Linux/Mac)
 dotnet tool install --global docky --add-source ./nupkg
 
 # Or install locally
 dotnet tool install --local docky --add-source ./nupkg
+
+# Alternative: Use the install scripts
+# Windows:
+install.bat
+
+# Linux/Mac:
+./install.sh
 ```
 
 ### Update Tool

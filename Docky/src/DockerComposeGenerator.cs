@@ -196,12 +196,13 @@ public class DockerComposeGenerator
         foreach (var service in services)
         {
             sb.AppendLine($"  {service.Key}:");
-            var serviceLines = service.Value.Split('\n');
+            var serviceLines = service.Value.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
             foreach (var line in serviceLines)
             {
-                if (!string.IsNullOrWhiteSpace(line))
+                var trimmedLine = line.TrimEnd('\r');
+                if (!string.IsNullOrWhiteSpace(trimmedLine))
                 {
-                    sb.AppendLine($"    {line}");
+                    sb.AppendLine($"    {trimmedLine}");
                 }
             }
             sb.AppendLine();
