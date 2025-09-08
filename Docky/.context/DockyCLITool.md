@@ -81,3 +81,19 @@ docky generate docker-compose --model base --add-redis --redis-port 6380
 # Örnekte MinIO servisi ekleniyor
 docky generate docker-compose --model base --add-service /path/to/minio-service.yml
 ```
+
+## Versiyon 2.0
+
+- **Servis Desteği(DockyHub):** Docker imajlarının kod içerisinde tanımlanması yerine `Rest` tabanlı bir servis üzerinden alınması sağlanacak. Böylece `docker imajlarına` ait compose içeriklerinin güncellenmesi, yenilerinin eklenmesi kolaylaşacak.
+- **Model Listesi:** Kullanılabilecek modellerin listesi için yeni bir komut eklenecek. Bu komutlar ilgili model içerisinde yer alan servisleri, kullandıkları portlar da görülebilecek.
+- **Container Servis Listesi:** Özellikle -add öneki ile eklenen servislerin listesi için yeni bir komut eklenecek. Bu komut eklenebilecek servislerin listesi de görülebilecek.
+
+### DockyHub
+
+`DockyHub`, `Docky CLI Tool` için servis sağlayıcı görevi üstlenen bir servis. Bu servis, Docker imajlarına ait `docker-compose` içeriklerini barındırır ve Docky CLI Tool'un bu içeriklere erişmesini sağlar. `DockyHUB`, `.Net 9.0` ile geliştirilmiş bir `Web API` projesidir. `DockyHub`'ın temel özellikleri şunlardır:
+
+- **Servis Kataloğu:** DockyHub, çeşitli Docker imajlarına ait `docker-compose` dosyalarında kullanılabilecek servis tanımlama içeriklerini barındırır. Bu içerikler, farklı servislerin nasıl yapılandırılacağını ve çalıştırılacağını tanımlar.
+- **Model Kataloğu:** DockyHub, farklı yazılım geliştirme modellerine uygun `docker-compose` içeriklerini de sunar. Örneğin, `base`, `full`, `microservices` gibi modeller için önceden tanımlanmış içerikler otomatik olarak sağlar. Var olan CLI aracında yer alan modellerin tamamı servise entegre edilmelidir.
+- **Repository:** Servis ve model tanımlamalarına ait yml içerikleri şimdilik `yml` uzantılı fiziki dosyalarda tutulabilir. *(Sonraki sürümde bu içeriğin `Postgresql` veritabanından okunması için gerekli geliştirmeler yapılacaktır)*
+- **API Erişimi:** Docky CLI Tool, DockyHub'a REST API üzerinden erişir. Bu sayede, gerekli `docker-compose` içerikleri dinamik olarak alınabilir.
+- **Güncellemeler:** `DockyHub`, yeni servislerin eklenmesi veya mevcut servislerin güncellenmesi için merkezi bir nokta sağlar. Bu, Docky CLI Tool'un her zaman en güncel içeriklere erişmesini mümkün kılar.
