@@ -38,6 +38,6 @@
    <tr>
       <td valign="top"><strong>Docky(Dotnet Tool)</strong></td>
       <td valign="top"><strong>Tarih:</strong> Ağustos 2025<br><strong>Tanım:</strong> Kolayca docker-compose dosyası oluşturulmasını sağlayan dotnet tool<br><strong>Geliştirici:</strong> Sonnet 4.0<br><strong>Dil:</strong> C#<br><strong>Zorluk:</strong> Orta<br><strong> Ayrılan Süre:</strong> ~ </td>
-      <td valign="top"></td> 
+      <td valign="top">Programı ilk seferde yazmayı başardı. Sonrasında farklı modeller önermesi istendi ve buna göre de uygulamayı başarılı bir şekilde geliştirdi.</td> 
    </tr>
 </table>
