@@ -1,5 +1,7 @@
 using DockyHub.Models;
-using YamlDotNet.Serialization;
+using DockyHub.Repositories;
+using DockyHub.Data.Entities;
+using System.Text.Json;
 
 namespace DockyHub.Services;
 
@@ -8,72 +10,44 @@ public interface IModelService
     Task<IEnumerable<ModelCatalogResponse>> GetAllModelsAsync();
     Task<ModelDefinition?> GetModelAsync(string modelName);
     Task<string> GenerateDockerComposeAsync(string modelName, Dictionary<string, object>? options = null);
+    Task<ModelDefinition> CreateModelAsync(ModelDefinition modelDefinition);
+    Task<ModelDefinition?> UpdateModelAsync(string modelName, ModelDefinition modelDefinition);
+    Task<bool> DeleteModelAsync(string modelName);
 }
 
 public class ModelService : IModelService
 {
-    private readonly string _modelsPath;
-    private readonly IDeserializer _yamlDeserializer;
+    private readonly IModelRepository _modelRepository;
     private readonly IServiceCatalogService _serviceCatalogService;
 
-    public ModelService(IServiceCatalogService serviceCatalogService)
+    public ModelService(IModelRepository modelRepository, IServiceCatalogService serviceCatalogService)
     {
-        _modelsPath = Path.Combine(Directory.GetCurrentDirectory(), "Repository", "Models");
-        _yamlDeserializer = new DeserializerBuilder().Build();
+        _modelRepository = modelRepository;
         _serviceCatalogService = serviceCatalogService;
     }
 
     public async Task<IEnumerable<ModelCatalogResponse>> GetAllModelsAsync()
     {
-        var models = new List<ModelCatalogResponse>();
-
-        if (!Directory.Exists(_modelsPath))
-            return models;
-
-        var modelFiles = Directory.GetFiles(_modelsPath, "*.yml");
-
-        foreach (var file in modelFiles)
+        var models = await _modelRepository.GetAllAsync();
+        
+        return models.Select(m => new ModelCatalogResponse
         {
-            try
-            {
-                var content = await File.ReadAllTextAsync(file);
-                var modelDefinition = _yamlDeserializer.Deserialize<ModelDefinition>(content);
-
-                models.Add(new ModelCatalogResponse
-                {
-                    Name = modelDefinition.Name,
-                    Description = modelDefinition.Description,
-                    Services = modelDefinition.Services,
-                    TotalServices = modelDefinition.TotalServices,
-                    Ports = modelDefinition.Ports
-                });
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error processing {file}: {ex.Message}");
-            }
-        }
-
-        return models.OrderBy(m => m.Name);
+            Name = m.Name,
+            Description = m.Description,
+            Services = JsonSerializer.Deserialize<string[]>(m.Services) ?? Array.Empty<string>(),
+            TotalServices = m.TotalServices,
+            Ports = JsonSerializer.Deserialize<string[]>(m.Ports) ?? Array.Empty<string>()
+        });
     }
 
     public async Task<ModelDefinition?> GetModelAsync(string modelName)
     {
-        var filePath = Path.Combine(_modelsPath, $"{modelName.ToLower()}.yml");
-
-        if (!File.Exists(filePath))
+        var model = await _modelRepository.GetByNameAsync(modelName);
+        
+        if (model == null)
             return null;
 
-        try
-        {
-            var content = await File.ReadAllTextAsync(filePath);
-            return _yamlDeserializer.Deserialize<ModelDefinition>(content);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error reading model {modelName}: {ex.Message}");
-            return null;
-        }
+        return MapToModelDefinition(model);
     }
 
     public async Task<string> GenerateDockerComposeAsync(string modelName, Dictionary<string, object>? options = null)
@@ -125,5 +99,61 @@ public class ModelService : IModelService
         }
 
         return compose.ToString();
+    }
+
+    public async Task<ModelDefinition> CreateModelAsync(ModelDefinition modelDefinition)
+    {
+        var entity = MapToModelEntity(modelDefinition);
+        var createdEntity = await _modelRepository.CreateAsync(entity);
+        return MapToModelDefinition(createdEntity);
+    }
+
+    public async Task<ModelDefinition?> UpdateModelAsync(string modelName, ModelDefinition modelDefinition)
+    {
+        var existingModel = await _modelRepository.GetByNameAsync(modelName);
+        if (existingModel == null)
+            return null;
+
+        // Update fields
+        existingModel.Description = modelDefinition.Description;
+        existingModel.Services = JsonSerializer.Serialize(modelDefinition.Services);
+        existingModel.TotalServices = modelDefinition.TotalServices;
+        existingModel.Ports = JsonSerializer.Serialize(modelDefinition.Ports);
+
+        var updatedEntity = await _modelRepository.UpdateAsync(existingModel);
+        return MapToModelDefinition(updatedEntity);
+    }
+
+    public async Task<bool> DeleteModelAsync(string modelName)
+    {
+        var model = await _modelRepository.GetByNameAsync(modelName);
+        if (model == null)
+            return false;
+
+        return await _modelRepository.DeleteAsync(model.Id);
+    }
+
+    private ModelDefinition MapToModelDefinition(ModelEntity entity)
+    {
+        return new ModelDefinition
+        {
+            Name = entity.Name,
+            Description = entity.Description,
+            Services = JsonSerializer.Deserialize<string[]>(entity.Services) ?? Array.Empty<string>(),
+            TotalServices = entity.TotalServices,
+            Ports = JsonSerializer.Deserialize<string[]>(entity.Ports) ?? Array.Empty<string>()
+        };
+    }
+
+    private ModelEntity MapToModelEntity(ModelDefinition definition)
+    {
+        return new ModelEntity
+        {
+            Name = definition.Name,
+            Description = definition.Description,
+            Services = JsonSerializer.Serialize(definition.Services),
+            TotalServices = definition.TotalServices,
+            Ports = JsonSerializer.Serialize(definition.Ports)
+        };
     }
 }

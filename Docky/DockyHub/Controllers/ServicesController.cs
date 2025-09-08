@@ -52,4 +52,49 @@ public class ServicesController : ControllerBase
 
         return Ok(service);
     }
+
+    /// <summary>
+    /// Create a new service
+    /// </summary>
+    [HttpPost]
+    public async Task<ActionResult<ServiceDefinition>> CreateService([FromBody] ServiceDefinition serviceDefinition)
+    {
+        try
+        {
+            var createdService = await _serviceCatalogService.CreateServiceAsync(serviceDefinition);
+            return CreatedAtAction(nameof(GetService), new { serviceName = createdService.Name }, createdService);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest($"Error creating service: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Update an existing service
+    /// </summary>
+    [HttpPut("{serviceName}")]
+    public async Task<ActionResult<ServiceDefinition>> UpdateService(string serviceName, [FromBody] ServiceDefinition serviceDefinition)
+    {
+        var updatedService = await _serviceCatalogService.UpdateServiceAsync(serviceName, serviceDefinition);
+        
+        if (updatedService == null)
+            return NotFound($"Service '{serviceName}' not found");
+
+        return Ok(updatedService);
+    }
+
+    /// <summary>
+    /// Delete a service
+    /// </summary>
+    [HttpDelete("{serviceName}")]
+    public async Task<ActionResult> DeleteService(string serviceName)
+    {
+        var deleted = await _serviceCatalogService.DeleteServiceAsync(serviceName);
+        
+        if (!deleted)
+            return NotFound($"Service '{serviceName}' not found");
+
+        return NoContent();
+    }
 }
