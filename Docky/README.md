@@ -18,3 +18,35 @@ Docky\.context klasöründe yer alan DockyCLITool.md dokümanını inceleyip, ba
 - **Soru 3(Agent Mode Açık):** Burada bahsettiğin tüm modelleri entegre edebilir misin?
 
 ---
+
+- **Soru 4(Agent Mode Açık):** Oluşan docker-compose örneklerinde fazladan boş satırlar olduğunu görüyorum. Aşağıdaki gibi.
+
+```yml
+  postgresql:
+    image: postgres:15
+
+    container_name: docky_postgres
+
+    environment:
+
+      POSTGRES_DB: docky_db
+
+      POSTGRES_USER: docky_user
+
+      POSTGRES_PASSWORD: docky_pass
+
+    ports:
+
+      - "5432:5432"
+
+    volumes:
+
+      - postgres_data:/var/lib/postgresql/data
+```
+
+Bu sorunu giderebilir misin?
+
+## Çalışma Zamanı
+
+Windows 11 sisteminde örnek kullanımlar ve çıktıları aşağıdaki gibidir.
+
