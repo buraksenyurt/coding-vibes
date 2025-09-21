@@ -17,31 +17,41 @@
 - Uygulama, **Entity Framework Core** kullanarak PostgreSQL ile etkileşimde bulunmalıdır.
 - Uygulama basit **Model View Controller** *(MVC)* mimarisine göre geliştirilmelidir.
 - Kullanıcı arayüzü, **Bootstrap 5** kullanılarak tasarlanmalıdır.
+- Proje, **src** klasörü altında oluşturulmalıdır.
 
 ## Model Nesneleri
 
 - **Term**: Uygulama domain'ine ait kelime veya terim.
   - Özellikler:
-    - Id (int, primary key): Benzersiz tanımlayıcı.
-    - Name (string, benzersiz): Terim adı. Örneğin "Customer","Order Number","Invoice Date"
-    - Definition (string): Terim tanımı.
-    - IsApproved (bool): Onay durumu.
-    - CreatedAt (DateTime): Oluşturulma tarihi.
-    - UpdatedAt (DateTime): Güncellenme tarihi.
-    - CreatedBy (string): Oluşturan kullanıcı.
-    - ApprovedBy (string, nullable): Onaylayan kullanıcı.
-    - ApprovedAt (DateTime, nullable): Onaylanma tarihi.
-    - Version (int): Sürüm numarası.
+    - **Id (int, primary key):** Benzersiz tanımlayıcı.
+    - **Name (string, benzersiz):** Terim adı. Örneğin "Customer","Order Number","Invoice Date", vb.
+    - **Definition (string):** Terim tanımı. Maksimum 1000 karakter.
+    - **IsApproved (bool):** Onay durumu. Varsayılan olarak `false`.
+    - **CreatedAt (DateTime):** Oluşturulma tarihi. Otomatik olarak atanır.
+    - **UpdatedAt (DateTime):** Güncellenme tarihi. Kayıd güncellendiğinde otomatik olarak güncellenir.
+    - **CreatedBy (string):** Oluşturan kullanıcı. `DomainEditor` rolünde olan kullanıcı adıdır.
+    - **ApprovedBy (string, nullable):** Onaylayan kullanıcı. `DomainApprover` rolünde olan kullanıcı adıdır.
+    - **ApprovedAt (DateTime, nullable):** Onaylanma tarihi. Onaylandığında otomatik olarak atanır.
+    - **Version (int):** Sürüm numarası. *(Tablo kaydı güncellendiğinde otomatik olarak artar)*
+
+Örnek Veriler:
+
+| Id  | Name          | Definition                          | IsApproved | CreatedAt           | UpdatedAt           | CreatedBy | ApprovedBy | ApprovedAt | Version |
+| --- | ------------- | ---------------------------------------------------------------------- | ---------- | ------------------- | ------------------- | --------- | ---------- | ---------- | ------- |
+| 1   | Customer      | A person or organization that buys goods or services from a business. | true       | 2025-09-01 10:00:00 | 2025-09-01 10:00:00 | admin     | admin      | 2025-09-01 10:05:00 | 1       |
+| 2   | Order Number  | A unique identifier assigned to each order placed by a customer. | false      | 2025-09-01 11:00:00 | 2025-09-01 11:00:00 | user1    | null       | null       | 1       |
 
 ## Temel Fonksiyonlar
 
 - **Terim Ekleme**: Kullanıcı, yeni bir terim ekleyebilir. Eklenen terim varsayılan olarak onaysızdır.
 - **Terim Onaylama**: Yetkili kullanıcı, onaylanmamış terimleri onaylayabilir.
-- **Terim Listeleme**: Kullanıcı, eklediği terimleri listeleyebilir, güncelleyebilir veya silebilir. (Onaylanmış terimler silinemez veya güncellenemez.)
+- **Terim Listeleme**: Kullanıcı, eklediği terimleri listeleyebilir, güncelleyebilir veya silebilir. *(Onaylanmış terimler silinemez veya güncellenemez)*
 
-## Beklentiler
+## Geliştirme Aşamaları
 
-İlk versiyon olan 1.0.0.0. Sürümünde Olması İstenenler:
+Projenin `1.0.0.0` sürümünde olması istenenler:
 
-- İlk sürümde kullanıcı ve rol sistemi olmadan terim ekleme fonksiyonelliğinin çalışır hale getirilmesi.
-- Terim listeleme sayfasında eklenen terimlerin görüntülenmesi, filtrelenmesi ve sıralanması.
+- Kullanıcı ve rol yönetimi sistemi olmadan, 
+  - `Terim Ekleme` fonksiyonelliğinin çalışır hale getirilmesi.
+  - `Terim Listeleme` sayfasında eklenen terimlerin görüntülenmesi, filtrelenmesi ve sıralanması.
+  - `Terim Listeleme` sayfasında silme ve güncelleme işlemlerinin yapılabilmesi.
