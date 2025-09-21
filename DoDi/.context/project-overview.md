@@ -1,57 +1,64 @@
-# DoDi Web Uygulaması
+# DoDi Web Application
 
-## Künye
+## At-a-Glance
 
-- **Proje Adı**: DoDi
-- **Proje Konusu**: DoDi, belirli bir uygulama domain'ine ait kelimelerin ve terimlerin çevrimiçi girildiği, onay mekanizması ile eklenebildiği bir platformdur. Uygulama, Domain Drive Design *(DDD)* tabanlı projelerde kullanılan Ubiquitous Language *(UL)* oluşturulmasına yardımcı olmayı amaçlar.
-- **Tanım**: Uygulama domain'ine ait kelimelerin ve terimlerin çevrimiçi girilebildiği, onay mekanizması ile eklenebildiği bir web uygulaması.
-- **Geliştirici**: Grok Code Fast (Preview 1)
-- **Doküman Versiyonu**: 1.00
-- **Oluşturulma Tarihi**: Eylül 2025
+- **Project Name**: DoDi
+- **Project Scope**: DoDi is a platform where words and terms belonging to a specific application domain are entered online and can be added through an approval workflow. The application aims to help build the Ubiquitous Language (UL) used in Domain-Driven Design (DDD) projects.
+- **Description**: A web application where domain terms can be entered online and added after approval.
+- **Developer**: Grok Code Fast (Preview 1)
+- **Document Version**: 1.00
+- **Created**: September 2025
 
-## Teknik Gereksinimler
+## Technical Requirements
 
-- Proje **.Net 9.0** platformunda ve **Razor Pages** tabanlı **Web App** olarak geliştirilmelidir.
-- Veritabanı olarak **PostgreSQL** kullanılmalıdır.
-- Geliştirme safhasında root klasörde yer alan **docker-compose.yml** dosyası ile PostgreSQL servisi ayağa kaldırılabilir.
-- Uygulama, **Entity Framework Core** kullanarak PostgreSQL ile etkileşimde bulunmalıdır.
-- Uygulama basit **Model View Controller** *(MVC)* mimarisine göre geliştirilmelidir.
-- Kullanıcı arayüzü, **Bootstrap 5** kullanılarak tasarlanmalıdır.
-- Proje, **src** klasörü altında oluşturulmalıdır.
+- Build on **.NET 9.0** as a **Web App** based on **Razor Pages**.
+- Use **PostgreSQL** as the database.
+- During development, you can start the PostgreSQL service using the **docker-compose.yml** file located at the repository root.
+- Interact with PostgreSQL using **Entity Framework Core**.
+- Implement using a simple **Model–View–Controller (MVC)** architecture.
+- Design the user interface with **Bootstrap 5**.
+- Create the project under the **src** folder.
 
-## Model Nesneleri
+## Model Objects
 
-- **Term**: Uygulama domain'ine ait kelime veya terim.
-  - Özellikler:
-    - **Id (int, primary key):** Benzersiz tanımlayıcı.
-    - **Name (string, benzersiz):** Terim adı. Örneğin "Customer","Order Number","Invoice Date", vb.
-    - **Definition (string):** Terim tanımı. Maksimum 1000 karakter.
-    - **IsApproved (bool):** Onay durumu. Varsayılan olarak `false`.
-    - **CreatedAt (DateTime):** Oluşturulma tarihi. Otomatik olarak atanır.
-    - **UpdatedAt (DateTime):** Güncellenme tarihi. Kayıd güncellendiğinde otomatik olarak güncellenir.
-    - **CreatedBy (string):** Oluşturan kullanıcı. `DomainEditor` rolünde olan kullanıcı adıdır.
-    - **ApprovedBy (string, nullable):** Onaylayan kullanıcı. `DomainApprover` rolünde olan kullanıcı adıdır.
-    - **ApprovedAt (DateTime, nullable):** Onaylanma tarihi. Onaylandığında otomatik olarak atanır.
-    - **Version (int):** Sürüm numarası. *(Tablo kaydı güncellendiğinde otomatik olarak artar)*
+- **Term**: A word or term belonging to the application domain.
+  - Properties:
+    - **Id (int, primary key):** Unique identifier.
+    - **Name (string, unique):** Term name. For example, "Customer", "Order Number", "Invoice Date", etc.
+    - **Definition (string):** Term definition. Maximum 1,000 characters.
+    - **MainDomain (string):** Which application or domain the term belongs to. For example, "E-Commerce", "Healthcare", "Finance", "Automotive", etc. Maximum 50 characters.
+    - **SubDomain (string, nullable):** Which sub-domain the term belongs to. For example, "Payments", "Shipping", etc. Maximum 50 characters.
+    - **IsApproved (bool):** Approval status. Defaults to `false`.
+    - **CreatedAt (DateTime):** Creation timestamp. Set automatically.
+    - **UpdatedAt (DateTime):** Update timestamp. Set automatically when the record is updated.
+    - **CreatedBy (string):** Creating user. The username of a user in the `DomainEditor` role.
+    - **ApprovedBy (string, nullable):** Approving user. The username of a user in the `DomainApprover` role.
+    - **ApprovedAt (DateTime, nullable):** Approval timestamp. Set automatically upon approval.
+    - **Version (int):** Version number. (Automatically increments when the record is updated.)
 
-Örnek Veriler:
+Example Data:
 
-| Id  | Name          | Definition                          | IsApproved | CreatedAt           | UpdatedAt           | CreatedBy | ApprovedBy | ApprovedAt | Version |
-| --- | ------------- | ---------------------------------------------------------------------- | ---------- | ------------------- | ------------------- | --------- | ---------- | ---------- | ------- |
-| 1   | Customer      | A person or organization that buys goods or services from a business. | true       | 2025-09-01 10:00:00 | 2025-09-01 10:00:00 | admin     | admin      | 2025-09-01 10:05:00 | 1       |
-| 2   | Order Number  | A unique identifier assigned to each order placed by a customer. | false      | 2025-09-01 11:00:00 | 2025-09-01 11:00:00 | user1    | null       | null       | 1       |
+| Id  | Name         | Definition                                                                 | MainDomain | SubDomain | IsApproved | CreatedAt           | UpdatedAt           | CreatedBy | ApprovedBy | ApprovedAt           | Version |
+| --- | ------------ | -------------------------------------------------------------------------- | --------- | -------- | ---------- | ------------------- | ------------------- | --------- | ---------- | -------------------- | ------- |
+| 1   | Customer     | A person or organization that buys goods or services from a business.      | E-Commerce| Campaign     | true       | 2025-09-01 10:00:00 | 2025-09-01 10:00:00 | admin     | admin      | 2025-09-01 10:05:00  | 1       |
+| 2   | Order Number | A unique identifier assigned to each order placed by a customer.           | E-Commerce| Invoice     | false      | 2025-09-01 11:00:00 | 2025-09-01 11:00:00 | user1     | null       | null                 | 1       |
+| 3   | Job Order    | A request for the performance of work or the provision of services.        | Automotive | Customer Services     | false      | 2025-09-01 12:00:00 | 2025-09-01 12:00:00 | user2     | null       | null                 | 1       |
+| 4   | Service Advisory | A formal recommendation provided to a customer regarding services.        | Automotive | Maintenance     | false      | 2025-09-01 13:00:00 | 2025-09-01 13:00:00 | user3     | null       | null                 | 1       |
+| 5   | Invoice Date | The date when an invoice is issued to a customer for payment.              | Finance | Invoice     | true       | 2025-09-01 14:00:00 | 2025-09-01 14:00:00 | admin     | admin      | 2025-09-01 14:05:00  | 1       |
 
-## Temel Fonksiyonlar
+## Core Features
 
-- **Terim Ekleme**: Kullanıcı, yeni bir terim ekleyebilir. Eklenen terim varsayılan olarak onaysızdır.
-- **Terim Onaylama**: Yetkili kullanıcı, onaylanmamış terimleri onaylayabilir.
-- **Terim Listeleme**: Kullanıcı, eklediği terimleri listeleyebilir, güncelleyebilir veya silebilir. *(Onaylanmış terimler silinemez veya güncellenemez)*
+- **Add Term**: A user can add a new term. Newly added terms are unapproved by default.
+- **Approve Term**: An authorized user can approve unapproved terms.
+- **List Terms**: A user can list, update, or delete the terms they added. (Approved terms cannot be deleted or updated.)
 
-## Geliştirme Aşamaları
+## Development Milestones
 
-Projenin `1.0.0.0` sürümünde olması istenenler:
+For version `1.0.0.0`:
 
-- Kullanıcı ve rol yönetimi sistemi olmadan, 
-  - `Terim Ekleme` fonksiyonelliğinin çalışır hale getirilmesi.
-  - `Terim Listeleme` sayfasında eklenen terimlerin görüntülenmesi, filtrelenmesi ve sıralanması.
-  - `Terim Listeleme` sayfasında silme ve güncelleme işlemlerinin yapılabilmesi.
+- Without a user and role management system:
+  - Implement the `Add Term` functionality.
+  - On the `List Terms` page, display, filter, and sort the added terms.
+  - On the `List Terms` page, enable delete and update operations.
+
+> This document is created with the assistance of AI (GPT 5, 1x) and reviewed by a human.
