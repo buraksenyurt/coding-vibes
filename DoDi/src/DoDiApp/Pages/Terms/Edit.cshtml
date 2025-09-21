@@ -1,0 +1,68 @@
+@page "{id:int?}"
+@model DoDiApp.Pages.Terms.EditModel
+@{
+    ViewData["Title"] = "Edit Term";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0">Edit Term</h2>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        <input type="hidden" asp-for="Term.Id" />
+
+                        <div class="mb-3">
+                            <label for="Term_Name" class="form-label">Term Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="Term_Name" asp-for="Term.Name" required maxlength="100">
+                            <span asp-validation-for="Term.Name" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="Term_Definition" class="form-label">Definition <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="Term_Definition" rows="4" asp-for="Term.Definition" required maxlength="1000"></textarea>
+                            <span asp-validation-for="Term.Definition" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="Term_MainDomain" class="form-label">Main Domain <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="Term_MainDomain" asp-for="Term.MainDomain" required maxlength="50">
+                                <span asp-validation-for="Term.MainDomain" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="Term_SubDomain" class="form-label">Sub Domain</label>
+                                <input type="text" class="form-control" id="Term_SubDomain" asp-for="Term.SubDomain" maxlength="50">
+                                <span asp-validation-for="Term.SubDomain" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="Term_IsApproved" asp-for="Term.IsApproved" disabled>
+                                <label class="form-check-label" for="Term_IsApproved">
+                                    Approved
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a asp-page="/Terms/Index" class="btn btn-secondary me-md-2">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Update Term</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Add any client-side validation or enhancements here
+    </script>
+}

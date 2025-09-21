@@ -1,0 +1,112 @@
+@page
+@model DoDiApp.Pages.Terms.IndexModel
+@{
+    ViewData["Title"] = "Terms";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Domain Terms</h2>
+        <a asp-page="/Terms/Create" class="btn btn-primary">Add New Term</a>
+    </div>
+
+    <!-- Search -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-8">
+                    <input type="text" class="form-control" name="SearchString" value="@Model.SearchString" placeholder="Search terms, definitions, or domains...">
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" name="SortOrder">
+                        <option value="">Sort by...</option>
+                        <option value="name" selected="@(Model.SortOrder == "name")">Name (A-Z)</option>
+                        <option value="name_desc" selected="@(Model.SortOrder == "name_desc")">Name (Z-A)</option>
+                        <option value="domain" selected="@(Model.SortOrder == "domain")">Domain (A-Z)</option>
+                        <option value="domain_desc" selected="@(Model.SortOrder == "domain_desc")">Domain (Z-A)</option>
+                        <option value="approved" selected="@(Model.SortOrder == "approved")">Status (Unapproved first)</option>
+                        <option value="approved_desc" selected="@(Model.SortOrder == "approved_desc")">Status (Approved first)</option>
+                        <option value="created" selected="@(Model.SortOrder == "created")">Created (Oldest first)</option>
+                        <option value="created_desc" selected="@(Model.SortOrder == "created_desc")">Created (Newest first)</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-outline-primary w-100">Search</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Terms List -->
+    <div class="card">
+        <div class="card-body">
+            @if (Model.Terms.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Definition</th>
+                                <th>Main Domain</th>
+                                <th>Sub Domain</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var term in Model.Terms)
+                            {
+                                <tr>
+                                    <td>@term.Name</td>
+                                    <td>
+                                        @if (term.Definition.Length > 100)
+                                        {
+                                            @term.Definition.Substring(0, 100)@("...")
+                                        }
+                                        else
+                                        {
+                                            @term.Definition
+                                        }
+                                    </td>
+                                    <td>@term.MainDomain</td>
+                                    <td>@term.SubDomain</td>
+                                    <td>
+                                        @if (term.IsApproved)
+                                        {
+                                            <span class="badge bg-success">Approved</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning">Pending</span>
+                                        }
+                                    </td>
+                                    <td>@term.CreatedAt.ToShortDateString()</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a asp-page="/Terms/Edit" asp-route-id="@term.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+                                            @if (!term.IsApproved)
+                                            {
+                                                <form method="post" asp-page-handler="Delete" asp-route-id="@term.Id" style="display: inline;">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                            onclick="return confirm('Are you sure you want to delete this term?')">Delete</button>
+                                                </form>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <p class="text-muted">No terms found. <a href="/Terms/Create">Add the first term</a>.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
