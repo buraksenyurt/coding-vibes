@@ -42,7 +42,7 @@
    </tr>
    <tr>
       <td valign="top"><strong>DoDi (Web App)</strong></td>
-      <td valign="top"><strong>Tarih:</strong> Eylül 2025<br><strong>Tanım:</strong> Bir uygulama domain'inen dail olacak kelimelerin ve terimlerin çevrimiçi girilebildiği, onaya mekanizması ile eklenebildiği bir web uygulaması<br><strong>Geliştirici:</strong> Grok Code Fast (Preview 1)<br><strong>Dil:</strong> C#<br><strong>Zorluk:</strong> Orta<br><strong> Ayrılan Süre:</strong>  </td>
-      <td valign="top"></td> 
+      <td valign="top"><strong>Tarih:</strong> Eylül 2025<br><strong>Tanım:</strong> Bir uygulama domain'inen dail olacak kelimelerin ve terimlerin çevrimiçi girilebildiği, onaya mekanizması ile eklenebildiği bir web uygulaması<br><strong>Geliştirici:</strong> Grok Code Fast (Preview 1)<br><strong>Dil:</strong> C#<br><strong>Zorluk:</strong> Orta<br><strong> Ayrılan Süre:</strong> ~4 Saat  </td>
+      <td valign="top">Veriion 1.0 için sonuçlar fena değildi. Sadece Routing tanımlamalarında sorunlar yaşadım.</td> 
    </tr>
 </table>
