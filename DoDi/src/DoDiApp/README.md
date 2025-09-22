@@ -23,3 +23,5 @@ Version 1.0 sürümüne ait örnek ekran görüntüleri aşağıdaki gibidir:
 ![runtime_01](runtime_01.png)
 
 ![runtime_02](runtime_02.png)
+
+![runtime_03](runtime_03.png)
