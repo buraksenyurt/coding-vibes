@@ -578,7 +578,6 @@ __marimo__/
 # Build artifacts - common build directories
 **/bin/
 **/build/
-**/dist/
 
 # Go workspace file
 go.work
