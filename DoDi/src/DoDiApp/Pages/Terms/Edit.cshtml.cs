@@ -36,8 +36,13 @@ namespace DoDiApp.Pages.Terms
 
         public async Task<IActionResult> OnPostAsync()
         {
+            Console.WriteLine("OnPostAsync called");
+            Console.WriteLine($"Term ID: {Term.Id}, Name: {Term.Name}");
+            ModelState.Remove("Term.CreatedBy"); // Remove CreatedBy from validation
+            
             if (!ModelState.IsValid)
             {
+                Console.WriteLine("ModelState is invalid");
                 return Page();
             }
 
