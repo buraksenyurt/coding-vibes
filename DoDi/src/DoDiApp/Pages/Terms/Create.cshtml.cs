@@ -24,10 +24,14 @@ namespace DoDiApp.Pages.Terms
 
         public async Task<IActionResult> OnPostAsync()
         {
-            ModelState.Remove("Term.CreatedAt"); // Remove CreatedAt from validation
+            Console.WriteLine("OnPostAsync called");
+            Console.WriteLine($"Term Name: {Term.Name}");
+
+            ModelState.Remove("Term.CreatedBy"); // Remove CreatedBy from validation
 
             if (!ModelState.IsValid)
             {
+                Console.WriteLine("ModelState is invalid");
                 return Page();
             }
 
