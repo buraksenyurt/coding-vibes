@@ -24,6 +24,8 @@ namespace DoDiApp.Pages.Terms
 
         public async Task<IActionResult> OnPostAsync()
         {
+            ModelState.Remove("Term.CreatedAt"); // Remove CreatedAt from validation
+
             if (!ModelState.IsValid)
             {
                 return Page();
