@@ -369,8 +369,6 @@ FodyWeavers.xsd
 
 # Docker
 .dockerignore
-Dockerfile*
-docker-compose*
 .docker/
 
 # Environment variables
