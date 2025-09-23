@@ -18,10 +18,16 @@ Geliştirmelerin bir kısmı Github Codespaces üzerinde yapıldı. Windows 11 t
 
 Version 1.0 sürümüne ait örnek ekran görüntüleri aşağıdaki gibidir:
 
-![runtime_00](runtime_00.png)
+![runtime_00.png](runtime_00.png)
 
-![runtime_01](runtime_01.png)
+![runtime_01.png](runtime_01.png)
 
-![runtime_02](runtime_02.png)
+![runtime_02.png](runtime_02.png)
 
-![runtime_03](runtime_03.png)
+![runtime_03.png](runtime_03.png)
+
+## Version 1.0.1
+
+Version 1.0.1 sürümüne ait örnek ekran görüntüleri aşağıdaki gibidir:
+
+![runtime_04.png](runtime_04.png)
