@@ -61,4 +61,12 @@ For version `1.0.0.0`:
   - On the `List Terms` page, display, filter, and sort the added terms.
   - On the `List Terms` page, enable delete and update operations.
 
+- For version `1.0.0.1`:
+  - Use the left menu on the Layout page.
+  - Use Bootstrap 5, not custom CSS.
+  - Rearrange the Privacy and Index pages to suit the project's purpose.
+  - Use Awesome Fonts icons where appropriate.
+  - Show total term and domain counts on the Index page.
+  - Show the last 5 added terms on the Index page.
+
 > This document is created with the assistance of AI (GPT 5, 1x) and reviewed by a human.
