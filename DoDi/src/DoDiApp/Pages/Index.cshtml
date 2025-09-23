@@ -1,10 +1,74 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Home";
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <h1 class="display-4">Welcome to DoDi</h1>
+    <p class="lead">A platform for building Ubiquitous Language in Domain-Driven Design projects.</p>
+    <p>DoDi helps you manage domain terms and definitions through an approval workflow, ensuring consistency and clarity in your DDD applications.</p>
+
+    <div class="row mt-4 justify-content-center">
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-list-ol me-2"></i>Total Terms</h5>
+                    <h2 class="text-primary">@Model.TotalTerms</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-globe me-2"></i>Total Domains</h5>
+                    <h2 class="text-success">@Model.TotalDomains</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.RecentTerms.Any())
+    {
+        <div class="mt-5">
+            <h3 class="text-center mb-4"><i class="fas fa-clock me-2"></i>Recently Added Terms</h3>
+            <div class="row justify-content-center">
+                @foreach (var term in Model.RecentTerms)
+                {
+                    <div class="col-md-10 mb-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h5 class="card-title">@term.Name</h5>
+                                        <p class="card-text">@term.Definition</p>
+                                        <small class="text-muted">
+                                            <i class="fas fa-tag me-1"></i>@term.MainDomain
+                                            @if (!string.IsNullOrEmpty(term.SubDomain))
+                                            {
+                                                <span> • @term.SubDomain</span>
+                                            }
+                                        </small>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge @(term.IsApproved ? "bg-success" : "bg-warning")">
+                                            <i class="fas fa-@(term.IsApproved ? "check" : "clock") me-1"></i>
+                                            @(term.IsApproved ? "Approved" : "Pending")
+                                        </span>
+                                        <br />
+                                        <small class="text-muted mt-1 d-block">@term.CreatedAt.ToShortDateString()</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <div class="mt-4">
+        <a asp-page="/Terms/Index" class="btn btn-primary btn-lg"><i class="fas fa-list me-2"></i>View Terms</a>
+        <a asp-page="/Terms/Create" class="btn btn-secondary btn-lg ms-2"><i class="fas fa-plus me-2"></i>Add New Term</a>
+    </div>
 </div>
