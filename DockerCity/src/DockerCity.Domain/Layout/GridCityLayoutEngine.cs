@@ -13,36 +13,29 @@ public sealed class GridCityLayoutEngine : ICityLayoutEngine
         var settings = options ?? LayoutOptions.Default;
 
         var nodes = new Dictionary<string, LayoutPoint>(StringComparer.Ordinal);
-        var bounds = new List<DistrictBounds>();
+        var districts = OrderDistricts(map).ToList();
+        var placedSomething = new HashSet<string>(StringComparer.Ordinal);
 
         var cursorY = settings.Margin;
-        var widest = 0d;
 
-        foreach (var district in OrderDistricts(map))
+        foreach (var district in districts)
         {
-            // A service in several districts is drawn in the first one only,
-            // otherwise it would need to be in two places at once.
-            var members = district.Members
+            // A service belongs to one block only; it cannot be in two places
+            // at once. Districts that share it get an overlay region instead.
+            var fresh = district.Members
                 .Where(member => !nodes.ContainsKey(member.Name))
                 .OrderBy(member => member.Name, StringComparer.Ordinal)
+                .Select(member => member.Name)
                 .ToList();
 
-            if (members.Count == 0)
+            if (fresh.Count == 0)
             {
                 continue;
             }
 
-            var block = PlaceBlock(members.Select(member => member.Name), settings, cursorY, nodes);
+            var block = PlaceBlock(fresh, settings, cursorY, nodes);
 
-            bounds.Add(new DistrictBounds(
-                district.Name,
-                district.IsImplicit,
-                settings.Margin,
-                cursorY,
-                block.Width,
-                block.Height));
-
-            widest = Math.Max(widest, settings.Margin + block.Width);
+            placedSomething.Add(district.Name);
             cursorY += block.Height + settings.DistrictSpacing;
         }
 
@@ -56,13 +49,21 @@ public sealed class GridCityLayoutEngine : ICityLayoutEngine
         if (orphans.Count > 0)
         {
             var block = PlaceBlock(orphans, settings, cursorY, nodes);
-            widest = Math.Max(widest, settings.Margin + block.Width);
             cursorY += block.Height + settings.DistrictSpacing;
         }
 
-        var height = cursorY - settings.DistrictSpacing + settings.Margin;
+        // Bounds are derived from where the members actually ended up, so a
+        // district encloses all of its members even when another district
+        // placed some of them.
+        var bounds = districts
+            .Select(district => BoundsFor(district, nodes, settings, placedSomething))
+            .OfType<DistrictBounds>()
+            .ToList();
 
-        return new CityLayout(nodes, bounds, widest + settings.Margin, Math.Max(height, settings.Margin * 2));
+        var right = bounds.Count > 0 ? bounds.Max(area => area.X + area.Width) : settings.Margin;
+        var bottom = Math.Max(cursorY - settings.DistrictSpacing, settings.Margin);
+
+        return new CityLayout(nodes, bounds, right + settings.Margin, bottom + settings.Margin);
     }
 
     // Explicit districts first, in name order; the implicit default network
@@ -72,25 +73,57 @@ public sealed class GridCityLayoutEngine : ICityLayoutEngine
            .OrderBy(district => district.IsImplicit)
            .ThenBy(district => district.Name, StringComparer.Ordinal);
 
+    private static DistrictBounds? BoundsFor(
+        District district,
+        IReadOnlyDictionary<string, LayoutPoint> nodes,
+        LayoutOptions settings,
+        HashSet<string> placedSomething)
+    {
+        var points = district.Members
+            .Where(member => nodes.ContainsKey(member.Name))
+            .Select(member => nodes[member.Name])
+            .ToList();
+
+        if (points.Count == 0)
+        {
+            return null;
+        }
+
+        var left = points.Min(point => point.X) - settings.DistrictPadding;
+        var top = points.Min(point => point.Y) - settings.DistrictPadding;
+        var right = points.Max(point => point.X) + settings.NodeWidth + settings.DistrictPadding;
+        var bottom = points.Max(point => point.Y) + settings.NodeHeight + settings.DistrictPadding;
+
+        return new DistrictBounds(
+            district.Name,
+            district.IsImplicit,
+            left,
+            top,
+            right - left,
+            bottom - top)
+        {
+            IsOverlay = !placedSomething.Contains(district.Name)
+        };
+    }
+
     private static (double Width, double Height) PlaceBlock(
-        IEnumerable<string> names,
+        IReadOnlyList<string> names,
         LayoutOptions settings,
         double blockTop,
         Dictionary<string, LayoutPoint> nodes)
     {
-        var list = names.ToList();
-        var columns = Math.Min(settings.MaxColumns, list.Count);
-        var rows = (int)Math.Ceiling(list.Count / (double)columns);
+        var columns = Math.Min(settings.MaxColumns, names.Count);
+        var rows = (int)Math.Ceiling(names.Count / (double)columns);
 
         var cellWidth = settings.NodeWidth + settings.NodeSpacing;
         var cellHeight = settings.NodeHeight + settings.NodeSpacing;
 
-        for (var index = 0; index < list.Count; index++)
+        for (var index = 0; index < names.Count; index++)
         {
             var column = index % columns;
             var row = index / columns;
 
-            nodes[list[index]] = new LayoutPoint(
+            nodes[names[index]] = new LayoutPoint(
                 settings.Margin + settings.DistrictPadding + (column * cellWidth),
                 blockTop + settings.DistrictPadding + (row * cellHeight));
         }

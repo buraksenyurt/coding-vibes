@@ -19,6 +19,7 @@ public sealed partial class MainWindow : Window
         _viewModel = new MainViewModel(_workspace);
 
         RootGrid.DataContext = _viewModel;
+        CityBoard.Districts = _viewModel.Districts;
         CityBoard.Nodes = _viewModel.Nodes;
 
         Closed += (_, _) => _workspace.Dispose();

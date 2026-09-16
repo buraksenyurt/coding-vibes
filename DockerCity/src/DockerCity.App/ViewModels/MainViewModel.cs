@@ -16,6 +16,8 @@ public sealed partial class MainViewModel : ObservableObject
 
     public ObservableCollection<ServiceNodeViewModel> Nodes { get; } = [];
 
+    public ObservableCollection<DistrictViewModel> Districts { get; } = [];
+
     [ObservableProperty]
     private string _status = "Open a docker-compose file to build the city.";
 
@@ -52,6 +54,14 @@ public sealed partial class MainViewModel : ObservableObject
             var city = await Task.Run(() => _workspace.Load(path));
 
             Nodes.Clear();
+            Districts.Clear();
+
+            // Districts are added before the figures so the canvas draws them
+            // underneath; see CityCanvas for why order is what decides depth.
+            for (var index = 0; index < city.Layout.Districts.Count; index++)
+            {
+                Districts.Add(new DistrictViewModel(city.Layout.Districts[index], index));
+            }
 
             foreach (var service in city.Map.Services)
             {
@@ -72,6 +82,7 @@ public sealed partial class MainViewModel : ObservableObject
         catch (Exception exception)
         {
             Nodes.Clear();
+            Districts.Clear();
             Status = $"Could not read {Path.GetFileName(path)}: {exception.Message}";
         }
         finally

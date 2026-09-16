@@ -12,6 +12,13 @@ public class CityLayoutTests
 {
     private static CityLayout Sample() => new GridCityLayoutEngine().Arrange(SampleMap());
 
+    private static CityMap BuildFrom(string yaml)
+    {
+        var file = new ComposeFileReader().ReadFromText(yaml);
+
+        return new CityMapBuilder(new ServiceFactory(new InMemoryServiceCategoryResolver())).Build(file);
+    }
+
     private static CityMap SampleMap()
     {
         ComposeFileDto file = new ComposeFileReader().ReadFromFile(
@@ -105,6 +112,89 @@ public class CityLayoutTests
 
         Assert.Equal(680, layout.Width);
         Assert.Equal(624, layout.Height);
+    }
+
+    [Fact]
+    public void A_district_whose_members_are_all_placed_elsewhere_becomes_an_overlay()
+    {
+        // "api" belongs to both networks. It can only be drawn once, so the
+        // second district has to wrap around wherever the first one put it.
+        const string yaml = """
+            services:
+              api:
+                image: nginx
+                networks:
+                  - back
+                  - front
+              db:
+                image: postgres
+                networks:
+                  - back
+            networks:
+              back:
+              front:
+            """;
+
+        var layout = new GridCityLayoutEngine().Arrange(BuildFrom(yaml));
+
+        var back = layout.Districts.Single(district => district.DistrictName == "back");
+        var front = layout.Districts.Single(district => district.DistrictName == "front");
+
+        Assert.False(back.IsOverlay);
+        Assert.True(front.IsOverlay);
+
+        // The overlay still encloses its member.
+        var api = layout.Nodes["api"];
+        Assert.InRange(api.X, front.X, front.X + front.Width - LayoutOptions.Default.NodeWidth);
+        Assert.InRange(api.Y, front.Y, front.Y + front.Height - LayoutOptions.Default.NodeHeight);
+
+        // ...and it is narrower than the district that did the placing.
+        Assert.True(front.Width < back.Width);
+    }
+
+    [Fact]
+    public void A_shared_member_is_only_positioned_once()
+    {
+        const string yaml = """
+            services:
+              api:
+                image: nginx
+                networks:
+                  - back
+                  - front
+              db:
+                image: postgres
+                networks:
+                  - back
+            networks:
+              back:
+              front:
+            """;
+
+        var layout = new GridCityLayoutEngine().Arrange(BuildFrom(yaml));
+
+        Assert.Equal(2, layout.Nodes.Count);
+        Assert.Equal(2, layout.Districts.Count);
+    }
+
+    [Fact]
+    public void Bounds_enclose_members_placed_by_another_district()
+    {
+        var layout = Sample();
+        var map = SampleMap();
+
+        // Every district, overlay or not, must contain all of its members.
+        foreach (var bounds in layout.Districts)
+        {
+            var district = map.Districts.Single(candidate => candidate.Name == bounds.DistrictName);
+
+            Assert.All(district.Members, member =>
+            {
+                var point = layout.Nodes[member.Name];
+                Assert.InRange(point.X, bounds.X, bounds.X + bounds.Width);
+                Assert.InRange(point.Y, bounds.Y, bounds.Y + bounds.Height);
+            });
+        }
     }
 
     [Fact]
