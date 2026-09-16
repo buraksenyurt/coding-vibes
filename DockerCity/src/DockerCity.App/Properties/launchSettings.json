@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "DockerCity.App (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "DockerCity.App (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
