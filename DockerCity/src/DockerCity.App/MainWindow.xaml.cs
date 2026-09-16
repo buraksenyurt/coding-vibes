@@ -1,31 +1,34 @@
+﻿using DockerCity.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 
-// and more about our project templates, see: http://aka.ms/winui-project-info.
+namespace DockerCity.App;
 
-namespace DockerCity.App
+public sealed partial class MainWindow : Window
 {
-    /// <summary>
-    /// An empty window that can be used on its own or navigated to within a Frame.
-    /// </summary>
-    public sealed partial class MainWindow : Window
+    public MainWindow()
     {
-        public MainWindow()
+        InitializeComponent();
+        Title = "DockerCity";
+
+        _ = ShowDatabaseStatusAsync();
+    }
+
+    // Phase 3 has no UI of its own yet. Reporting the store here is enough to
+    // prove the database is created and seeded on first run.
+    private async Task ShowDatabaseStatusAsync()
+    {
+        try
         {
-            InitializeComponent();
-            Title = "Docker City";
+            using var context = await DatabaseInitializer.OpenAsync();
+            var mappings = await context.ImageMappings.CountAsync();
+
+            DatabaseStatusText.Text =
+                $"{mappings} image mappings ready · {DockerCityPaths.DatabaseFile}";
+        }
+        catch (Exception exception)
+        {
+            DatabaseStatusText.Text = $"Database unavailable: {exception.Message}";
         }
     }
 }

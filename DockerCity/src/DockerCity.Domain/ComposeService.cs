@@ -9,7 +9,8 @@ public enum ServiceCategory
     Messaging,
     Storage,
     Identity,
-    Tooling
+    Tooling,
+    Gateway
 }
 
 public enum RestartPolicy

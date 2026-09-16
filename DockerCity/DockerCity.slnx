@@ -1,4 +1,4 @@
-<Solution>
+﻿<Solution>
   <Folder Name="/src/">
     <Project Path="src/DockerCity.App/DockerCity.App.csproj" Id="811350a7-5eee-45c7-a914-1693725b83a2">
       <Platform Project="x64" />
@@ -9,6 +9,7 @@
     <Project Path="src/DockerCity.Parsing/DockerCity.Parsing.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/DockerCity.Data.Tests/DockerCity.Data.Tests.csproj" />
     <Project Path="tests/DockerCity.Domain.Tests/DockerCity.Domain.Tests.csproj" />
     <Project Path="tests/DockerCity.Parsing.Tests/DockerCity.Parsing.Tests.csproj" />
   </Folder>

@@ -44,7 +44,8 @@ public sealed class ServiceFactory
             ServiceCategory.Messaging => new MessagingService(name, definition),
             ServiceCategory.Storage => new StorageService(name, definition),
             ServiceCategory.Identity => new IdentityService(name, definition),
-            ServiceCategory.Tooling => new ToolingService(name, definition),
+            ServiceCategory.Tooling => new ToolingService(name, definition),
+            ServiceCategory.Gateway => new GatewayService(name, definition),
             _ => new GenericService(name, definition)
         };
     }

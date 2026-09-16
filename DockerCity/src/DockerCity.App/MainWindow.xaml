@@ -10,13 +10,22 @@
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <StackPanel HorizontalAlignment="Center"
                     VerticalAlignment="Center"
-                    Spacing="8">
+                    Spacing="8"
+                    MaxWidth="640">
             <TextBlock Text="DockerCity"
                        Style="{ThemeResource TitleLargeTextBlockStyle}"
                        HorizontalAlignment="Center" />
             <TextBlock Text="The city is under construction."
                        Style="{ThemeResource BodyTextBlockStyle}"
                        Opacity="0.6"
+                       HorizontalAlignment="Center" />
+            <TextBlock x:Name="DatabaseStatusText"
+                       Text="Opening the local database..."
+                       Style="{ThemeResource CaptionTextBlockStyle}"
+                       Opacity="0.5"
+                       TextWrapping="Wrap"
+                       TextAlignment="Center"
+                       Margin="0,16,0,0"
                        HorizontalAlignment="Center" />
         </StackPanel>
     </Grid>
