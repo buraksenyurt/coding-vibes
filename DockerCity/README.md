@@ -19,11 +19,11 @@ Diğer çalışmalardan farkı: bu proje tek seferde bir modele yazdırılmadı.
 | 2 | Domain modeli, kalıtım hiyerarşisi, `CityMap` | Tamamlandı |
 | 3 | EF Core + SQLite, image → ikon eşlemeleri | Tamamlandı |
 | 4 | Canvas üzerinde ilk görselleştirme (MVVM) | Tamamlandı |
-| 5 | Mahalle sınırları | Sıradaki |
-| 6 | Etkileşim, sürükle-bırak, konum kaydı (MVP) | |
+| 5 | Mahalle sınırları | Tamamlandı |
+| 6 | Etkileşim, sürükle-bırak, konum kaydı (MVP) | Sıradaki |
 | 7–10 | Bağlantı okları, zoom/pan, kullanılabilirlik, canlı Docker | |
 
-Testler: 104 (Domain + Parsing + Data).
+Testler: 107 (Domain + Parsing + Data).
 
 ## Klasör yapısı
 
