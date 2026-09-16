@@ -1,10 +1,10 @@
 # DockerCity
 
-Bir `docker-compose.yml` dosyasindaki servisleri ve aralarindaki iliskileri **oyunlastirilmis bir sehir haritasi** olarak gosteren Windows masaustu uygulamasi.
+Bir `docker-compose.yml` dosyasındaki servisleri ve aralarındaki ilişkileri **oyunlaştırılmış bir şehir haritası** olarak gösteren Windows masaüstü uygulaması.
 
-Servisler sehrin sakinleri, network'ler mahalleler, `depends_on` iliskileri aralarindaki yollar. Bir figurun uzerine gelindiginde image adi, container adi, portlar ve volume bilgileri balon pencerede acilir.
+Servisler şehrin sakinleri, network'ler mahalleler, `depends_on` ilişkileri aralarındaki yollar. Bir figürün üzerine gelindiğinde image adı, container adı, portlar ve volume bilgileri balon pencerede açılır.
 
-Diger calismalardan farki: bu proje tek seferde bir modele yazdirilmadi. **Faz faz ilerleyen bir ogreti** olarak kurgulandi; her asamada once dokuman yazildi, sonra kod ona gore gelistirildi. Amac calisan araci uretmek kadar WinUI 3, YamlDotNet, OOP modelleme ve EF Core konularinda adim adim ilerleyen bir malzeme birakmak.
+Diğer çalışmalardan farkı: bu proje tek seferde bir modele yazdırılmadı. **Faz faz ilerleyen bir öğreti** olarak kurgulandı; her aşamada önce doküman yazıldı, sonra kod ona göre geliştirildi. Amaç çalışan aracı üretmek kadar WinUI 3, YamlDotNet, OOP modelleme ve EF Core konularında adım adım ilerleyen bir malzeme bırakmak.
 
 ## Teknoloji
 
@@ -14,36 +14,37 @@ Diger calismalardan farki: bu proje tek seferde bir modele yazdirilmadi. **Faz f
 
 | Faz | Konu | Durum |
 | --- | --- | --- |
-| 0 | Solution iskeleti, calisan WinUI 3 penceresi | Tamamlandi |
-| 1 | YamlDotNet ile compose okuyucu, polimorfik alan converter'lari | Tamamlandi |
-| 2 | Domain modeli, kalitim hiyerarsisi, `CityMap` | Tamamlandi |
-| 3 | EF Core + SQLite, image -> ikon eslemeleri | Tamamlandi |
-| 4 | Canvas uzerinde ilk gorsellestirme (MVVM) | Siradaki |
-| 5 | Mahalle sinirlari | |
-| 6 | Etkilesim, surukle-birak, konum kaydi (MVP) | |
-| 7-10 | Baglanti oklari, zoom/pan, kullanilabilirlik, canli Docker | |
+| 0 | Solution iskeleti, çalışan WinUI 3 penceresi | Tamamlandı |
+| 1 | YamlDotNet ile compose okuyucu, polimorfik alan converter'ları | Tamamlandı |
+| 2 | Domain modeli, kalıtım hiyerarşisi, `CityMap` | Tamamlandı |
+| 3 | EF Core + SQLite, image → ikon eşlemeleri | Tamamlandı |
+| 4 | Canvas üzerinde ilk görselleştirme (MVVM) | Tamamlandı |
+| 5 | Mahalle sınırları | Sıradaki |
+| 6 | Etkileşim, sürükle-bırak, konum kaydı (MVP) | |
+| 7–10 | Bağlantı okları, zoom/pan, kullanılabilirlik, canlı Docker | |
 
-Testler: 96 (Domain + Parsing + Data).
+Testler: 104 (Domain + Parsing + Data).
 
-## Klasor yapisi
+## Klasör yapısı
 
 ```
 DockerCity/
 ├── DockerCity.slnx
 ├── Directory.Build.props
 ├── src/
-│   ├── DockerCity.Domain/     entity'ler, deger nesneleri, CityMap   (net10.0)
-│   ├── DockerCity.Parsing/    YamlDotNet DTO'lari + domain'e mapper  (net10.0)
-│   ├── DockerCity.Data/       EF Core + SQLite                       (net10.0)
-│   └── DockerCity.App/        WinUI 3 arayuzu          (net10.0-windows...)
+│   ├── DockerCity.Domain/     entity'ler, değer nesneleri, CityMap, yerleşim   (net10.0)
+│   ├── DockerCity.Parsing/    YamlDotNet DTO'ları + domain'e mapper            (net10.0)
+│   ├── DockerCity.Data/       EF Core + SQLite, image kataloğu                 (net10.0)
+│   └── DockerCity.App/        WinUI 3 arayüzü                     (net10.0-windows…)
 └── tests/
     ├── DockerCity.Domain.Tests/
-    └── DockerCity.Parsing.Tests/
+    ├── DockerCity.Parsing.Tests/
+    └── DockerCity.Data.Tests/
 ```
 
-Cekirdek uc katman platformdan bagimsiz `net10.0` hedefler; yalnizca `DockerCity.App` Windows'a baglidir. Boylece UI tiplerinin is mantigina sizmasi derleme zamaninda engellenir.
+Çekirdek üç katman platformdan bağımsız `net10.0` hedefler; yalnızca `DockerCity.App` Windows'a bağlıdır. Böylece UI tiplerinin iş mantığına sızması derleme zamanında engellenir.
 
-## Calistirma
+## Çalıştırma
 
 ```powershell
 dotnet build
@@ -51,11 +52,13 @@ dotnet test
 dotnet build src\DockerCity.App\DockerCity.App.csproj -p:Platform=x64
 ```
 
-Visual Studio'da `DockerCity.App` baslangic projesi yapilip **DockerCity.App (Unpackaged)** profiliyle calistirilir.
+Visual Studio'da `DockerCity.App` başlangıç projesi yapılıp **DockerCity.App (Unpackaged)** profiliyle çalıştırılır. Uygulama açıldığında **Open compose file…** ile bir compose dosyası seçilir.
 
-## Dokumanlar
+Veritabanı ilk çalıştırmada `%LOCALAPPDATA%\DockerCity\dockercity.db` altında oluşturulur.
 
-Plan ve faz faz ogreti dokumanlari ayri bir repoda tutuluyor:
+## Dokümanlar
+
+Plan ve faz faz öğreti dokümanları ayrı bir repoda tutuluyor:
 
 `ideas-pool/dockercity/docs/` — `PLAN.md` ve `tutorial/00..NN-*.md`
 
