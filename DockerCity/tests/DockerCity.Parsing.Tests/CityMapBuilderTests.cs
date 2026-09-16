@@ -123,7 +123,7 @@ public class CityMapBuilderTests
     [Fact]
     public void Depends_on_produces_a_directed_link()
     {
-        var link = Assert.Single(Sample().Links.Where(l => l.Kind == CityLinkKind.DependsOn));
+        var link = Assert.Single(Sample().Links, l => l.Kind == CityLinkKind.DependsOn);
 
         Assert.Equal("pgadmin", link.From);
         Assert.Equal("postgres", link.To);
@@ -132,7 +132,7 @@ public class CityMapBuilderTests
     [Fact]
     public void No_shared_volume_link_when_every_volume_has_one_user()
     {
-        Assert.Empty(Sample().Links.Where(l => l.Kind == CityLinkKind.SharedVolume));
+        Assert.DoesNotContain(Sample().Links, l => l.Kind == CityLinkKind.SharedVolume);
     }
 
     [Fact]
@@ -153,7 +153,7 @@ public class CityMapBuilderTests
             """;
 
         var link = Assert.Single(
-            BuildFromText(yaml).Links.Where(l => l.Kind == CityLinkKind.SharedVolume));
+            BuildFromText(yaml).Links, l => l.Kind == CityLinkKind.SharedVolume);
 
         Assert.Equal("reader", link.From);
         Assert.Equal("writer", link.To);
