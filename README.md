@@ -10,7 +10,7 @@
 | **RAM**     | 32Gb                                                                           |
 | **VGA**     | Adapter Type Intel(R) Iris(R) Xe Graphics Family, Intel Corporation compatible |
 | **OS**      | Windows 11                                                                     |
-| **IDE**     | Visual Studio Code                                                             |
+| **IDE**     | Visual Studio Code, Visual Studio 2026                                         |
 
 ## Çalışmalar
 
@@ -22,16 +22,22 @@
       <th>Scor(10 Üzerinden)</th>
    </tr>
    <tr>
-      <td valign="top"><strong>Lunar Landing(Oyun)</strong></td>
-      <td valign="top"><strong>Tarih:</strong> Temmuz 2025<br><strong>Tanım:</strong> Uzay temalı 2d platform oyunu<br><strong>Geliştirici:</strong> Sonnet 4.0<br><strong>Dil:</strong> Python<br><strong>Zorluk:</strong> Orta<br><strong>Ayrılan Süre:</strong> ~2 Saat</td>
-      <td valign="top">Çalışır bir versiyon yazabildi. Python dilini üst düzey soyutlamaları işini oldukça kolaylaştırdı.</td>
-      <td>8
+      <td valign="top"><strong>DockerCity (WinUI App)</strong></td>
+      <td valign="top"><strong>Tarih:</strong> Eylül 2026<br><strong>Tanım:</strong> Bir docker compose dosyası içerisinde servisleri gösteren Windows tabanlı bir dashboard uygulaması.<br><strong>Geliştirici:</strong> Claude Opus (Coworks Mode)<br><strong>Dil:</strong> C#<br><strong>Zorluk:</strong> Yüksek<br><strong> Ayrılan Süre:</strong> ~3 Saat  </td>
+      <td valign="top">Bu seferki çalışmada önce bir plan dosyası hazırlandı ve tüm çalışma fazlandırılararak uygulamaya geçirildi. Uygulama, docker-compose dosyalarını doğru şekilde okuyup servisleri UI üzerinde başarılı bir şekilde gösterdi. Sürük bırak, bilgi baloncuğu, layout rest gibi özellikler tamamlandı. MVP kısmına kadar işlemler 6 ayrı fazda tamamlandı. Tek eksik yanı MVP aşamasına gelindiğinde session limitinin dolması oldu. Hevesim kursağımda kaldı :D </td>
+      <td>9</td>
    </tr>
    <tr>
-      <td valign="top"><strong>Mission Control(Oyun)</strong></td>
-      <td valign="top"><strong>Tarih:</strong> Ağustos 2025<br><strong>Tanım:</strong> Space Invaders benzeri 2d platform oyunu<br><strong>Geliştirici:</strong> GPT 5.0(Preview)<br><strong>Dil:</strong> Rust<br><strong>Zorluk:</strong> Zor<br><strong> Ayrılan Süre:</strong> ~8 Saat</td>
-      <td valign="top">GPT 5.0 Preview, ilk derlemede hatalar oluştu. Hata mesajlarını değerlendirip birkaç denemede düzeltmeye çalıştı ancak başarılı olamadı. Düzeltmeler için Sonnet 4.0'a geçildi. Öncelikle Bevy 0.16 API'sini öğrenmeye ve değişiklikleri anlamaya çalıştı. <em>(Bevy geriye uyumluluk yönünden oldukça zorlayıcı bir paket)</em> Temel çalışma mantığını anladı ve projeyi derlenebilir hale getirdi.</td>
+      <td valign="top"><strong>DoDi (Web App)</strong></td>
+      <td valign="top"><strong>Tarih:</strong> Eylül 2025<br><strong>Tanım:</strong> Bir uygulama domain'inen dail olacak kelimelerin ve terimlerin çevrimiçi girilebildiği, onaya mekanizması ile eklenebildiği bir web uygulaması<br><strong>Geliştirici:</strong> Grok Code Fast (Preview 1)<br><strong>Dil:</strong> C#<br><strong>Zorluk:</strong> Orta<br><strong> Ayrılan Süre:</strong> ~4 Saat  </td>
+      <td valign="top">Veriion 1.0 için sonuçlar fena değildi. Sadece Routing tanımlamalarında sorunlar yaşadım. Sonraki testler sırasında Submit butonunun çalışmadığını fark ettim ve ayrıca EF üzerinden veritabanı kaydetmede sorunlar oluştuğunu gördüm. Buralarda manuel düzeltme yoluna gittim. </td>
       <td>6</td>
+   </tr>
+      <tr>
+      <td valign="top"><strong>Docky(Dotnet Tool)</strong></td>
+      <td valign="top"><strong>Tarih:</strong> Eylül 2025<br><strong>Tanım:</strong> Kolayca docker-compose dosyası oluşturulmasını sağlayan dotnet tool<br><strong>Geliştirici:</strong> Sonnet 4.0<br><strong>Dil:</strong> C#<br><strong>Zorluk:</strong> Orta<br><strong> Ayrılan Süre:</strong> ~6 Saat </td>
+      <td valign="top">Programı ilk seferde yazmayı başardı. Sonrasında farklı modeller önermesi istendi ve buna göre de uygulamayı başarılı bir şekilde geliştirdi. Tool'u sisteme kolayca yükleyebilmek için oluşturduğu shell script'ler başarılı şekilde çalıştı (install.bat ve install.sh). Oluşturulan docker-compose dosyalarında boşluk ve girinti problemleri oluştu ama sonrasında bunları düzeltmek için kodu refactor edebildi. Version 2.0 kullanımında ise dosya temelli sistemde dosya path'lerini tam ayarlayamadığından verileri genelde gelmedi. SQlite veritabanı sistemine döndürünce servis tarafı düzeldi. </td>
+      <td>7</td>
    </tr>
    <tr>
       <td valign="top"><strong>Friendsly(Web App)</strong></td>
@@ -40,15 +46,16 @@
       <td>6</td>
    </tr>
    <tr>
-      <td valign="top"><strong>Docky(Dotnet Tool)</strong></td>
-      <td valign="top"><strong>Tarih:</strong> Eylül 2025<br><strong>Tanım:</strong> Kolayca docker-compose dosyası oluşturulmasını sağlayan dotnet tool<br><strong>Geliştirici:</strong> Sonnet 4.0<br><strong>Dil:</strong> C#<br><strong>Zorluk:</strong> Orta<br><strong> Ayrılan Süre:</strong> ~6 Saat </td>
-      <td valign="top">Programı ilk seferde yazmayı başardı. Sonrasında farklı modeller önermesi istendi ve buna göre de uygulamayı başarılı bir şekilde geliştirdi. Tool'u sisteme kolayca yükleyebilmek için oluşturduğu shell script'ler başarılı şekilde çalıştı (install.bat ve install.sh). Oluşturulan docker-compose dosyalarında boşluk ve girinti problemleri oluştu ama sonrasında bunları düzeltmek için kodu refactor edebildi. Version 2.0 kullanımında ise dosya temelli sistemde dosya path'lerini tam ayarlayamadığından verileri genelde gelmedi. SQlite veritabanı sistemine döndürünce servis tarafı düzeldi. </td> 
-      <td>7</td>
-   </tr>
-   <tr>
-      <td valign="top"><strong>DoDi (Web App)</strong></td>
-      <td valign="top"><strong>Tarih:</strong> Eylül 2025<br><strong>Tanım:</strong> Bir uygulama domain'inen dail olacak kelimelerin ve terimlerin çevrimiçi girilebildiği, onaya mekanizması ile eklenebildiği bir web uygulaması<br><strong>Geliştirici:</strong> Grok Code Fast (Preview 1)<br><strong>Dil:</strong> C#<br><strong>Zorluk:</strong> Orta<br><strong> Ayrılan Süre:</strong> ~4 Saat  </td>
-      <td valign="top">Veriion 1.0 için sonuçlar fena değildi. Sadece Routing tanımlamalarında sorunlar yaşadım. Sonraki testler sırasında Submit butonunun çalışmadığını fark ettim ve ayrıca EF üzerinden veritabanı kaydetmede sorunlar oluştuğunu gördüm. Buralarda manuel düzeltme yoluna gittim. </td> 
+      <td valign="top"><strong>Mission Control(Oyun)</strong></td>
+      <td valign="top"><strong>Tarih:</strong> Ağustos 2025<br><strong>Tanım:</strong> Space Invaders benzeri 2d platform oyunu<br><strong>Geliştirici:</strong> GPT 5.0(Preview)<br><strong>Dil:</strong> Rust<br><strong>Zorluk:</strong> Zor<br><strong> Ayrılan Süre:</strong> ~8 Saat</td>
+      <td valign="top">GPT 5.0 Preview, ilk derlemede hatalar oluştu. Hata mesajlarını değerlendirip birkaç denemede düzeltmeye çalıştı ancak başarılı olamadı. Düzeltmeler için Sonnet 4.0'a geçildi. Öncelikle Bevy 0.16 API'sini öğrenmeye ve değişiklikleri anlamaya çalıştı. <em>(Bevy geriye uyumluluk yönünden oldukça zorlayıcı bir paket)</em> Temel çalışma mantığını anladı ve projeyi derlenebilir hale getirdi.</td>
       <td>6</td>
    </tr>
+   <tr>
+      <td valign="top"><strong>Lunar Landing(Oyun)</strong></td>
+      <td valign="top"><strong>Tarih:</strong> Temmuz 2025<br><strong>Tanım:</strong> Uzay temalı 2d platform oyunu<br><strong>Geliştirici:</strong> Sonnet 4.0<br><strong>Dil:</strong> Python<br><strong>Zorluk:</strong> Orta<br><strong>Ayrılan Süre:</strong> ~2 Saat</td>
+      <td valign="top">Çalışır bir versiyon yazabildi. Python dilini üst düzey soyutlamaları işini oldukça kolaylaştırdı.</td>
+      <td>8
+   </tr>
+
 </table>
