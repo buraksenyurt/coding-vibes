@@ -20,8 +20,8 @@ Diğer çalışmalardan farkı: bu proje tek seferde bir modele yazdırılmadı.
 | 3 | EF Core + SQLite, image → ikon eşlemeleri | Tamamlandı |
 | 4 | Canvas üzerinde ilk görselleştirme (MVVM) | Tamamlandı |
 | 5 | Mahalle sınırları | Tamamlandı |
-| 6 | Etkileşim, sürükle-bırak, konum kaydı (MVP) | Sıradaki |
-| 7–10 | Bağlantı okları, zoom/pan, kullanılabilirlik, canlı Docker | |
+| 6 | Etkileşim, sürükle-bırak, konum kaydı (MVP) | Tamamlandı |
+| 7–10 | Bağlantı okları, zoom/pan, kullanılabilirlik, canlı Docker | Sıradaki |
 
 Testler: 107 (Domain + Parsing + Data).
 
@@ -63,3 +63,9 @@ Plan ve faz faz öğreti dokümanları ayrı bir repoda tutuluyor:
 `ideas-pool/dockercity/docs/` — `PLAN.md` ve `tutorial/00..NN-*.md`
 
 Bkz. [`.context/README.md`](./.context/README.md)
+
+## Çalışma Zamanı
+
+İlk MVP çıktıktan sonra çalışma zamanından bir görüntü.
+
+![Runtime Screenshot of DockerCity App](Runtime_00.png)
