@@ -17,13 +17,13 @@ Diger calismalardan farki: bu proje tek seferde bir modele yazdirilmadi. **Faz f
 | 0 | Solution iskeleti, calisan WinUI 3 penceresi | Tamamlandi |
 | 1 | YamlDotNet ile compose okuyucu, polimorfik alan converter'lari | Tamamlandi |
 | 2 | Domain modeli, kalitim hiyerarsisi, `CityMap` | Tamamlandi |
-| 3 | EF Core + SQLite, image -> ikon eslemeleri | Siradaki |
-| 4 | Canvas uzerinde ilk gorsellestirme (MVVM) | |
+| 3 | EF Core + SQLite, image -> ikon eslemeleri | Tamamlandi |
+| 4 | Canvas uzerinde ilk gorsellestirme (MVVM) | Siradaki |
 | 5 | Mahalle sinirlari | |
 | 6 | Etkilesim, surukle-birak, konum kaydi (MVP) | |
 | 7-10 | Baglanti oklari, zoom/pan, kullanilabilirlik, canli Docker | |
 
-Testler: 54 (Domain + Parsing).
+Testler: 96 (Domain + Parsing + Data).
 
 ## Klasor yapisi
 
