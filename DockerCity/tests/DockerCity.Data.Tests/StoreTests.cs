@@ -84,4 +84,35 @@ public class StoreTests
         await settings.SetAsync("theme", "light");
         Assert.Equal("light", await settings.GetAsync("theme"));
     }
+
+    [Fact]
+    public async Task Clearing_a_layout_removes_only_that_project()
+    {
+        using var database = new TemporaryDatabase();
+        var projects = new ComposeProjectStore(database.Context);
+        var layouts = new LayoutStore(database.Context);
+
+        var kept = await projects.OpenAsync(@"C:\work\one\docker-compose.yml");
+        var cleared = await projects.OpenAsync(@"C:\work\two\docker-compose.yml");
+
+        await layouts.SaveAsync(kept.Id, "redis", new ServicePosition(1, 1));
+        await layouts.SaveAsync(cleared.Id, "redis", new ServicePosition(2, 2));
+        await layouts.SaveAsync(cleared.Id, "postgres", new ServicePosition(3, 3));
+
+        var removed = await layouts.ClearAsync(cleared.Id);
+
+        Assert.Equal(2, removed);
+        Assert.Empty(await layouts.LoadAsync(cleared.Id));
+        Assert.Single(await layouts.LoadAsync(kept.Id));
+    }
+
+    [Fact]
+    public async Task Clearing_an_empty_layout_removes_nothing()
+    {
+        using var database = new TemporaryDatabase();
+        var project = await new ComposeProjectStore(database.Context)
+            .OpenAsync(@"C:\work\shop\docker-compose.yml");
+
+        Assert.Equal(0, await new LayoutStore(database.Context).ClearAsync(project.Id));
+    }
 }

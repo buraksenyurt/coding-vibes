@@ -16,14 +16,22 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
 
         <StackPanel Grid.Row="0"
+                    Grid.ColumnSpan="2"
                     Orientation="Horizontal"
                     Spacing="12"
                     Padding="16,12">
             <Button x:Name="OpenButton"
                     Content="Open compose file..."
                     Click="OnOpenClick" />
+            <Button x:Name="ResetButton"
+                    Content="Reset layout"
+                    Click="OnResetClick" />
             <ProgressRing IsActive="{Binding IsBusy}"
                           Width="20"
                           Height="20"
@@ -31,6 +39,7 @@
         </StackPanel>
 
         <ScrollViewer Grid.Row="1"
+                      Grid.Column="0"
                       HorizontalScrollBarVisibility="Auto"
                       HorizontalScrollMode="Auto"
                       VerticalScrollBarVisibility="Auto"
@@ -41,7 +50,72 @@
                                  Height="{Binding CanvasHeight}" />
         </ScrollViewer>
 
+        <Border Grid.Row="1"
+                Grid.Column="1"
+                Width="320"
+                Padding="20,16"
+                BorderThickness="1,0,0,0"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="14">
+
+                    <TextBlock Text="{Binding SelectionTitle}"
+                               Style="{ThemeResource SubtitleTextBlockStyle}"
+                               TextTrimming="CharacterEllipsis" />
+
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Image" Opacity="0.5" FontSize="11" />
+                        <TextBlock Text="{Binding Selected.ImageLabel}" TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Container" Opacity="0.5" FontSize="11" />
+                        <TextBlock Text="{Binding Selected.ContainerText}" TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Category" Opacity="0.5" FontSize="11" />
+                        <TextBlock Text="{Binding Selected.CategoryText}" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Networks" Opacity="0.5" FontSize="11" />
+                        <TextBlock Text="{Binding Selected.NetworksText}" TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Ports" Opacity="0.5" FontSize="11" />
+                        <TextBlock Text="{Binding Selected.PortsText}" TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Volumes" Opacity="0.5" FontSize="11" />
+                        <TextBlock Text="{Binding Selected.VolumesText}" TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Depends on" Opacity="0.5" FontSize="11" />
+                        <TextBlock Text="{Binding Selected.DependsOnText}" TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Command" Opacity="0.5" FontSize="11" />
+                        <TextBlock Text="{Binding Selected.CommandText}" TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Environment" Opacity="0.5" FontSize="11" />
+                        <TextBlock Text="{Binding Selected.EnvironmentText}"
+                                   FontFamily="Consolas"
+                                   FontSize="11"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
         <Border Grid.Row="2"
+                Grid.ColumnSpan="2"
                 Padding="16,8"
                 BorderThickness="0,1,0,0"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">

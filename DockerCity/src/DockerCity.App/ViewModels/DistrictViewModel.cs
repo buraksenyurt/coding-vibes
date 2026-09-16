@@ -74,4 +74,15 @@ public sealed partial class DistrictViewModel : ObservableObject
     public Brush Stroke { get; }
 
     public DoubleCollection DashArray { get; }
+
+    // Districts follow their members, so a drag moves the border too.
+    public void Apply(DistrictBounds bounds)
+    {
+        ArgumentNullException.ThrowIfNull(bounds);
+
+        X = bounds.X;
+        Y = bounds.Y;
+        Width = bounds.Width;
+        Height = bounds.Height;
+    }
 }

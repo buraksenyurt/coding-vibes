@@ -22,6 +22,13 @@ public sealed partial class MainWindow : Window
         CityBoard.Districts = _viewModel.Districts;
         CityBoard.Nodes = _viewModel.Nodes;
 
+        CityBoard.NodeSelected += (_, node) => _viewModel.Select(node);
+        CityBoard.NodeMoving += (_, _) => _viewModel.NodeMoved();
+        CityBoard.NodeDropped += async (_, node) => await _viewModel.NodeDroppedAsync(node);
+
+        // Clicking empty canvas clears the selection.
+        CityBoard.PointerPressed += (_, _) => _viewModel.Select(null);
+
         Closed += (_, _) => _workspace.Dispose();
 
         _ = _viewModel.InitialiseAsync();
@@ -49,4 +56,7 @@ public sealed partial class MainWindow : Window
             await _viewModel.LoadAsync(file.Path);
         }
     }
+
+    private async void OnResetClick(object sender, RoutedEventArgs args) =>
+        await _viewModel.ResetLayoutAsync();
 }

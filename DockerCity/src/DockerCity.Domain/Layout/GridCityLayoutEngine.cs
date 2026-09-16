@@ -2,8 +2,8 @@
 
 // Stacks districts top to bottom and lays their members out in a grid.
 // Deliberately boring: the first arrangement only has to be readable and
-// repeatable, because from phase 6 on the user drags figures where they want
-// and those positions are what gets stored.
+// repeatable, because from here on the user drags figures where they want and
+// those positions are what gets stored.
 public sealed class GridCityLayoutEngine : ICityLayoutEngine
 {
     public CityLayout Arrange(CityMap map, LayoutOptions? options = null)
@@ -11,14 +11,10 @@ public sealed class GridCityLayoutEngine : ICityLayoutEngine
         ArgumentNullException.ThrowIfNull(map);
 
         var settings = options ?? LayoutOptions.Default;
-
         var nodes = new Dictionary<string, LayoutPoint>(StringComparer.Ordinal);
-        var districts = OrderDistricts(map).ToList();
-        var placedSomething = new HashSet<string>(StringComparer.Ordinal);
-
         var cursorY = settings.Margin;
 
-        foreach (var district in districts)
+        foreach (var district in OrderDistricts(map))
         {
             // A service belongs to one block only; it cannot be in two places
             // at once. Districts that share it get an overlay region instead.
@@ -33,10 +29,7 @@ public sealed class GridCityLayoutEngine : ICityLayoutEngine
                 continue;
             }
 
-            var block = PlaceBlock(fresh, settings, cursorY, nodes);
-
-            placedSomething.Add(district.Name);
-            cursorY += block.Height + settings.DistrictSpacing;
+            cursorY += PlaceBlock(fresh, settings, cursorY, nodes) + settings.DistrictSpacing;
         }
 
         // Defensive: anything the districts did not cover still gets a spot.
@@ -48,22 +41,47 @@ public sealed class GridCityLayoutEngine : ICityLayoutEngine
 
         if (orphans.Count > 0)
         {
-            var block = PlaceBlock(orphans, settings, cursorY, nodes);
-            cursorY += block.Height + settings.DistrictSpacing;
+            PlaceBlock(orphans, settings, cursorY, nodes);
         }
 
-        // Bounds are derived from where the members actually ended up, so a
-        // district encloses all of its members even when another district
-        // placed some of them.
-        var bounds = districts
-            .Select(district => BoundsFor(district, nodes, settings, placedSomething))
+        return Rebound(map, nodes, settings);
+    }
+
+    public CityLayout Rebound(
+        CityMap map,
+        IReadOnlyDictionary<string, LayoutPoint> nodes,
+        LayoutOptions? options = null)
+    {
+        ArgumentNullException.ThrowIfNull(map);
+        ArgumentNullException.ThrowIfNull(nodes);
+
+        var settings = options ?? LayoutOptions.Default;
+        var claiming = ClaimingDistricts(map);
+
+        var bounds = OrderDistricts(map)
+            .Select(district => BoundsFor(district, nodes, settings, claiming))
             .OfType<DistrictBounds>()
             .ToList();
 
-        var right = bounds.Count > 0 ? bounds.Max(area => area.X + area.Width) : settings.Margin;
-        var bottom = Math.Max(cursorY - settings.DistrictSpacing, settings.Margin);
+        var right = nodes.Count > 0
+            ? nodes.Values.Max(point => point.X) + settings.NodeWidth
+            : settings.Margin;
 
-        return new CityLayout(nodes, bounds, right + settings.Margin, bottom + settings.Margin);
+        var bottom = nodes.Count > 0
+            ? nodes.Values.Max(point => point.Y) + settings.NodeHeight
+            : settings.Margin;
+
+        if (bounds.Count > 0)
+        {
+            right = Math.Max(right, bounds.Max(area => area.X + area.Width));
+            bottom = Math.Max(bottom, bounds.Max(area => area.Y + area.Height));
+        }
+
+        return new CityLayout(
+            nodes.ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal),
+            bounds,
+            right + settings.Margin,
+            bottom + settings.Margin);
     }
 
     // Explicit districts first, in name order; the implicit default network
@@ -73,11 +91,32 @@ public sealed class GridCityLayoutEngine : ICityLayoutEngine
            .OrderBy(district => district.IsImplicit)
            .ThenBy(district => district.Name, StringComparer.Ordinal);
 
+    // Which districts introduce at least one service no earlier district had.
+    // Derived from the map alone, so it means the same thing whether figures
+    // are being placed for the first time or restored from storage.
+    private static HashSet<string> ClaimingDistricts(CityMap map)
+    {
+        var claiming = new HashSet<string>(StringComparer.Ordinal);
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var district in OrderDistricts(map))
+        {
+            var claimed = district.Members.Count(member => seen.Add(member.Name));
+
+            if (claimed > 0)
+            {
+                claiming.Add(district.Name);
+            }
+        }
+
+        return claiming;
+    }
+
     private static DistrictBounds? BoundsFor(
         District district,
         IReadOnlyDictionary<string, LayoutPoint> nodes,
         LayoutOptions settings,
-        HashSet<string> placedSomething)
+        HashSet<string> claiming)
     {
         var points = district.Members
             .Where(member => nodes.ContainsKey(member.Name))
@@ -94,19 +133,13 @@ public sealed class GridCityLayoutEngine : ICityLayoutEngine
         var right = points.Max(point => point.X) + settings.NodeWidth + settings.DistrictPadding;
         var bottom = points.Max(point => point.Y) + settings.NodeHeight + settings.DistrictPadding;
 
-        return new DistrictBounds(
-            district.Name,
-            district.IsImplicit,
-            left,
-            top,
-            right - left,
-            bottom - top)
+        return new DistrictBounds(district.Name, district.IsImplicit, left, top, right - left, bottom - top)
         {
-            IsOverlay = !placedSomething.Contains(district.Name)
+            IsOverlay = !claiming.Contains(district.Name)
         };
     }
 
-    private static (double Width, double Height) PlaceBlock(
+    private static double PlaceBlock(
         IReadOnlyList<string> names,
         LayoutOptions settings,
         double blockTop,
@@ -120,17 +153,11 @@ public sealed class GridCityLayoutEngine : ICityLayoutEngine
 
         for (var index = 0; index < names.Count; index++)
         {
-            var column = index % columns;
-            var row = index / columns;
-
             nodes[names[index]] = new LayoutPoint(
-                settings.Margin + settings.DistrictPadding + (column * cellWidth),
-                blockTop + settings.DistrictPadding + (row * cellHeight));
+                settings.Margin + settings.DistrictPadding + (index % columns * cellWidth),
+                blockTop + settings.DistrictPadding + (index / columns * cellHeight));
         }
 
-        var width = (columns * cellWidth) - settings.NodeSpacing + (settings.DistrictPadding * 2);
-        var height = (rows * cellHeight) - settings.NodeSpacing + (settings.DistrictPadding * 2);
-
-        return (width, height);
+        return (rows * cellHeight) - settings.NodeSpacing + (settings.DistrictPadding * 2);
     }
 }

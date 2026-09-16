@@ -12,20 +12,29 @@
         <converters:CategoryToBrushConverter x:Key="CategoryBrush" />
     </UserControl.Resources>
 
-    <StackPanel Width="120" Spacing="4" ToolTipService.ToolTip="{Binding Description}">
+    <StackPanel Width="120" Spacing="4" ToolTipService.ToolTip="{Binding TooltipText}">
 
-        <Border Width="72"
-                Height="72"
-                CornerRadius="14"
-                HorizontalAlignment="Center"
-                Background="{Binding Category, Converter={StaticResource CategoryBrush}}">
-            <TextBlock Text="{Binding Initials}"
-                       Foreground="White"
-                       FontSize="24"
-                       FontWeight="SemiBold"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Center" />
-        </Border>
+        <Grid Width="82" Height="82" HorizontalAlignment="Center">
+
+            <!-- Always present, faded out when not selected. Keeps the control
+                 free of value converters and avoids a layout shift on select. -->
+            <Border CornerRadius="20"
+                    BorderThickness="2.5"
+                    BorderBrush="{ThemeResource AccentFillColorDefaultBrush}"
+                    Opacity="{Binding SelectionOpacity}" />
+
+            <Border Width="72"
+                    Height="72"
+                    CornerRadius="14"
+                    Background="{Binding Category, Converter={StaticResource CategoryBrush}}">
+                <TextBlock Text="{Binding Initials}"
+                           Foreground="White"
+                           FontSize="24"
+                           FontWeight="SemiBold"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center" />
+            </Border>
+        </Grid>
 
         <TextBlock Text="{Binding Name}"
                    FontWeight="SemiBold"

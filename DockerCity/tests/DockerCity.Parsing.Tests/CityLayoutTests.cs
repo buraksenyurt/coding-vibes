@@ -198,6 +198,69 @@ public class CityLayoutTests
     }
 
     [Fact]
+    public void Rebound_with_the_original_positions_changes_nothing()
+    {
+        var map = SampleMap();
+        var engine = new GridCityLayoutEngine();
+
+        var arranged = engine.Arrange(map);
+        var rebound = engine.Rebound(map, arranged.Nodes);
+
+        Assert.Equal(arranged.Nodes, rebound.Nodes);
+        Assert.Equal(arranged.Districts, rebound.Districts);
+        Assert.Equal(arranged.Width, rebound.Width);
+        Assert.Equal(arranged.Height, rebound.Height);
+    }
+
+    [Fact]
+    public void A_district_follows_a_member_that_moved()
+    {
+        var map = SampleMap();
+        var engine = new GridCityLayoutEngine();
+
+        var positions = engine.Arrange(map).Nodes
+            .ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
+
+        // Drag postgres far to the right; fnp-network has to stretch with it.
+        positions["postgres"] = new LayoutPoint(1500, positions["postgres"].Y);
+
+        var rebound = engine.Rebound(map, positions);
+        var network = rebound.Districts.Single(district => district.DistrictName == "fnp-network");
+
+        Assert.True(network.X + network.Width > 1500);
+        Assert.True(rebound.Width > 1500);
+    }
+
+    [Fact]
+    public void Rebound_keeps_the_overlay_flag()
+    {
+        const string yaml = """
+            services:
+              api:
+                image: nginx
+                networks:
+                  - back
+                  - front
+              db:
+                image: postgres
+                networks:
+                  - back
+            networks:
+              back:
+              front:
+            """;
+
+        var map = BuildFrom(yaml);
+        var engine = new GridCityLayoutEngine();
+        var positions = engine.Arrange(map).Nodes;
+
+        var rebound = engine.Rebound(map, positions);
+
+        Assert.True(rebound.Districts.Single(d => d.DistrictName == "front").IsOverlay);
+        Assert.False(rebound.Districts.Single(d => d.DistrictName == "back").IsOverlay);
+    }
+
+    [Fact]
     public void Options_change_the_result()
     {
         var wide = new GridCityLayoutEngine().Arrange(

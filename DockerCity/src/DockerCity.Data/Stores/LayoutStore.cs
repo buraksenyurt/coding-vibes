@@ -53,4 +53,11 @@ public sealed class LayoutStore(DockerCityDbContext context) : ILayoutStore
 
         await context.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task<int> ClearAsync(int composeProjectId, CancellationToken cancellationToken = default)
+    {
+        return await context.ServiceLayouts
+            .Where(layout => layout.ComposeProjectId == composeProjectId)
+            .ExecuteDeleteAsync(cancellationToken);
+    }
 }
