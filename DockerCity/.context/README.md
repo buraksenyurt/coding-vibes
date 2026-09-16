@@ -1,9 +1,9 @@
 # DockerCity — Bağlam
 
-Bu klasör normalde projeyi yönlendiren spec dokümanını tutar. DockerCity'de spec tek bir dosya değil, **faz faz ilerleyen bir doküman serisi** ve başka bir repoda yaşıyor:
+Bu klasör normalde projeyi yönlendiren spec dokümanını tutar. DockerCity'de spec tek bir dosya değil, **faz faz ilerleyen bir doküman serisi** ve `docs/` altında duruyor:
 
 ```
-C:\Users\burak\Development\ideas-pool\dockercity\docs\
+docs/
 ├── PLAN.md                       mimari, veri modeli, 11 fazlık yol haritası
 └── tutorial/
     ├── 00-kurulum-ve-iskelet.md
@@ -11,10 +11,15 @@ C:\Users\burak\Development\ideas-pool\dockercity\docs\
     ├── 02-domain-modeli.md
     ├── 03-sqlite-ef-core.md
     ├── 04-canvas-ve-mvvm.md
-    └── ...
+    ├── 05-mahalle-bolgeleri.md
+    └── 06-etkilesim.md
 ```
 
-Ayrım bilinçli: `ideas-pool` fikirlerin ve anlatının yeri, `coding-vibes` kodun yeri. Dokümanlar buraya kopyalanmadı ki iki sürüm birbirinden ayrışmasın.
+Dokümanlar MVP'ye kadar ayrı bir repoda (`ideas-pool`) tutuldu; MVP tamamlanınca kodun yanına alındı.
+
+## Nasıl yazıldı
+
+Bu proje tek bir istemle üretilmedi. Her fazda önce doküman yazıldı, sonra kod ona göre geliştirildi ve testlerle doğrulandı. Dokümanların "Neden böyle" bölümleri, alınan kararların gerekçelerini ve **yanlış çıkan kararların düzeltilmesini** de kaydediyor — örneğin Faz 4, Faz 0'da WPF refleksiyle verilmiş yanlış bir tavsiyeyi düzelterek açılıyor.
 
 ## Örnek girdi
 
@@ -33,3 +38,5 @@ Parser, domain ve yerleşim testleri şu dosyayı fixture olarak kullanır:
 | 2 | `DockerCity.Domain` — abstract taban, yetenek arayüzleri, `CityMap` |
 | 3 | `DockerCity.Data` — EF Core, dört tablo, tohumlanmış image kataloğu |
 | 4 | `DockerCity.App/ViewModels`, `Controls/CityCanvas`, `Domain/Layout` |
+| 5 | `Views/DistrictControl`, `DistrictPalette`, `Layout` sınır hesabı |
+| 6 | `CityCanvas` sürükle-bırak, `Stores/LayoutStore`, detay paneli |

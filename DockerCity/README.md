@@ -58,11 +58,20 @@ Veritabanı ilk çalıştırmada `%LOCALAPPDATA%\DockerCity\dockercity.db` altı
 
 ## Dokümanlar
 
-Plan ve faz faz öğreti dokümanları ayrı bir repoda tutuluyor:
+- [`docs/PLAN.md`](./docs/PLAN.md) — mimari, veri modeli ve 11 fazlık yol haritası
+- [`docs/tutorial/`](./docs/tutorial/) — faz faz ilerleyen öğreti dokümanları
 
-`ideas-pool/dockercity/docs/` — `PLAN.md` ve `tutorial/00..NN-*.md`
+| Faz | Doküman |
+| --- | --- |
+| 0 | [Kurulum ve solution iskeleti](./docs/tutorial/00-kurulum-ve-iskelet.md) |
+| 1 | [YamlDotNet ile compose okuyucu](./docs/tutorial/01-yaml-parser.md) |
+| 2 | [Domain modeli ve OOP hiyerarşisi](./docs/tutorial/02-domain-modeli.md) |
+| 3 | [SQLite kalıcılık katmanı](./docs/tutorial/03-sqlite-ef-core.md) |
+| 4 | [Canvas ve MVVM](./docs/tutorial/04-canvas-ve-mvvm.md) |
+| 5 | [Mahalle sınırları](./docs/tutorial/05-mahalle-bolgeleri.md) |
+| 6 | [Etkileşim — MVP](./docs/tutorial/06-etkilesim.md) |
 
-Bkz. [`.context/README.md`](./.context/README.md)
+Her doküman aynı kalıpta: ne yapacağız, **neden böyle**, adım adım uygulama, takıldığın yerler, ne öğrendik, kendin dene.
 
 ## Çalışma Zamanı
 
