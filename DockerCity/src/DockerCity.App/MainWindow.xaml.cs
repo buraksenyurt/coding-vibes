@@ -1,34 +1,51 @@
-﻿using DockerCity.Data;
-using Microsoft.EntityFrameworkCore;
+﻿using DockerCity.App.Services;
+using DockerCity.App.ViewModels;
 using Microsoft.UI.Xaml;
+using Windows.Storage.Pickers;
+using WinRT.Interop;
 
 namespace DockerCity.App;
 
 public sealed partial class MainWindow : Window
 {
+    private readonly CityWorkspace _workspace = new();
+    private readonly MainViewModel _viewModel;
+
     public MainWindow()
     {
         InitializeComponent();
         Title = "DockerCity";
 
-        _ = ShowDatabaseStatusAsync();
+        _viewModel = new MainViewModel(_workspace);
+
+        RootGrid.DataContext = _viewModel;
+        CityBoard.Nodes = _viewModel.Nodes;
+
+        Closed += (_, _) => _workspace.Dispose();
+
+        _ = _viewModel.InitialiseAsync();
     }
 
-    // Phase 3 has no UI of its own yet. Reporting the store here is enough to
-    // prove the database is created and seeded on first run.
-    private async Task ShowDatabaseStatusAsync()
+    private async void OnOpenClick(object sender, RoutedEventArgs args)
     {
-        try
+        var picker = new FileOpenPicker
         {
-            using var context = await DatabaseInitializer.OpenAsync();
-            var mappings = await context.ImageMappings.CountAsync();
+            SuggestedStartLocation = PickerLocationId.ComputerFolder
+        };
 
-            DatabaseStatusText.Text =
-                $"{mappings} image mappings ready · {DockerCityPaths.DatabaseFile}";
-        }
-        catch (Exception exception)
+        // A picker in a desktop app has no window of its own to sit on top of,
+        // so it has to be told which one owns it. Packaged or not, this is
+        // required in WinUI desktop.
+        InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(this));
+
+        picker.FileTypeFilter.Add(".yml");
+        picker.FileTypeFilter.Add(".yaml");
+
+        var file = await picker.PickSingleFileAsync();
+
+        if (file is not null)
         {
-            DatabaseStatusText.Text = $"Database unavailable: {exception.Message}";
+            await _viewModel.LoadAsync(file.Path);
         }
     }
 }
