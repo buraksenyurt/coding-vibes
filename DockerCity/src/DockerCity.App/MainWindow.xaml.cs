@@ -34,6 +34,7 @@ public sealed partial class MainWindow : Window
     private readonly CityWorkspace _workspace = new();
     private readonly MainViewModel _viewModel;
     private readonly ComposeFileWatcher _watcher;
+    private readonly RuntimeMonitor _runtime;
     private readonly DispatcherQueueTimer _placementTimer;
 
     // The last size and position while the window was neither maximized nor
@@ -45,6 +46,9 @@ public sealed partial class MainWindow : Window
     // Panning by dragging empty ground. Positions are measured against the
     // ScrollViewer, which stays put, not against the canvas, which moves
     // under the pointer as soon as the view scrolls.
+    // Polling Docker while the user is in another window is work nobody sees.
+    private bool _isActive = true;
+
     private bool _panning;
     private Point _panStart;
     private double _panOriginX;
@@ -83,6 +87,15 @@ public sealed partial class MainWindow : Window
         _viewModel.CityLoaded += OnCityLoaded;
         AddZoomAccelerators();
 
+        _runtime = new RuntimeMonitor(DispatcherQueue);
+        _runtime.Updated += (_, update) => _viewModel.ApplyRuntime(update);
+
+        Activated += (_, args) =>
+        {
+            _isActive = args.WindowActivationState != WindowActivationState.Deactivated;
+            UpdateRuntimeMonitor();
+        };
+
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
         _viewModel.RecentFiles.CollectionChanged += (_, _) => RebuildRecentMenu();
         _watcher.Changed += async (_, _) => await _viewModel.CheckFileOnDiskAsync();
@@ -98,6 +111,7 @@ public sealed partial class MainWindow : Window
         Closed += (_, _) =>
         {
             _placementTimer.Stop();
+            _runtime.Dispose();
             _watcher.Dispose();
             _workspace.Dispose();
         };
@@ -197,6 +211,8 @@ public sealed partial class MainWindow : Window
 
     private void OnToggleMinimapClick(object sender, RoutedEventArgs args) => _viewModel.ShowMinimap = MinimapItem.IsChecked;
 
+    private void OnToggleLiveClick(object sender, RoutedEventArgs args) => _viewModel.ShowLiveStatus = LiveItem.IsChecked;
+
     private async void OnResetClick(object sender, RoutedEventArgs args) => await _viewModel.ResetLayoutAsync();
 
     private void OnZoomInClick(object sender, RoutedEventArgs args) => ZoomIn();
@@ -232,6 +248,7 @@ public sealed partial class MainWindow : Window
         LinksItem.IsChecked = _viewModel.ShowLinks;
         DistrictsItem.IsChecked = _viewModel.ShowDistricts;
         MinimapItem.IsChecked = _viewModel.ShowMinimap;
+        LiveItem.IsChecked = _viewModel.ShowLiveStatus;
 
         ThemeSystemItem.IsChecked = _viewModel.Theme == ThemePreference.System;
         ThemeLightItem.IsChecked = _viewModel.Theme == ThemePreference.Light;
@@ -257,6 +274,15 @@ public sealed partial class MainWindow : Window
             case nameof(MainViewModel.ShowMinimap):
                 SyncMenuState();
                 UpdateViewIndicators();
+                break;
+
+            case nameof(MainViewModel.ShowLiveStatus):
+                SyncMenuState();
+                UpdateRuntimeMonitor();
+                break;
+
+            case nameof(MainViewModel.HasCity):
+                UpdateRuntimeMonitor();
                 break;
 
             case nameof(MainViewModel.CurrentPath):
@@ -370,6 +396,7 @@ public sealed partial class MainWindow : Window
         AddAccelerator(VirtualKey.NumberPad0, () => ZoomTo(1));
         AddAccelerator(VirtualKey.Number9, () => FitToWindow(animate: true));
         AddAccelerator(VirtualKey.Number4, () => _viewModel.ShowMinimap = !_viewModel.ShowMinimap);
+        AddAccelerator(VirtualKey.Number5, () => _viewModel.ShowLiveStatus = !_viewModel.ShowLiveStatus);
     }
 
     private void AddAccelerator(VirtualKey key, Action action)
@@ -383,6 +410,22 @@ public sealed partial class MainWindow : Window
         };
 
         RootGrid.KeyboardAccelerators.Add(accelerator);
+    }
+
+    // ----------------------------------------------------------- Live status
+
+    // Poll only when there is a city to light up, the user asked for it, and
+    // the window is the one they are looking at.
+    private void UpdateRuntimeMonitor()
+    {
+        if (_viewModel.HasCity && _viewModel.ShowLiveStatus && _isActive)
+        {
+            _runtime.Start();
+        }
+        else
+        {
+            _runtime.Stop();
+        }
     }
 
     // ----------------------------------------------------------- Zoom and pan

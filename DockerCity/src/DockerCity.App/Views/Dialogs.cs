@@ -21,6 +21,7 @@ internal static class Dialogs
         ("Ctrl+2", "Show or hide roads"),
         ("Ctrl+3", "Show or hide district borders"),
         ("Ctrl+4", "Show or hide the mini map"),
+        ("Ctrl+5", "Show or hide live status from Docker"),
         ("Ctrl+Plus / Ctrl+Minus", "Zoom in or out (the numeric keypad works too)"),
         ("Ctrl+Mouse wheel", "Zoom around the pointer"),
         ("Ctrl+0", "Actual size (100%)"),

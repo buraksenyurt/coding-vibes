@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using DockerCity.Domain;
 using DockerCity.Domain.Catalog;
 using DockerCity.Domain.Layout;
+using DockerCity.Domain.Runtime;
 using DockerCity.Domain.Values;
 
 namespace DockerCity.App.ViewModels;
@@ -32,6 +33,28 @@ public sealed partial class ServiceNodeViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SelectionOpacity))]
     private bool _isSelected;
+
+    // --- Phase 10: what Docker says about this service right now ---
+
+    // Null means "nothing to show": either no container was matched, or
+    // nobody is looking (live status off, Docker unreachable).
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasRuntime))]
+    [NotifyPropertyChangedFor(nameof(Signal))]
+    [NotifyPropertyChangedFor(nameof(IsPulsing))]
+    [NotifyPropertyChangedFor(nameof(LiveText))]
+    private ContainerSnapshot? _runtime;
+
+    public bool HasRuntime => Runtime is not null;
+
+    public RuntimeSignal Signal => Runtime?.Signal ?? RuntimeSignal.Unknown;
+
+    // Only a living service breathes; a red light should stay still.
+    public bool IsPulsing => Signal is RuntimeSignal.Running or RuntimeSignal.Healthy;
+
+    public string LiveText => Runtime is null
+        ? "no container"
+        : $"{Runtime.Name} · {Runtime.StatusText}";
 
     // A plain number instead of a Visibility keeps the control free of value
     // converters; the selection ring is always there and simply fades.

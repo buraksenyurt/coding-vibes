@@ -6,6 +6,7 @@
     </Project>
     <Project Path="src/DockerCity.Data/DockerCity.Data.csproj" />
     <Project Path="src/DockerCity.Domain/DockerCity.Domain.csproj" />
+    <Project Path="src/DockerCity.Live/DockerCity.Live.csproj" />
     <Project Path="src/DockerCity.Parsing/DockerCity.Parsing.csproj" />
   </Folder>
   <Folder Name="/tests/">

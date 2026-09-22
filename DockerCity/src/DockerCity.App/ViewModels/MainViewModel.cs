@@ -4,6 +4,7 @@ using DockerCity.App.Services;
 using DockerCity.Data.Preferences;
 using DockerCity.Domain;
 using DockerCity.Domain.Layout;
+using DockerCity.Domain.Runtime;
 
 namespace DockerCity.App.ViewModels;
 
@@ -15,6 +16,10 @@ public sealed partial class MainViewModel : ObservableObject
     private CityMap? _map;
     private int _projectId;
     private string? _loadedHash;
+
+    // The name Compose would use for this file's project; needed to tell our
+    // containers from another project's.
+    private string? _composeProject;
 
     // Set while preferences are being read, so that applying them does not
     // immediately write the same values back.
@@ -96,6 +101,9 @@ public sealed partial class MainViewModel : ObservableObject
     private bool _showMinimap = true;
 
     [ObservableProperty]
+    private bool _showLiveStatus = true;
+
+    [ObservableProperty]
     private bool _reopenLastFile;
 
     [ObservableProperty]
@@ -104,6 +112,13 @@ public sealed partial class MainViewModel : ObservableObject
     public bool IsDetailsPanelVisible => ShowDetails && HasCity;
 
     public bool IsMinimapVisible => ShowMinimap && HasCity;
+
+    // --- Phase 10: live status ---
+
+    // One line for the status bar: how many services are actually up, or why
+    // we cannot tell.
+    [ObservableProperty]
+    private string _runtimeText = string.Empty;
 
     // --- Phase 9: what fitting to the window and the mini map look at ---
 
@@ -145,6 +160,7 @@ public sealed partial class MainViewModel : ObservableObject
                 ShowLinks = await preferences.GetLayerVisibleAsync(AppPreferences.ShowLinksKey);
                 ShowDistricts = await preferences.GetLayerVisibleAsync(AppPreferences.ShowDistrictsKey);
                 ShowMinimap = await preferences.GetLayerVisibleAsync(AppPreferences.ShowMinimapKey);
+                ShowLiveStatus = await preferences.GetLayerVisibleAsync(AppPreferences.ShowLiveStatusKey);
                 ReopenLastFile = await preferences.GetReopenLastFileAsync();
                 SavedWindow = await preferences.GetWindowAsync();
                 lastFile = await preferences.GetLastFileAsync();
@@ -186,6 +202,7 @@ public sealed partial class MainViewModel : ObservableObject
             var isSameFile = string.Equals(CurrentPath, path, StringComparison.OrdinalIgnoreCase) && HasCity;
 
             _map = city.Map;
+            _composeProject = ComposeProjectName.FromPath(path);
             _projectId = city.ProjectId;
             _loadedHash = city.Hash;
             Select(null);
@@ -474,6 +491,19 @@ public sealed partial class MainViewModel : ObservableObject
     partial void OnShowDistrictsChanged(bool value) =>
         _ = PersistAsync(preferences => preferences.SetLayerVisibleAsync(AppPreferences.ShowDistrictsKey, value));
 
+    partial void OnShowLiveStatusChanged(bool value)
+    {
+        // Turning it off should clear the lights at once, not leave the last
+        // poll's colours frozen on the figures.
+        if (!value)
+        {
+            ClearRuntime();
+            RuntimeText = string.Empty;
+        }
+
+        _ = PersistAsync(preferences => preferences.SetLayerVisibleAsync(AppPreferences.ShowLiveStatusKey, value));
+    }
+
     partial void OnShowMinimapChanged(bool value) =>
         _ = PersistAsync(preferences => preferences.SetLayerVisibleAsync(AppPreferences.ShowMinimapKey, value));
 
@@ -500,6 +530,57 @@ public sealed partial class MainViewModel : ObservableObject
         catch (Exception exception)
         {
             Status = $"Could not save preferences: {exception.Message}";
+        }
+    }
+
+    // --- Phase 10: what the monitor brings back ---
+
+    public void ApplyRuntime(RuntimeUpdate update)
+    {
+        ArgumentNullException.ThrowIfNull(update);
+
+        // A late answer from a poll that was in flight when the user turned
+        // live status off must not light the city up again.
+        if (!ShowLiveStatus)
+        {
+            return;
+        }
+
+        if (!update.IsConnected)
+        {
+            ClearRuntime();
+            RuntimeText = $"Docker: not reachable · {update.Error}";
+            return;
+        }
+
+        if (_map is null)
+        {
+            RuntimeText = string.Empty;
+            return;
+        }
+
+        var matched = RuntimeMatcher.Match(_map.Services, _composeProject, CurrentPath, update.Containers);
+        var running = 0;
+
+        foreach (var node in Nodes)
+        {
+            var snapshot = matched.GetValueOrDefault(node.Name);
+            node.Runtime = snapshot;
+
+            if (snapshot?.IsUp == true)
+            {
+                running++;
+            }
+        }
+
+        RuntimeText = $"Docker: {running}/{Nodes.Count} running";
+    }
+
+    private void ClearRuntime()
+    {
+        foreach (var node in Nodes)
+        {
+            node.Runtime = null;
         }
     }
 

@@ -15,6 +15,7 @@ public sealed class AppPreferences(IAppSettingsStore store)
     public const string ShowLinksKey = "view.links";
     public const string ShowDistrictsKey = "view.districts";
     public const string ShowMinimapKey = "view.minimap";
+    public const string ShowLiveStatusKey = "view.live";
 
     public async Task<ThemePreference> GetThemeAsync(CancellationToken cancellationToken = default) =>
         Enum.TryParse<ThemePreference>(await store.GetAsync(ThemeKey, cancellationToken), ignoreCase: true, out var theme)

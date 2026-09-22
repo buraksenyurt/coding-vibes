@@ -68,6 +68,7 @@
                     <ToggleMenuFlyoutItem x:Name="LinksItem" Text="Roads" KeyboardAcceleratorTextOverride="Ctrl+2" Click="OnToggleLinksClick" />
                     <ToggleMenuFlyoutItem x:Name="DistrictsItem" Text="District borders" KeyboardAcceleratorTextOverride="Ctrl+3" Click="OnToggleDistrictsClick" />
                     <ToggleMenuFlyoutItem x:Name="MinimapItem" Text="Mini map" KeyboardAcceleratorTextOverride="Ctrl+4" Click="OnToggleMinimapClick" />
+                    <ToggleMenuFlyoutItem x:Name="LiveItem" Text="Live status from Docker" KeyboardAcceleratorTextOverride="Ctrl+5" Click="OnToggleLiveClick" />
                     <MenuFlyoutSeparator />
                     <MenuFlyoutItem Text="Zoom in" KeyboardAcceleratorTextOverride="Ctrl+Plus" Click="OnZoomInClick" />
                     <MenuFlyoutItem Text="Zoom out" KeyboardAcceleratorTextOverride="Ctrl+Minus" Click="OnZoomOutClick" />
@@ -217,6 +218,11 @@
                                TextTrimming="CharacterEllipsis" />
 
                     <StackPanel Spacing="2">
+                        <TextBlock Text="Runtime" Opacity="0.5" FontSize="11" />
+                        <TextBlock Text="{Binding Selected.LiveText}" TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="2">
                         <TextBlock Text="Image" Opacity="0.5" FontSize="11" />
                         <TextBlock Text="{Binding Selected.ImageLabel}" TextWrapping="Wrap" />
                     </StackPanel>
@@ -290,14 +296,21 @@
                            VerticalAlignment="Center"
                            TextTrimming="CharacterEllipsis" />
 
-                <HyperlinkButton x:Name="ZoomButton"
-                                 Grid.Column="1"
-                                 Content="100%"
-                                 FontSize="12"
-                                 Padding="6,0"
-                                 ToolTipService.ToolTip="Back to actual size (Ctrl+0)"
-                                 Click="OnActualSizeClick"
-                                 Visibility="{Binding HasCity, Converter={StaticResource BoolToVisibility}}" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12">
+                    <TextBlock Text="{Binding RuntimeText}"
+                               Opacity="0.7"
+                               FontSize="12"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis" />
+
+                    <HyperlinkButton x:Name="ZoomButton"
+                                     Content="100%"
+                                     FontSize="12"
+                                     Padding="6,0"
+                                     ToolTipService.ToolTip="Back to actual size (Ctrl+0)"
+                                     Click="OnActualSizeClick"
+                                     Visibility="{Binding HasCity, Converter={StaticResource BoolToVisibility}}" />
+                </StackPanel>
             </Grid>
         </Border>
     </Grid>

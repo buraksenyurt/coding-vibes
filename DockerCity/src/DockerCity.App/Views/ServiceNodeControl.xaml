@@ -11,6 +11,7 @@
     <UserControl.Resources>
         <converters:CategoryToBrushConverter x:Key="CategoryBrush" />
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+        <converters:SignalToBrushConverter x:Key="SignalBrush" />
     </UserControl.Resources>
 
     <StackPanel Width="120"
@@ -59,6 +60,22 @@
                           FontSize="11"
                           Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" />
             </Border>
+
+            <!-- The runtime light. It is only there when a container was
+                 matched, so an empty corner means "nothing is running under
+                 this name" rather than "unknown". -->
+            <Border x:Name="LiveDot"
+                    Width="18"
+                    Height="18"
+                    CornerRadius="9"
+                    Margin="0,0,0,-2"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Bottom"
+                    BorderThickness="2"
+                    BorderBrush="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+                    Background="{Binding Signal, Converter={StaticResource SignalBrush}}"
+                    Visibility="{Binding HasRuntime, Converter={StaticResource BoolToVisibility}}"
+                    ToolTipService.ToolTip="{Binding LiveText}" />
         </Grid>
 
         <TextBlock Text="{Binding Name}"
