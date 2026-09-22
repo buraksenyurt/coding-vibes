@@ -23,9 +23,10 @@ Diğer çalışmalardan farkı: bu proje tek seferde bir modele yazdırılmadı.
 | 6 | Etkileşim, sürükle-bırak, konum kaydı (MVP) | Tamamlandı |
 | 7 | Bağlantı okları (`depends_on`), Needed by | Tamamlandı |
 | 8 | Kullanılabilirlik: menü, son açılanlar, tema, dışa aktarma | Tamamlandı |
-| 9–10 | Zoom/pan ve animasyon, canlı Docker | Sıradaki |
+| 9 | Zoom/pan, mini harita, giriş ve hover animasyonları | Tamamlandı |
+| 10 | Canlı Docker bağlantısı (opsiyonel) | Sıradaki |
 
-Testler: 139 (Domain + Parsing + Data).
+Testler: 167 (Domain + Parsing + Data).
 
 ## Klasör yapısı
 
@@ -74,6 +75,7 @@ Veritabanı ilk çalıştırmada `%LOCALAPPDATA%\DockerCity\dockercity.db` altı
 | 6 | [Etkileşim — MVP](./docs/tutorial/06-etkilesim.md) |
 | 7 | [Yollar ve ilişkiler](./docs/tutorial/07-baglantilar.md) |
 | 8 | [Kullanılabilirlik](./docs/tutorial/08-kullanilabilirlik.md) |
+| 9 | [Zoom, pan ve animasyon](./docs/tutorial/09-zoom-pan-animasyon.md) |
 
 Her doküman aynı kalıpta: ne yapacağız, **neden böyle**, adım adım uygulama, takıldığın yerler, ne öğrendik, kendin dene.
 
