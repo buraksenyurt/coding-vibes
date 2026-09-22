@@ -2,6 +2,7 @@
 using DockerCity.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -9,9 +10,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DockerCity.Data.Migrations
 {
     [DbContext(typeof(DockerCityDbContext))]
-    partial class DockerCityDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260922142318_HideProjectsFromRecent")]
+    partial class HideProjectsFromRecent
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.12");

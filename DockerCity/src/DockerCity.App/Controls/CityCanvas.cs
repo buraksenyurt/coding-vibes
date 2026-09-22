@@ -78,6 +78,30 @@ public sealed class CityCanvas : Canvas
         set => SetValue(LinksProperty, value);
     }
 
+    public static readonly DependencyProperty ShowLinksProperty = DependencyProperty.Register(
+        nameof(ShowLinks),
+        typeof(bool),
+        typeof(CityCanvas),
+        new PropertyMetadata(true, OnLayerVisibilityChanged));
+
+    public static readonly DependencyProperty ShowDistrictsProperty = DependencyProperty.Register(
+        nameof(ShowDistricts),
+        typeof(bool),
+        typeof(CityCanvas),
+        new PropertyMetadata(true, OnLayerVisibilityChanged));
+
+    public bool ShowLinks
+    {
+        get => (bool)GetValue(ShowLinksProperty);
+        set => SetValue(ShowLinksProperty, value);
+    }
+
+    public bool ShowDistricts
+    {
+        get => (bool)GetValue(ShowDistrictsProperty);
+        set => SetValue(ShowDistrictsProperty, value);
+    }
+
     public ObservableCollection<ServiceNodeViewModel>? Nodes
     {
         get => (ObservableCollection<ServiceNodeViewModel>?)GetValue(NodesProperty);
@@ -108,6 +132,27 @@ public sealed class CityCanvas : Canvas
     }
 
     private void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs args) => Rebuild();
+
+    // Hiding a layer keeps its visuals and subscriptions alive, so turning it
+    // back on is instant and the geometry is still current.
+    private static void OnLayerVisibilityChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args) =>
+        ((CityCanvas)sender).ApplyLayerVisibility();
+
+    private void ApplyLayerVisibility()
+    {
+        var links = ShowLinks ? Visibility.Visible : Visibility.Collapsed;
+        var districts = ShowDistricts ? Visibility.Visible : Visibility.Collapsed;
+
+        foreach (var visual in _linkVisuals.Values)
+        {
+            visual.Visibility = links;
+        }
+
+        foreach (var visual in _districtVisuals.Values)
+        {
+            visual.Visibility = districts;
+        }
+    }
 
     private void Rebuild()
     {
@@ -148,6 +193,8 @@ public sealed class CityCanvas : Canvas
                 link.PropertyChanged += OnLinkPropertyChanged;
             }
         }
+
+        ApplyLayerVisibility();
 
         if (Nodes is null)
         {

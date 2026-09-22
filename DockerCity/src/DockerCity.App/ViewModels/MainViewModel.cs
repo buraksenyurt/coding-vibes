@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DockerCity.App.Services;
+using DockerCity.Data.Preferences;
 using DockerCity.Domain;
 using DockerCity.Domain.Layout;
 
@@ -13,6 +14,15 @@ public sealed partial class MainViewModel : ObservableObject
 
     private CityMap? _map;
     private int _projectId;
+    private string? _loadedHash;
+
+    // Set while preferences are being read, so that applying them does not
+    // immediately write the same values back.
+    private bool _applyingPreferences;
+
+    // Why the database could not be opened, kept so that later actions report
+    // the real cause instead of a generic "not initialised".
+    private string? _initialisationError;
 
     public MainViewModel(CityWorkspace workspace)
     {
@@ -25,6 +35,8 @@ public sealed partial class MainViewModel : ObservableObject
     public ObservableCollection<DistrictViewModel> Districts { get; } = [];
 
     public ObservableCollection<LinkViewModel> Links { get; } = [];
+
+    public ObservableCollection<RecentFileViewModel> RecentFiles { get; } = [];
 
     [ObservableProperty]
     private string _status = "Open a docker-compose file to build the city.";
@@ -48,9 +60,45 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string _neededByText = string.Empty;
 
-    public bool CanReset => _map is not null;
+    // --- Phase 8: file state ---
 
-    public string? CurrentPath { get; private set; }
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsDetailsPanelVisible))]
+    private bool _hasCity;
+
+    [ObservableProperty]
+    private string? _currentPath;
+
+    [ObservableProperty]
+    private bool _isFileChangedOnDisk;
+
+    public string CurrentFileName => CurrentPath is null ? string.Empty : Path.GetFileName(CurrentPath);
+
+    // --- Phase 8: preferences ---
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsDetailsPanelVisible))]
+    private bool _showDetails = true;
+
+    [ObservableProperty]
+    private bool _showLinks = true;
+
+    [ObservableProperty]
+    private bool _showDistricts = true;
+
+    [ObservableProperty]
+    private bool _reopenLastFile;
+
+    [ObservableProperty]
+    private ThemePreference _theme = ThemePreference.System;
+
+    public bool IsDetailsPanelVisible => ShowDetails && HasCity;
+
+    public WindowPlacement? SavedWindow { get; private set; }
+
+    public int MappingCount => _workspace.MappingCount;
+
+    public string DatabaseFile => _workspace.DatabaseFile;
 
     public async Task InitialiseAsync()
     {
@@ -61,13 +109,55 @@ public sealed partial class MainViewModel : ObservableObject
         }
         catch (Exception exception)
         {
+            _initialisationError = exception.Message;
             Status = $"Database unavailable: {exception.Message}";
+            return;
+        }
+
+        string? lastFile = null;
+
+        try
+        {
+            _applyingPreferences = true;
+
+            await _workspace.UsePreferencesAsync(async preferences =>
+            {
+                Theme = await preferences.GetThemeAsync();
+                ShowDetails = await preferences.GetLayerVisibleAsync(AppPreferences.ShowDetailsKey);
+                ShowLinks = await preferences.GetLayerVisibleAsync(AppPreferences.ShowLinksKey);
+                ShowDistricts = await preferences.GetLayerVisibleAsync(AppPreferences.ShowDistrictsKey);
+                ReopenLastFile = await preferences.GetReopenLastFileAsync();
+                SavedWindow = await preferences.GetWindowAsync();
+                lastFile = await preferences.GetLastFileAsync();
+            });
+        }
+        catch (Exception exception)
+        {
+            // Preferences are a comfort, not a requirement.
+            Status = $"Could not read preferences: {exception.Message}";
+        }
+        finally
+        {
+            _applyingPreferences = false;
+        }
+
+        await RefreshRecentAsync();
+
+        if (ReopenLastFile && lastFile is not null && File.Exists(lastFile))
+        {
+            await LoadAsync(lastFile);
         }
     }
 
     public async Task LoadAsync(string path)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
+
+        if (!_workspace.IsInitialised)
+        {
+            Status = $"Database unavailable: {_initialisationError ?? "still starting up, try again in a moment."}";
+            return;
+        }
 
         IsBusy = true;
 
@@ -77,7 +167,7 @@ public sealed partial class MainViewModel : ObservableObject
 
             _map = city.Map;
             _projectId = city.ProjectId;
-            CurrentPath = path;
+            _loadedHash = city.Hash;
             Select(null);
 
             Nodes.Clear();
@@ -106,10 +196,19 @@ public sealed partial class MainViewModel : ObservableObject
 
             ApplyExtent(city.Layout);
 
+            CurrentPath = path;
+            OnPropertyChanged(nameof(CurrentFileName));
+            HasCity = true;
+            IsFileChangedOnDisk = false;
+
             var implicitDistricts = city.Map.Districts.Count(district => district.IsImplicit);
 
             Status = $"{Nodes.Count} services · {city.Map.Districts.Count} districts "
-                   + $"({implicitDistricts} implicit) · {Links.Count} links · {Path.GetFileName(path)}";
+                   + $"({implicitDistricts} implicit) · {Links.Count} links · {Path.GetFileName(path)}"
+                   + (city.ChangedSinceLastVisit ? " · changed since you last opened it" : string.Empty);
+
+            await PersistAsync(preferences => preferences.SetLastFileAsync(path));
+            await RefreshRecentAsync();
         }
         catch (Exception exception)
         {
@@ -117,6 +216,7 @@ public sealed partial class MainViewModel : ObservableObject
             Nodes.Clear();
             Links.Clear();
             Districts.Clear();
+            HasCity = false;
             Status = $"Could not read {Path.GetFileName(path)}: {exception.Message}";
         }
         finally
@@ -124,6 +224,102 @@ public sealed partial class MainViewModel : ObservableObject
             IsBusy = false;
         }
     }
+
+    public async Task ReloadAsync()
+    {
+        if (CurrentPath is null)
+        {
+            return;
+        }
+
+        if (!File.Exists(CurrentPath))
+        {
+            Status = $"{Path.GetFileName(CurrentPath)} no longer exists.";
+            return;
+        }
+
+        await LoadAsync(CurrentPath);
+    }
+
+    public async Task OpenRecentAsync(RecentFileViewModel recent)
+    {
+        ArgumentNullException.ThrowIfNull(recent);
+
+        if (!File.Exists(recent.FilePath))
+        {
+            // A dead entry is worse than no entry: take it off the list and say why.
+            await _workspace.RemoveFromRecentAsync(recent.FilePath);
+            await RefreshRecentAsync();
+            Status = $"{recent.FilePath} could not be found and was removed from recent files.";
+            return;
+        }
+
+        await LoadAsync(recent.FilePath);
+    }
+
+    public async Task ClearRecentAsync()
+    {
+        try
+        {
+            var hidden = await _workspace.ClearRecentAsync();
+            await RefreshRecentAsync();
+            Status = $"Cleared {hidden} recent files. Stored layouts were kept.";
+        }
+        catch (Exception exception)
+        {
+            Status = $"Could not clear recent files: {exception.Message}";
+        }
+    }
+
+    public async Task RefreshRecentAsync()
+    {
+        if (!_workspace.IsInitialised)
+        {
+            return;
+        }
+
+        try
+        {
+            var recent = await _workspace.RecentAsync();
+
+            RecentFiles.Clear();
+
+            foreach (var project in recent)
+            {
+                RecentFiles.Add(new RecentFileViewModel(project.Name, project.FilePath, project.LastOpenedAt));
+            }
+        }
+        catch (Exception exception)
+        {
+            Status = $"Could not read recent files: {exception.Message}";
+        }
+    }
+
+    // Called by the file watcher. Editors often touch a file without changing
+    // it, so the content is compared rather than trusting the event alone.
+    public async Task CheckFileOnDiskAsync()
+    {
+        if (CurrentPath is null || _loadedHash is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var hash = await CityWorkspace.HashFileAsync(CurrentPath);
+            IsFileChangedOnDisk = hash != _loadedHash;
+        }
+        catch (IOException)
+        {
+            // Still being written; the next event will try again.
+        }
+        catch (UnauthorizedAccessException)
+        {
+        }
+    }
+
+    public Task SaveWindowAsync(WindowPlacement placement) =>
+        PersistAsync(preferences => preferences.SetWindowAsync(placement));
 
     public void Select(ServiceNodeViewModel? node)
     {
@@ -240,6 +436,43 @@ public sealed partial class MainViewModel : ObservableObject
         catch (Exception exception)
         {
             Status = $"Could not reset the layout: {exception.Message}";
+        }
+    }
+
+    // --- Preferences are written as soon as they change ---
+
+    partial void OnShowDetailsChanged(bool value) =>
+        _ = PersistAsync(preferences => preferences.SetLayerVisibleAsync(AppPreferences.ShowDetailsKey, value));
+
+    partial void OnShowLinksChanged(bool value) =>
+        _ = PersistAsync(preferences => preferences.SetLayerVisibleAsync(AppPreferences.ShowLinksKey, value));
+
+    partial void OnShowDistrictsChanged(bool value) =>
+        _ = PersistAsync(preferences => preferences.SetLayerVisibleAsync(AppPreferences.ShowDistrictsKey, value));
+
+    partial void OnReopenLastFileChanged(bool value) =>
+        _ = PersistAsync(preferences => preferences.SetReopenLastFileAsync(value));
+
+    partial void OnThemeChanged(ThemePreference value) =>
+        _ = PersistAsync(preferences => preferences.SetThemeAsync(value));
+
+    private async Task PersistAsync(Func<AppPreferences, Task> write)
+    {
+        // Before the database is open (or if it never opens) there is nowhere
+        // to write. Preferences are a comfort: skip quietly rather than
+        // replace a status message that explains the real problem.
+        if (_applyingPreferences || !_workspace.IsInitialised)
+        {
+            return;
+        }
+
+        try
+        {
+            await _workspace.UsePreferencesAsync(write);
+        }
+        catch (Exception exception)
+        {
+            Status = $"Could not save preferences: {exception.Message}";
         }
     }
 
