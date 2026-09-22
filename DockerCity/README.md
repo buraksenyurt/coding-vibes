@@ -84,3 +84,17 @@ Her doküman aynı kalıpta: ne yapacağız, **neden böyle**, adım adım uygul
 İlk MVP çıktıktan sonra çalışma zamanından bir görüntü.
 
 ![Runtime Screenshot of DockerCity App](Runtime_00.png)
+
+Faz 9 sonrası:
+
+- Artık son bakılan yml dosyaları var;
+
+![Runtime Screenshot of DockerCity App after Phase 9](Runtime_09.png)
+
+- Menü seçenekleri eklendi
+
+![Menu options of DockerCity App](Runtime_10.png)
+
+- Zoom in/Zoom out ve ekran kaydırma özellikleri
+
+![Zoom and Pan of DockerCity App](Runtime_11.png)
