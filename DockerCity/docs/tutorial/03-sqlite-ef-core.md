@@ -178,7 +178,7 @@ Dört tablo:
 | `ImageMappings` | image deseni → kategori, ikon, görünen ad | Faz 3–4 |
 | `ComposeProjects` | açılmış dosyalar, son açılış zamanı | Faz 6, 9 |
 | `ServiceLayouts` | figür konumları | Faz 6 |
-| `AppSettings` | anahtar/değer ayarlar | Faz 8, 9 |
+| `AppSettings` | anahtar/değer ayarlar | Faz 8 |
 
 `OnModelCreating` içindeki iki kısıt önemli:
 
@@ -241,7 +241,7 @@ public static async Task<DockerCityDbContext> OpenAsync(CancellationToken cancel
 | Mevcut veritabanını günceller mi | **Hayır** | Evet, eksik migration'ları uygular |
 | Migration geçmişi tutar mı | Hayır | Evet |
 
-Faz 9'da ikon yönetim ekranı gelince şema değişecek. `EnsureCreated` kullanıyor olsaydık, kullanıcının mevcut veritabanını silmekten başka yolun kalmazdı.
+Şema bir gün değişecek (Faz 8'de değişti: son açılanlar için yeni bir kolon). `EnsureCreated` kullanıyor olsaydık, kullanıcının mevcut veritabanını silmekten başka yolun kalmazdı.
 
 *(Testlerde yine de `EnsureCreated` kullanıyoruz — orada amaç modelin kendisini sınamak, onu taşıyan migration'ı değil. Her test kendi geçici dosyasıyla çalışır.)*
 

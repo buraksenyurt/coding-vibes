@@ -164,7 +164,7 @@ private static async Task<string> HashAsync(string path, CancellationToken cance
 }
 ```
 
-Bugün kullanılmıyor. Faz 9'da "bu dosya en son açtığından beri değişmiş" diyebilmek için `ComposeProjects.FileHash` kolonu Faz 3'ten beri orada duruyordu; doldurmanın maliyeti bir satır.
+Bugün kullanılmıyor. Faz 8'de "bu dosya en son açtığından beri değişmiş" diyebilmek için `ComposeProjects.FileHash` kolonu Faz 3'ten beri orada duruyordu; doldurmanın maliyeti bir satır.
 
 ### Adım 4 — Seçim
 

@@ -384,7 +384,7 @@ public sealed class ComposeFileReader
 
 **`IgnoreUnmatchedProperties()`** — Compose şeması devasa: `build`, `healthcheck`, `deploy`, `labels`, `profiles`... Biz bunların küçük bir alt kümesini modelliyoruz. Bu satır olmadan, modellemediğimiz ilk anahtarda okuyucu istisna fırlatır. Yani bu satır "gerçek dosyalarla çalışabilmenin" bedeli.
 
-**`ComposeParseException`** — YamlDotNet'in `YamlException`'ını kendi tipimize sarıyoruz ki satır/sütun bilgisi taşınsın. Faz 9'da bozuk bir dosyayı kullanıcıya gösterirken "3. satırda hata" diyebilmek için bu bilgi şimdiden korunmalı.
+**`ComposeParseException`** — YamlDotNet'in `YamlException`'ını kendi tipimize sarıyoruz ki satır/sütun bilgisi taşınsın. İleride bozuk bir dosyayı kullanıcıya gösterirken "3. satırda hata" diyebilmek için bu bilgi şimdiden korunmalı.
 
 ---
 

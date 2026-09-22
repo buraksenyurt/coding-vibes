@@ -22,9 +22,10 @@ Diğer çalışmalardan farkı: bu proje tek seferde bir modele yazdırılmadı.
 | 5 | Mahalle sınırları | Tamamlandı |
 | 6 | Etkileşim, sürükle-bırak, konum kaydı (MVP) | Tamamlandı |
 | 7 | Bağlantı okları (`depends_on`), Needed by | Tamamlandı |
-| 8–10 | Zoom/pan, kullanılabilirlik, canlı Docker | Sıradaki |
+| 8 | Kullanılabilirlik: menü, son açılanlar, tema, dışa aktarma | Tamamlandı |
+| 9–10 | Zoom/pan ve animasyon, canlı Docker | Sıradaki |
 
-Testler: 120 (Domain + Parsing + Data).
+Testler: 139 (Domain + Parsing + Data).
 
 ## Klasör yapısı
 
@@ -72,6 +73,7 @@ Veritabanı ilk çalıştırmada `%LOCALAPPDATA%\DockerCity\dockercity.db` altı
 | 5 | [Mahalle sınırları](./docs/tutorial/05-mahalle-bolgeleri.md) |
 | 6 | [Etkileşim — MVP](./docs/tutorial/06-etkilesim.md) |
 | 7 | [Yollar ve ilişkiler](./docs/tutorial/07-baglantilar.md) |
+| 8 | [Kullanılabilirlik](./docs/tutorial/08-kullanilabilirlik.md) |
 
 Her doküman aynı kalıpta: ne yapacağız, **neden böyle**, adım adım uygulama, takıldığın yerler, ne öğrendik, kendin dene.
 

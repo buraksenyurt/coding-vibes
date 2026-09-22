@@ -204,7 +204,7 @@ Parse sonrası `CityMap` nesnesi üretilir:
 
 | Konu | Karar |
 |---|---|
-| Zemin | Düz gri (`#2B2B2B` koyu tema / `#F3F3F3` açık tema). Tile/doku Faz 8'e ertelendi. |
+| Zemin | Düz gri (`#2B2B2B` koyu tema / `#F3F3F3` açık tema). Tile/doku Faz 9'a ertelendi. |
 | Mahalle bölgesi | Üyelerin bounding box'ı + padding, 16px yuvarlatılmış köşe, %12 opaklıkta dolgu + belirgin kenarlık. Her network'e paletten bir renk atanır. |
 | Örtük default bölge | Kesikli kenarlık, nötr gri, "default (örtük)" etiketi |
 | Figür boyutu | 64×64 px sprite + altında servis adı etiketi |
@@ -324,19 +324,27 @@ MVP = **Faz 0 → Faz 6**. Sonrası cila ve genişleme.
 
 ---
 
-### Faz 8 — Oyunlaştırma cilası
-`docs/tutorial/08-zoom-pan-animasyon.md`
+### Faz 8 — Kullanılabilirlik
+`docs/tutorial/08-kullanilabilirlik.md`
+
+> **Plan değişikliği (Faz 7 sonrası):** Bu faz başlangıçta 9. sıradaydı; MVP'den sonra zoom/pan'dan önceye alındı. Kullanıcı olarak ilk eksik hissedilen şey yakınlaştırma değil, her açılışta dosyayı yeniden aramak oldu.
+
+Menü çubuğu (File / View / Help), son açılan dosyalar ve temizleme, dosya değişince uyarı ve yeniden yükleme (F5), karşılama ekranı, sürükle-bırak ile açma, pencere konumunu ve son dosyayı hatırlama, açık/koyu/sistem teması, katmanları aç/kapa, PNG olarak dışa aktarma, klavye kısayolları ve About penceresi.
+
+Şema ilk kez değişiyor: `ComposeProjects.IsHiddenFromRecent`. Faz 3'te `EnsureCreated` yerine `Migrate` seçmemizin karşılığı burada.
+
+Kapsam dışı bırakılanlar: bozuk YAML için ayrı hata diyaloğu (durum çubuğu yeterli görüldü), ikon kataloğu yönetim ekranı (CRUD), MSIX paketleme.
+
+**Kazanım:** MenuBar ve KeyboardAccelerator, ContentDialog ve XamlRoot, FileSystemWatcher ile UI iş parçacığı, AppWindow ile pencere yönetimi, RenderTargetBitmap, EF Core'da şema evrimi.
+
+---
+
+### Faz 9 — Oyunlaştırma cilası
+`docs/tutorial/09-zoom-pan-animasyon.md`
 
 Zoom/pan (`ScrollViewer` veya `CompositeTransform`), giriş animasyonları, hover'da figür "zıplaması", `restart: always` için nöbetçi rozeti, mini harita.
 
 **Kazanım:** Transform zinciri, composition animasyonları, viewport yönetimi.
-
----
-
-### Faz 9 — Kullanılabilirlik ve yönetim
-`docs/tutorial/09-kullanilabilirlik.md`
-
-Son açılan dosyalar, hata yönetimi (bozuk YAML), ikon eşleme yönetim ekranı (CRUD), açık/koyu tema, PNG olarak dışa aktarma, MSIX paketleme değerlendirmesi.
 
 ---
 
@@ -384,7 +392,7 @@ MVP'yi "bitti" saymak için:
 | Dosya seçici (WinUI 3 masaüstü) | `FileOpenPicker` pencere handle'ı ister — `WinRT.Interop.InitializeWithWindow`. Packaged/unpackaged fark etmez, her iki durumda da gerekli. Faz 4'ün bilinen tuzağı. |
 | Sprite'ların temini | Faz 4'te **placeholder** geometrik ikonlarla başlanacak; gerçek "aksiyon figür" görselleri sonradan `assets/icons/` içine bırakılarak değiştirilebilir. Kod bundan etkilenmez. |
 | Performans | 10 servis için sorun yok. 50+ servisli dosyalarda XAML eleman sayısı sorun olursa Win2D'ye geçiş yolu açık bırakıldı. |
-| Kapsam kayması | Faz 8 (oyunlaştırma cilası) en cazip ama en az öğretici kısım. MVP bitmeden oraya atlanmaması öneriliyor. |
+| Kapsam kayması | Faz 9 (oyunlaştırma cilası) en cazip ama en az öğretici kısım. MVP bitmeden oraya atlanmaması öneriliyor. |
 
 ---
 

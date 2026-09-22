@@ -1,7 +1,7 @@
 # Faz 7 — Yollar ve İlişkiler
 
 > **Seri:** DockerCity — docker-compose topoloji dashboard'u
-> **Önceki bölüm:** `06-etkilesim.md` · **Sonraki bölüm:** `08-zoom-pan-animasyon.md`
+> **Önceki bölüm:** `06-etkilesim.md` · **Sonraki bölüm:** `08-kullanilabilirlik.md`
 > **Tahmini süre:** 2–3 saat
 > **Kod reposu:** `C:\Users\burak\Development\coding-vibes\DockerCity`
 
@@ -265,4 +265,4 @@ Katman sırası yanlış — yollar figürlerden **önce** eklenmeli.
 
 ---
 
-**Sonraki bölüm:** `08-zoom-pan-animasyon.md` — büyük dosyalar ekrana sığmıyor. Yakınlaştırma, kaydırma ve figürlerin şehre "yerleşme" animasyonları. Oradaki asıl mesele, sürükleme koordinatlarının zoom altında da doğru kalması olacak — çünkü `GetCurrentPoint(this)` ile aldığımız konum, ölçeklenmiş bir canvas'ta artık dünya koordinatı değil.
+**Sonraki bölüm:** `08-kullanilabilirlik.md` — plan değişti: zoom/pan'dan önce uygulamayı kullanışlı hale getiriyoruz. Menü çubuğu, son açılan dosyalar, dosya değişince uyarı, tema, PNG dışa aktarma ve About penceresi. Veritabanı şeması da ilk kez değişiyor.
