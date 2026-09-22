@@ -3,10 +3,16 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using DockerCity.App.ViewModels;
 using DockerCity.App.Views;
+using DockerCity.Domain.Layout;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 using Windows.Foundation;
+using Windows.UI;
+
+// Implicit usings bring in System.IO, whose Path would shadow the XAML shape.
+using ShapePath = Microsoft.UI.Xaml.Shapes.Path;
 
 namespace DockerCity.App.Controls;
 
@@ -20,13 +26,17 @@ namespace DockerCity.App.Controls;
 // single source of truth; only the plumbing is manual.
 //
 // Canvas has no ZIndex of its own: children are drawn in the order they were
-// added. Districts are therefore added first so figures land on top of them.
+// added. Three layers, back to front: districts, roads, figures.
 public sealed class CityCanvas : Canvas
 {
     private const double DragThreshold = 4;
 
     private readonly Dictionary<ServiceNodeViewModel, FrameworkElement> _nodeVisuals = [];
     private readonly Dictionary<DistrictViewModel, FrameworkElement> _districtVisuals = [];
+    private readonly Dictionary<LinkViewModel, ShapePath> _linkVisuals = [];
+
+    private static readonly Color DependsOnColor = Color.FromArgb(255, 214, 218, 228);
+    private static readonly Color SharedVolumeColor = Color.FromArgb(255, 78, 176, 150);
 
     private ServiceNodeViewModel? _dragNode;
     private FrameworkElement? _dragVisual;
@@ -55,6 +65,18 @@ public sealed class CityCanvas : Canvas
         typeof(ObservableCollection<DistrictViewModel>),
         typeof(CityCanvas),
         new PropertyMetadata(null, OnSourceChanged));
+
+    public static readonly DependencyProperty LinksProperty = DependencyProperty.Register(
+        nameof(Links),
+        typeof(ObservableCollection<LinkViewModel>),
+        typeof(CityCanvas),
+        new PropertyMetadata(null, OnSourceChanged));
+
+    public ObservableCollection<LinkViewModel>? Links
+    {
+        get => (ObservableCollection<LinkViewModel>?)GetValue(LinksProperty);
+        set => SetValue(LinksProperty, value);
+    }
 
     public ObservableCollection<ServiceNodeViewModel>? Nodes
     {
@@ -92,7 +114,7 @@ public sealed class CityCanvas : Canvas
         Detach();
         Children.Clear();
 
-        // Order matters: districts first, so they sit behind the figures.
+        // Order matters: districts, then roads, then figures on top.
         if (Districts is not null)
         {
             foreach (var district in Districts)
@@ -106,6 +128,24 @@ public sealed class CityCanvas : Canvas
                 _districtVisuals[district] = visual;
 
                 district.PropertyChanged += OnDistrictPropertyChanged;
+            }
+        }
+
+        if (Links is not null)
+        {
+            foreach (var link in Links)
+            {
+                var visual = CreateLinkVisual(link);
+
+                // Geometry is in canvas coordinates, so the shape itself sits
+                // at the origin.
+                SetLeft(visual, 0);
+                SetTop(visual, 0);
+
+                Children.Add(visual);
+                _linkVisuals[link] = visual;
+
+                link.PropertyChanged += OnLinkPropertyChanged;
             }
         }
 
@@ -145,8 +185,14 @@ public sealed class CityCanvas : Canvas
             district.PropertyChanged -= OnDistrictPropertyChanged;
         }
 
+        foreach (var link in _linkVisuals.Keys)
+        {
+            link.PropertyChanged -= OnLinkPropertyChanged;
+        }
+
         _nodeVisuals.Clear();
         _districtVisuals.Clear();
+        _linkVisuals.Clear();
     }
 
     private void OnNodePropertyChanged(object? sender, PropertyChangedEventArgs args)
@@ -182,6 +228,81 @@ public sealed class CityCanvas : Canvas
             SetTop(visual, district.Y);
         }
     }
+
+    private void OnLinkPropertyChanged(object? sender, PropertyChangedEventArgs args)
+    {
+        if (sender is not LinkViewModel link || !_linkVisuals.TryGetValue(link, out var visual))
+        {
+            return;
+        }
+
+        if (args.PropertyName == nameof(LinkViewModel.Route))
+        {
+            visual.Data = BuildGeometry(link);
+        }
+        else if (args.PropertyName is nameof(LinkViewModel.Thickness) or nameof(LinkViewModel.Opacity))
+        {
+            visual.StrokeThickness = link.Thickness;
+            visual.Opacity = link.Opacity;
+        }
+    }
+
+    private static ShapePath CreateLinkVisual(LinkViewModel link)
+    {
+        var visual = new ShapePath
+        {
+            // Decoration only; clicks must reach the figures underneath.
+            IsHitTestVisible = false,
+            Stroke = new SolidColorBrush(link.IsDirected ? DependsOnColor : SharedVolumeColor),
+            StrokeThickness = link.Thickness,
+            Opacity = link.Opacity,
+            Data = BuildGeometry(link)
+        };
+
+        if (!link.IsDirected)
+        {
+            var dashes = new DoubleCollection();
+            dashes.Add(4);
+            dashes.Add(3);
+            visual.StrokeDashArray = dashes;
+        }
+
+        return visual;
+    }
+
+    private static PathGeometry? BuildGeometry(LinkViewModel link)
+    {
+        if (link.Route is not LinkPath route)
+        {
+            return null;
+        }
+
+        var road = new PathFigure { StartPoint = ToPoint(route.Start), IsClosed = false };
+        road.Segments.Add(new BezierSegment
+        {
+            Point1 = ToPoint(route.Control1),
+            Point2 = ToPoint(route.Control2),
+            Point3 = ToPoint(route.End)
+        });
+
+        var geometry = new PathGeometry();
+        geometry.Figures.Add(road);
+
+        // The head is an open chevron drawn with the same stroke. A filled
+        // triangle would need Fill on the Path, which would also fill the
+        // area under the curve.
+        if (link.IsDirected)
+        {
+            var head = new PathFigure { StartPoint = ToPoint(route.ArrowLeft), IsClosed = false };
+            head.Segments.Add(new LineSegment { Point = ToPoint(route.End) });
+            head.Segments.Add(new LineSegment { Point = ToPoint(route.ArrowRight) });
+            geometry.Figures.Add(head);
+        }
+
+        return geometry;
+    }
+
+    private static Point ToPoint(LayoutPoint point) => new(point.X, point.Y);
 
     private void OnNodePointerPressed(object sender, PointerRoutedEventArgs args)
     {

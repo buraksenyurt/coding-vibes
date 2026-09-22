@@ -9,6 +9,7 @@ namespace DockerCity.App.ViewModels;
 public sealed partial class MainViewModel : ObservableObject
 {
     private readonly CityWorkspace _workspace;
+    private readonly LinkRouter _router = new();
 
     private CityMap? _map;
     private int _projectId;
@@ -22,6 +23,8 @@ public sealed partial class MainViewModel : ObservableObject
     public ObservableCollection<ServiceNodeViewModel> Nodes { get; } = [];
 
     public ObservableCollection<DistrictViewModel> Districts { get; } = [];
+
+    public ObservableCollection<LinkViewModel> Links { get; } = [];
 
     [ObservableProperty]
     private string _status = "Open a docker-compose file to build the city.";
@@ -40,6 +43,10 @@ public sealed partial class MainViewModel : ObservableObject
     private ServiceNodeViewModel? _selected;
 
     public string SelectionTitle => Selected?.Name ?? "No service selected";
+
+    // The reverse of depends_on: who would break if this service went away.
+    [ObservableProperty]
+    private string _neededByText = string.Empty;
 
     public bool CanReset => _map is not null;
 
@@ -74,6 +81,7 @@ public sealed partial class MainViewModel : ObservableObject
             Select(null);
 
             Nodes.Clear();
+            Links.Clear();
             Districts.Clear();
 
             // Districts are added before the figures so the canvas draws them
@@ -81,6 +89,11 @@ public sealed partial class MainViewModel : ObservableObject
             for (var index = 0; index < city.Layout.Districts.Count; index++)
             {
                 Districts.Add(new DistrictViewModel(city.Layout.Districts[index], index));
+            }
+
+            foreach (var link in city.Map.Links)
+            {
+                Links.Add(new LinkViewModel(link, _router.Route(link, city.Layout.Nodes)));
             }
 
             foreach (var service in city.Map.Services)
@@ -96,12 +109,13 @@ public sealed partial class MainViewModel : ObservableObject
             var implicitDistricts = city.Map.Districts.Count(district => district.IsImplicit);
 
             Status = $"{Nodes.Count} services · {city.Map.Districts.Count} districts "
-                   + $"({implicitDistricts} implicit) · {Path.GetFileName(path)}";
+                   + $"({implicitDistricts} implicit) · {Links.Count} links · {Path.GetFileName(path)}";
         }
         catch (Exception exception)
         {
             _map = null;
             Nodes.Clear();
+            Links.Clear();
             Districts.Clear();
             Status = $"Could not read {Path.GetFileName(path)}: {exception.Message}";
         }
@@ -129,6 +143,26 @@ public sealed partial class MainViewModel : ObservableObject
         {
             node.IsSelected = true;
         }
+
+        foreach (var link in Links)
+        {
+            link.IsHighlighted = node is not null && link.Touches(node.Name);
+            link.IsDimmed = node is not null && !link.IsHighlighted;
+        }
+
+        if (node is null)
+        {
+            NeededByText = string.Empty;
+            return;
+        }
+
+        var neededBy = Links
+            .Where(link => link.IsDirected && link.To == node.Name)
+            .Select(link => link.From)
+            .OrderBy(name => name, StringComparer.Ordinal)
+            .ToList();
+
+        NeededByText = neededBy.Count == 0 ? "-" : string.Join(", ", neededBy);
     }
 
     // Called continuously while a figure is being dragged. Only the regions
@@ -156,6 +190,12 @@ public sealed partial class MainViewModel : ObservableObject
             {
                 Districts[index].Apply(bounds);
             }
+        }
+
+        // Roads are cheap to recompute: a handful of square roots per link.
+        foreach (var link in Links)
+        {
+            link.Route = _router.Route(link.Link, positions);
         }
 
         ApplyExtent(layout);

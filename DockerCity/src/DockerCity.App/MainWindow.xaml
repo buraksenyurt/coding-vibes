@@ -99,6 +99,11 @@
                     </StackPanel>
 
                     <StackPanel Spacing="2">
+                        <TextBlock Text="Needed by" Opacity="0.5" FontSize="11" />
+                        <TextBlock Text="{Binding NeededByText}" TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="2">
                         <TextBlock Text="Command" Opacity="0.5" FontSize="11" />
                         <TextBlock Text="{Binding Selected.CommandText}" TextWrapping="Wrap" />
                     </StackPanel>

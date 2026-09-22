@@ -261,6 +261,17 @@ public class CityLayoutTests
     }
 
     [Fact]
+    public void Every_link_in_the_sample_file_can_be_routed()
+    {
+        var map = SampleMap();
+        var layout = new GridCityLayoutEngine().Arrange(map);
+        var router = new LinkRouter();
+
+        Assert.NotEmpty(map.Links);
+        Assert.All(map.Links, link => Assert.NotNull(router.Route(link, layout.Nodes)));
+    }
+
+    [Fact]
     public void Options_change_the_result()
     {
         var wide = new GridCityLayoutEngine().Arrange(

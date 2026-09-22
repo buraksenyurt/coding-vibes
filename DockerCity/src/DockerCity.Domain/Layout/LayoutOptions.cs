@@ -16,5 +16,12 @@ public sealed record LayoutOptions
 
     public int MaxColumns { get; init; } = 4;
 
+    // Where a figure's icon sits inside its slot. Links attach to a circle
+    // around the icon rather than to the whole figure, so arrows point at the
+    // service and not at its label.
+    public double IconCenterX { get; init; } = 60;
+    public double IconCenterY { get; init; } = 41;
+    public double IconRadius { get; init; } = 46;
+
     public static LayoutOptions Default { get; } = new();
 }

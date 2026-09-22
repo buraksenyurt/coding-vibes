@@ -20,6 +20,7 @@ public sealed partial class MainWindow : Window
 
         RootGrid.DataContext = _viewModel;
         CityBoard.Districts = _viewModel.Districts;
+        CityBoard.Links = _viewModel.Links;
         CityBoard.Nodes = _viewModel.Nodes;
 
         CityBoard.NodeSelected += (_, node) => _viewModel.Select(node);
