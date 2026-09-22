@@ -24,9 +24,9 @@ Diğer çalışmalardan farkı: bu proje tek seferde bir modele yazdırılmadı.
 | 7 | Bağlantı okları (`depends_on`), Needed by | Tamamlandı |
 | 8 | Kullanılabilirlik: menü, son açılanlar, tema, dışa aktarma | Tamamlandı |
 | 9 | Zoom/pan, mini harita, giriş ve hover animasyonları | Tamamlandı |
-| 10 | Canlı Docker bağlantısı (opsiyonel) | Sıradaki |
+| 10 | Canlı Docker bağlantısı: container durumları figürlerde | Tamamlandı |
 
-Testler: 167 (Domain + Parsing + Data).
+Testler: 214 (Domain + Parsing + Data).
 
 ## Klasör yapısı
 
@@ -38,6 +38,7 @@ DockerCity/
 │   ├── DockerCity.Domain/     entity'ler, değer nesneleri, CityMap, yerleşim   (net10.0)
 │   ├── DockerCity.Parsing/    YamlDotNet DTO'ları + domain'e mapper            (net10.0)
 │   ├── DockerCity.Data/       EF Core + SQLite, image kataloğu                 (net10.0)
+│   ├── DockerCity.Live/       Docker Engine istemcisi (Docker.DotNet)          (net10.0)
 │   └── DockerCity.App/        WinUI 3 arayüzü                     (net10.0-windows…)
 └── tests/
     ├── DockerCity.Domain.Tests/
@@ -45,7 +46,7 @@ DockerCity/
     └── DockerCity.Data.Tests/
 ```
 
-Çekirdek üç katman platformdan bağımsız `net10.0` hedefler; yalnızca `DockerCity.App` Windows'a bağlıdır. Böylece UI tiplerinin iş mantığına sızması derleme zamanında engellenir.
+Çekirdek katmanlar platformdan bağımsız `net10.0` hedefler; yalnızca `DockerCity.App` Windows'a bağlıdır. Böylece UI tiplerinin iş mantığına sızması derleme zamanında engellenir.
 
 ## Çalıştırma
 
@@ -76,6 +77,7 @@ Veritabanı ilk çalıştırmada `%LOCALAPPDATA%\DockerCity\dockercity.db` altı
 | 7 | [Yollar ve ilişkiler](./docs/tutorial/07-baglantilar.md) |
 | 8 | [Kullanılabilirlik](./docs/tutorial/08-kullanilabilirlik.md) |
 | 9 | [Zoom, pan ve animasyon](./docs/tutorial/09-zoom-pan-animasyon.md) |
+| 10 | [Canlı Docker bağlantısı](./docs/tutorial/10-canli-docker.md) |
 
 Her doküman aynı kalıpta: ne yapacağız, **neden böyle**, adım adım uygulama, takıldığın yerler, ne öğrendik, kendin dene.
 
@@ -98,3 +100,7 @@ Faz 9 sonrası:
 - Zoom in/Zoom out ve ekran kaydırma özellikleri
 
 ![Zoom and Pan of DockerCity App](Runtime_11.png)
+
+- Docker servislerinin durumları izleyen parça da entegre edildiğinde
+
+![Runtime Screenshot of DockerCity App with Docker service status integrated](Runtime_12.png)
