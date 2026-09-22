@@ -1,18 +1,27 @@
 ﻿using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Numerics;
+using DockerCity.App.Services;
 using DockerCity.App.ViewModels;
 using DockerCity.App.Views;
 using DockerCity.Domain.Layout;
+using Microsoft.UI.Composition;
+using Microsoft.UI.Dispatching;
+using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Animation;
 using Windows.Foundation;
 using Windows.UI;
 
 // Implicit usings bring in System.IO, whose Path would shadow the XAML shape.
 using ShapePath = Microsoft.UI.Xaml.Shapes.Path;
+
+// Microsoft.UI.Composition has a CompositionTarget of its own.
+using XamlCompositionTarget = Microsoft.UI.Xaml.Media.CompositionTarget;
 
 namespace DockerCity.App.Controls;
 
@@ -31,6 +40,16 @@ public sealed class CityCanvas : Canvas
 {
     private const double DragThreshold = 4;
 
+    // Entrance timing, in milliseconds. The whole show stays under a second
+    // however many services there are: the step shrinks as the city grows.
+    private const double DistrictStep = 60;
+    private const double DistrictDuration = 350;
+    private const double FirstNodeDelay = 150;
+    private const double MaxNodeStep = 45;
+    private const double NodeSpread = 700;
+    private const double NodeDuration = 420;
+    private const double RoadFade = 300;
+
     private readonly Dictionary<ServiceNodeViewModel, FrameworkElement> _nodeVisuals = [];
     private readonly Dictionary<DistrictViewModel, FrameworkElement> _districtVisuals = [];
     private readonly Dictionary<LinkViewModel, ShapePath> _linkVisuals = [];
@@ -44,6 +63,20 @@ public sealed class CityCanvas : Canvas
     private double _originX;
     private double _originY;
     private bool _dragMoved;
+
+    private readonly DispatcherQueueTimer _roadsTimer;
+
+    public CityCanvas()
+    {
+        // A Canvas without a background is invisible to the pointer wherever
+        // it has no children, so clicks on empty ground fell through to the
+        // frame behind it. Transparent is enough to make it hit-testable.
+        Background = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
+
+        _roadsTimer = DispatcherQueue.CreateTimer();
+        _roadsTimer.IsRepeating = false;
+        _roadsTimer.Tick += (_, _) => FadeRoadsIn();
+    }
 
     // Raised on press, before any movement, so a plain click still selects.
     public event EventHandler<ServiceNodeViewModel>? NodeSelected;
@@ -131,7 +164,33 @@ public sealed class CityCanvas : Canvas
         canvas.Rebuild();
     }
 
-    private void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs args) => Rebuild();
+    // Adding is by far the common case (every load adds one item at a time),
+    // so it is handled in place. Anything else - a Clear, a Remove - is rare
+    // enough that starting over is simpler than being clever.
+    private void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs args)
+    {
+        if (args.Action != NotifyCollectionChangedAction.Add || args.NewItems is null)
+        {
+            Rebuild();
+            return;
+        }
+
+        foreach (var item in args.NewItems)
+        {
+            switch (item)
+            {
+                case DistrictViewModel district:
+                    AddDistrict(district);
+                    break;
+                case LinkViewModel link:
+                    AddLink(link);
+                    break;
+                case ServiceNodeViewModel node:
+                    AddNode(node);
+                    break;
+            }
+        }
+    }
 
     // Hiding a layer keeps its visuals and subscriptions alive, so turning it
     // back on is instant and the geometry is still current.
@@ -156,69 +215,219 @@ public sealed class CityCanvas : Canvas
 
     private void Rebuild()
     {
+        _roadsTimer.Stop();
         Detach();
         Children.Clear();
 
-        // Order matters: districts, then roads, then figures on top.
-        if (Districts is not null)
+        foreach (var district in Districts ?? [])
         {
-            foreach (var district in Districts)
-            {
-                var visual = new DistrictControl { DataContext = district };
-
-                SetLeft(visual, district.X);
-                SetTop(visual, district.Y);
-
-                Children.Add(visual);
-                _districtVisuals[district] = visual;
-
-                district.PropertyChanged += OnDistrictPropertyChanged;
-            }
+            AddDistrict(district);
         }
 
-        if (Links is not null)
+        foreach (var link in Links ?? [])
         {
-            foreach (var link in Links)
-            {
-                var visual = CreateLinkVisual(link);
-
-                // Geometry is in canvas coordinates, so the shape itself sits
-                // at the origin.
-                SetLeft(visual, 0);
-                SetTop(visual, 0);
-
-                Children.Add(visual);
-                _linkVisuals[link] = visual;
-
-                link.PropertyChanged += OnLinkPropertyChanged;
-            }
+            AddLink(link);
         }
 
-        ApplyLayerVisibility();
+        foreach (var node in Nodes ?? [])
+        {
+            AddNode(node);
+        }
+    }
 
-        if (Nodes is null)
+    // Each layer is inserted at its own depth, whatever order the items come
+    // in: districts at the back, roads above them, figures on top.
+    private void AddDistrict(DistrictViewModel district)
+    {
+        var visual = new DistrictControl
+        {
+            DataContext = district,
+            Visibility = ShowDistricts ? Visibility.Visible : Visibility.Collapsed
+        };
+
+        SetLeft(visual, district.X);
+        SetTop(visual, district.Y);
+
+        Children.Insert(_districtVisuals.Count, visual);
+        _districtVisuals[district] = visual;
+
+        district.PropertyChanged += OnDistrictPropertyChanged;
+    }
+
+    private void AddLink(LinkViewModel link)
+    {
+        var visual = CreateLinkVisual(link);
+        visual.Visibility = ShowLinks ? Visibility.Visible : Visibility.Collapsed;
+
+        // Geometry is in canvas coordinates, so the shape itself sits at the
+        // origin.
+        SetLeft(visual, 0);
+        SetTop(visual, 0);
+
+        Children.Insert(_districtVisuals.Count + _linkVisuals.Count, visual);
+        _linkVisuals[link] = visual;
+
+        link.PropertyChanged += OnLinkPropertyChanged;
+    }
+
+    private void AddNode(ServiceNodeViewModel node)
+    {
+        var visual = new ServiceNodeControl { DataContext = node };
+
+        SetLeft(visual, node.X);
+        SetTop(visual, node.Y);
+
+        visual.PointerPressed += OnNodePointerPressed;
+        visual.PointerMoved += OnNodePointerMoved;
+        visual.PointerReleased += OnNodePointerReleased;
+        visual.PointerCaptureLost += OnNodePointerCaptureLost;
+
+        Children.Add(visual);
+        _nodeVisuals[node] = visual;
+
+        node.PropertyChanged += OnNodePropertyChanged;
+    }
+
+    // ------------------------------------------------------------ Entrance
+
+    // Districts grow out of the ground, figures pop up one after another in
+    // reading order, and the roads are laid last, once there is something to
+    // connect. Composition animations run on the compositor thread, so a busy
+    // UI thread does not make them stutter.
+    public void PlayEntrance()
+    {
+        if (!Motion.IsEnabled || Children.Count == 0)
         {
             return;
         }
 
-        foreach (var node in Nodes)
+        var compositor = XamlCompositionTarget.GetCompositorForCurrentThread();
+
+        // "Ease out back": overshoots a little and settles, which is what makes
+        // it read as a bounce rather than a slide.
+        var easing = compositor.CreateCubicBezierEasingFunction(new Vector2(0.34f, 1.56f), new Vector2(0.64f, 1f));
+
+        var order = 0;
+
+        foreach (var (district, visual) in _districtVisuals)
         {
-            var visual = new ServiceNodeControl { DataContext = node };
-
-            SetLeft(visual, node.X);
-            SetTop(visual, node.Y);
-
-            visual.PointerPressed += OnNodePointerPressed;
-            visual.PointerMoved += OnNodePointerMoved;
-            visual.PointerReleased += OnNodePointerReleased;
-            visual.PointerCaptureLost += OnNodePointerCaptureLost;
-
-            Children.Add(visual);
-            _nodeVisuals[node] = visual;
-
-            node.PropertyChanged += OnNodePropertyChanged;
+            visual.CenterPoint = new Vector3((float)(district.Width / 2), (float)(district.Height / 2), 0);
+            Pop(compositor, easing, visual, order++ * DistrictStep, DistrictDuration, rise: 0);
         }
+
+        var nodes = _nodeVisuals
+            .OrderBy(pair => pair.Key.Y)
+            .ThenBy(pair => pair.Key.X)
+            .Select(pair => pair.Value)
+            .ToList();
+
+        var step = nodes.Count <= 1 ? 0 : Math.Min(MaxNodeStep, NodeSpread / (nodes.Count - 1));
+        var icon = LayoutOptions.Default;
+
+        for (var index = 0; index < nodes.Count; index++)
+        {
+            // Grow from the icon, not from the middle of icon plus labels.
+            nodes[index].CenterPoint = new Vector3((float)icon.IconCenterX, (float)icon.IconCenterY, 0);
+            Pop(compositor, easing, nodes[index], FirstNodeDelay + (index * step), NodeDuration, rise: 18);
+        }
+
+        if (_linkVisuals.Count == 0 || !ShowLinks)
+        {
+            return;
+        }
+
+        foreach (var visual in _linkVisuals.Values)
+        {
+            visual.Visibility = Visibility.Collapsed;
+        }
+
+        var lastLanding = FirstNodeDelay + (Math.Max(0, nodes.Count - 1) * step) + NodeDuration;
+        _roadsTimer.Interval = TimeSpan.FromMilliseconds(lastLanding);
+        _roadsTimer.Start();
     }
+
+    private static void Pop(
+        Compositor compositor,
+        CompositionEasingFunction easing,
+        UIElement visual,
+        double delayMs,
+        double durationMs,
+        float rise)
+    {
+        var delay = TimeSpan.FromMilliseconds(delayMs);
+        var duration = TimeSpan.FromMilliseconds(durationMs);
+
+        // Scale and Translation are XAML properties backed by the compositor
+        // (the "facades"), so UIElement.StartAnimation can drive them directly.
+        // Both are otherwise unused on these elements, so nothing fights over
+        // them, and both end on their default values.
+        var scale = compositor.CreateVector3KeyFrameAnimation();
+        scale.Target = "Scale";
+        scale.InsertKeyFrame(0f, new Vector3(0.01f, 0.01f, 1f));
+        scale.InsertKeyFrame(1f, Vector3.One, easing);
+        scale.Duration = duration;
+        scale.DelayTime = delay;
+
+        // Without this the element would sit at full size until its turn came,
+        // then collapse and grow. With it, it waits invisibly at key frame 0.
+        scale.DelayBehavior = AnimationDelayBehavior.SetInitialValueBeforeDelay;
+
+        visual.StartAnimation(scale);
+
+        if (rise <= 0)
+        {
+            return;
+        }
+
+        var translation = compositor.CreateVector3KeyFrameAnimation();
+        translation.Target = "Translation";
+        translation.InsertKeyFrame(0f, new Vector3(0, rise, 0));
+        translation.InsertKeyFrame(1f, Vector3.Zero, easing);
+        translation.Duration = duration;
+        translation.DelayTime = delay;
+        translation.DelayBehavior = AnimationDelayBehavior.SetInitialValueBeforeDelay;
+
+        visual.StartAnimation(translation);
+    }
+
+    // Roads have no Scale to play with, and their Opacity belongs to the
+    // selection highlight. A storyboard with FillBehavior.Stop borrows the
+    // property for the fade and hands it back untouched when it ends.
+    private void FadeRoadsIn()
+    {
+        ApplyLayerVisibility();
+
+        if (!ShowLinks)
+        {
+            return;
+        }
+
+        var storyboard = new Storyboard();
+
+        foreach (var visual in _linkVisuals.Values)
+        {
+            var fade = new DoubleAnimation
+            {
+                From = 0,
+                To = visual.Opacity,
+                Duration = new Duration(TimeSpan.FromMilliseconds(RoadFade)),
+                FillBehavior = FillBehavior.Stop
+            };
+
+            Storyboard.SetTarget(fade, visual);
+            Storyboard.SetTargetProperty(fade, nameof(Opacity));
+            storyboard.Children.Add(fade);
+        }
+
+        storyboard.Begin();
+    }
+
+    // ------------------------------------------------------------ Pan cursor
+
+    // ProtectedCursor can only be set from inside the element's own class,
+    // which is why the window asks rather than setting it itself.
+    public void SetPanCursor(bool panning) =>
+        ProtectedCursor = panning ? InputSystemCursor.Create(InputSystemCursorShape.SizeAll) : null;
 
     private void Detach()
     {

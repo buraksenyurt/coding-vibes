@@ -4,18 +4,26 @@ using DockerCity.App.Services;
 using DockerCity.App.ViewModels;
 using DockerCity.App.Views;
 using DockerCity.Data.Preferences;
+using DockerCity.Domain.Layout;
 using Microsoft.UI.Dispatching;
+using Microsoft.UI.Input;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.ApplicationModel.DataTransfer;
+using Windows.Foundation;
 using Windows.Graphics;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using WinRT.Interop;
+
+// Windows.System is not imported whole: it has its own DispatcherQueue types,
+// which would clash with the Microsoft.UI.Dispatching ones used here.
+using VirtualKey = Windows.System.VirtualKey;
+using VirtualKeyModifiers = Windows.System.VirtualKeyModifiers;
 
 namespace DockerCity.App;
 
@@ -34,6 +42,14 @@ public sealed partial class MainWindow : Window
     private RectInt32? _normalBounds;
     private bool _dialogOpen;
 
+    // Panning by dragging empty ground. Positions are measured against the
+    // ScrollViewer, which stays put, not against the canvas, which moves
+    // under the pointer as soon as the view scrolls.
+    private bool _panning;
+    private Point _panStart;
+    private double _panOriginX;
+    private double _panOriginY;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -48,11 +64,24 @@ public sealed partial class MainWindow : Window
         CityBoard.Nodes = _viewModel.Nodes;
 
         CityBoard.NodeSelected += (_, node) => _viewModel.Select(node);
-        CityBoard.NodeMoving += (_, _) => _viewModel.NodeMoved();
         CityBoard.NodeDropped += async (_, node) => await _viewModel.NodeDroppedAsync(node);
+        CityBoard.NodeMoving += (_, _) =>
+        {
+            _viewModel.NodeMoved();
+            RenderMinimap();
+        };
 
-        // Clicking empty canvas clears the selection.
-        CityBoard.PointerPressed += (_, _) => _viewModel.Select(null);
+        // Empty ground: a click clears the selection, a drag pans the city.
+        CityBoard.PointerPressed += OnBoardPointerPressed;
+        CityBoard.PointerMoved += OnBoardPointerMoved;
+        CityBoard.PointerReleased += OnBoardPointerReleased;
+        CityBoard.PointerCaptureLost += (_, _) => EndPan();
+
+        CityScroller.ViewChanged += (_, _) => UpdateViewIndicators();
+        CityScroller.SizeChanged += (_, _) => UpdateViewIndicators();
+        Minimap.NavigateRequested += (_, point) => CenterOn(point);
+        _viewModel.CityLoaded += OnCityLoaded;
+        AddZoomAccelerators();
 
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
         _viewModel.RecentFiles.CollectionChanged += (_, _) => RebuildRecentMenu();
@@ -166,7 +195,17 @@ public sealed partial class MainWindow : Window
 
     private void OnToggleDistrictsClick(object sender, RoutedEventArgs args) => _viewModel.ShowDistricts = DistrictsItem.IsChecked;
 
+    private void OnToggleMinimapClick(object sender, RoutedEventArgs args) => _viewModel.ShowMinimap = MinimapItem.IsChecked;
+
     private async void OnResetClick(object sender, RoutedEventArgs args) => await _viewModel.ResetLayoutAsync();
+
+    private void OnZoomInClick(object sender, RoutedEventArgs args) => ZoomIn();
+
+    private void OnZoomOutClick(object sender, RoutedEventArgs args) => ZoomOut();
+
+    private void OnActualSizeClick(object sender, RoutedEventArgs args) => ZoomTo(1);
+
+    private void OnFitClick(object sender, RoutedEventArgs args) => FitToWindow(animate: true);
 
     private void OnThemeClick(object sender, RoutedEventArgs args)
     {
@@ -192,6 +231,7 @@ public sealed partial class MainWindow : Window
         DetailsItem.IsChecked = _viewModel.ShowDetails;
         LinksItem.IsChecked = _viewModel.ShowLinks;
         DistrictsItem.IsChecked = _viewModel.ShowDistricts;
+        MinimapItem.IsChecked = _viewModel.ShowMinimap;
 
         ThemeSystemItem.IsChecked = _viewModel.Theme == ThemePreference.System;
         ThemeLightItem.IsChecked = _viewModel.Theme == ThemePreference.Light;
@@ -212,6 +252,11 @@ public sealed partial class MainWindow : Window
             case nameof(MainViewModel.ShowDistricts):
             case nameof(MainViewModel.ReopenLastFile):
                 SyncMenuState();
+                break;
+
+            case nameof(MainViewModel.ShowMinimap):
+                SyncMenuState();
+                UpdateViewIndicators();
                 break;
 
             case nameof(MainViewModel.CurrentPath):
@@ -308,6 +353,203 @@ public sealed partial class MainWindow : Window
         await ShowDialogAsync(root => Dialogs.ShowShortcutsAsync(root));
     }
 
+    // Key names such as "Add" or "Number0" work in XAML, but the Plus and
+    // Minus keys of the main keyboard are OEM keys (187 and 189) with no
+    // VirtualKey name. Keeping all the zoom shortcuts together in code is
+    // clearer than splitting them between two files.
+    private void AddZoomAccelerators()
+    {
+        const VirtualKey oemPlus = (VirtualKey)187;
+        const VirtualKey oemMinus = (VirtualKey)189;
+
+        AddAccelerator(oemPlus, ZoomIn);
+        AddAccelerator(VirtualKey.Add, ZoomIn);
+        AddAccelerator(oemMinus, ZoomOut);
+        AddAccelerator(VirtualKey.Subtract, ZoomOut);
+        AddAccelerator(VirtualKey.Number0, () => ZoomTo(1));
+        AddAccelerator(VirtualKey.NumberPad0, () => ZoomTo(1));
+        AddAccelerator(VirtualKey.Number9, () => FitToWindow(animate: true));
+        AddAccelerator(VirtualKey.Number4, () => _viewModel.ShowMinimap = !_viewModel.ShowMinimap);
+    }
+
+    private void AddAccelerator(VirtualKey key, Action action)
+    {
+        var accelerator = new KeyboardAccelerator { Key = key, Modifiers = VirtualKeyModifiers.Control };
+
+        accelerator.Invoked += (_, args) =>
+        {
+            args.Handled = true;
+            action();
+        };
+
+        RootGrid.KeyboardAccelerators.Add(accelerator);
+    }
+
+    // ----------------------------------------------------------- Zoom and pan
+
+    private void ZoomIn() => ZoomTo(ZoomMath.StepIn(CityScroller.ZoomFactor));
+
+    private void ZoomOut() => ZoomTo(ZoomMath.StepOut(CityScroller.ZoomFactor));
+
+    // ChangeView takes the new offsets in zoomed pixels. Passing the old ones
+    // would zoom around the top left corner; ZoomMath keeps the middle of the
+    // window where it was.
+    private void ZoomTo(double zoom)
+    {
+        if (!_viewModel.HasCity)
+        {
+            return;
+        }
+
+        var target = ZoomMath.Clamp(zoom);
+
+        var (x, y) = ZoomMath.OffsetsKeepingCenter(
+            CityScroller.HorizontalOffset,
+            CityScroller.VerticalOffset,
+            CityScroller.ViewportWidth,
+            CityScroller.ViewportHeight,
+            CityScroller.ZoomFactor,
+            target);
+
+        CityScroller.ChangeView(x, y, (float)target, disableAnimation: !Motion.IsEnabled);
+    }
+
+    private void FitToWindow(bool animate)
+    {
+        var content = _viewModel.ContentBounds;
+
+        if (!_viewModel.HasCity || content.IsEmpty)
+        {
+            return;
+        }
+
+        var zoom = ZoomMath.Fit(content, CityScroller.ViewportWidth, CityScroller.ViewportHeight);
+        var (x, y) = ZoomMath.OffsetsToCenterOn(content.Center, CityScroller.ViewportWidth, CityScroller.ViewportHeight, zoom);
+
+        CityScroller.ChangeView(x, y, (float)zoom, disableAnimation: !animate || !Motion.IsEnabled);
+    }
+
+    // The mini map asks for a point to be in the middle; the zoom stays.
+    private void CenterOn(LayoutPoint point)
+    {
+        var (x, y) = ZoomMath.OffsetsToCenterOn(
+            point,
+            CityScroller.ViewportWidth,
+            CityScroller.ViewportHeight,
+            CityScroller.ZoomFactor);
+
+        CityScroller.ChangeView(x, y, null, disableAnimation: true);
+    }
+
+    private void OnCityLoaded(object? sender, CityLoadedEventArgs args)
+    {
+        RenderMinimap();
+
+        // A reload keeps the view where the user left it.
+        if (args.IsSameFile)
+        {
+            return;
+        }
+
+        CityBoard.PlayEntrance();
+
+        // The ScrollViewer was collapsed until a moment ago and has not been
+        // measured yet: its viewport reads 0x0. Low priority runs this after
+        // the layout pass, when the numbers are real.
+        DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () => FitToWindow(animate: false));
+    }
+
+    private void UpdateViewIndicators()
+    {
+        var zoom = CityScroller.ZoomFactor;
+
+        ZoomButton.Content = $"{Math.Round(zoom * 100)}%";
+
+        Minimap.ShowViewport(
+            CityScroller.HorizontalOffset / zoom,
+            CityScroller.VerticalOffset / zoom,
+            CityScroller.ViewportWidth / zoom,
+            CityScroller.ViewportHeight / zoom);
+    }
+
+    private void RenderMinimap()
+    {
+        Minimap.Render(_viewModel.Districts, _viewModel.Nodes, _viewModel.ContentBounds);
+        UpdateViewIndicators();
+    }
+
+    private void OnBoardPointerPressed(object sender, PointerRoutedEventArgs args)
+    {
+        _viewModel.Select(null);
+
+        // Touch and pen already pan the ScrollViewer natively; only the mouse
+        // needs help.
+        if (args.Pointer.PointerDeviceType != PointerDeviceType.Mouse)
+        {
+            return;
+        }
+
+        var point = args.GetCurrentPoint(CityScroller);
+
+        if (!point.Properties.IsLeftButtonPressed && !point.Properties.IsMiddleButtonPressed)
+        {
+            return;
+        }
+
+        _panStart = point.Position;
+        _panOriginX = CityScroller.HorizontalOffset;
+        _panOriginY = CityScroller.VerticalOffset;
+        _panning = CityBoard.CapturePointer(args.Pointer);
+
+        if (_panning)
+        {
+            CityBoard.SetPanCursor(true);
+        }
+
+        args.Handled = true;
+    }
+
+    private void OnBoardPointerMoved(object sender, PointerRoutedEventArgs args)
+    {
+        if (!_panning)
+        {
+            return;
+        }
+
+        var position = args.GetCurrentPoint(CityScroller).Position;
+
+        // Offsets are in zoomed pixels and so is the pointer, so a pixel of
+        // mouse movement is a pixel of scrolling at every zoom level.
+        CityScroller.ChangeView(
+            _panOriginX - (position.X - _panStart.X),
+            _panOriginY - (position.Y - _panStart.Y),
+            null,
+            disableAnimation: true);
+
+        args.Handled = true;
+    }
+
+    private void OnBoardPointerReleased(object sender, PointerRoutedEventArgs args)
+    {
+        if (_panning)
+        {
+            CityBoard.ReleasePointerCapture(args.Pointer);
+        }
+
+        EndPan();
+    }
+
+    private void EndPan()
+    {
+        if (!_panning)
+        {
+            return;
+        }
+
+        _panning = false;
+        CityBoard.SetPanCursor(false);
+    }
+
     // ----------------------------------------------------------- Drag and drop
 
     private void OnDragOver(object sender, DragEventArgs args)
@@ -353,9 +595,7 @@ public sealed partial class MainWindow : Window
 
         try
         {
-            var bitmap = new RenderTargetBitmap();
-            await bitmap.RenderAsync(CityFrame);
-            var pixels = await bitmap.GetPixelsAsync();
+            var (bitmap, pixels) = await RenderCityAsync();
 
             var picker = new FileSavePicker
             {
@@ -398,6 +638,85 @@ public sealed partial class MainWindow : Window
         {
             _viewModel.Status = $"Could not export: {exception.Message}";
         }
+    }
+
+    // RenderTargetBitmap captures what the compositor already has, and under
+    // zoom that is the city rasterized at the zoomed size. At 49% the PNG came
+    // out at full size but built from half the pixels: blurry. So the view
+    // goes to 100% for the capture and comes straight back.
+    private async Task<(RenderTargetBitmap Bitmap, Windows.Storage.Streams.IBuffer Pixels)> RenderCityAsync()
+    {
+        var zoom = CityScroller.ZoomFactor;
+        var offsetX = CityScroller.HorizontalOffset;
+        var offsetY = CityScroller.VerticalOffset;
+        var zoomed = Math.Abs(zoom - 1) > 0.001f;
+
+        if (zoomed)
+        {
+            await ChangeViewAsync(0, 0, 1f);
+        }
+
+        try
+        {
+            var bitmap = new RenderTargetBitmap();
+            await bitmap.RenderAsync(CityFrame);
+            return (bitmap, await bitmap.GetPixelsAsync());
+        }
+        finally
+        {
+            if (zoomed)
+            {
+                CityScroller.ChangeView(offsetX, offsetY, zoom, disableAnimation: true);
+            }
+        }
+    }
+
+    // ChangeView only asks; the view settles a little later. Wait for the
+    // final ViewChanged, then for two frames so the content is rasterized
+    // again at the new scale before anything reads it.
+    private async Task ChangeViewAsync(double? offsetX, double? offsetY, float zoom)
+    {
+        var settled = new TaskCompletionSource();
+
+        void OnViewChanged(object? sender, ScrollViewerViewChangedEventArgs args)
+        {
+            if (!args.IsIntermediate)
+            {
+                settled.TrySetResult();
+            }
+        }
+
+        CityScroller.ViewChanged += OnViewChanged;
+
+        try
+        {
+            if (CityScroller.ChangeView(offsetX, offsetY, zoom, disableAnimation: true))
+            {
+                // A safety net: never hang an export on an event that did not come.
+                await Task.WhenAny(settled.Task, Task.Delay(500));
+            }
+        }
+        finally
+        {
+            CityScroller.ViewChanged -= OnViewChanged;
+        }
+
+        await NextFrameAsync();
+        await NextFrameAsync();
+    }
+
+    private static Task NextFrameAsync()
+    {
+        var frame = new TaskCompletionSource();
+
+        void OnRendering(object? sender, object args)
+        {
+            Microsoft.UI.Xaml.Media.CompositionTarget.Rendering -= OnRendering;
+            frame.TrySetResult();
+        }
+
+        Microsoft.UI.Xaml.Media.CompositionTarget.Rendering += OnRendering;
+        return frame.Task;
     }
 
     // ----------------------------------------------------------- Window placement

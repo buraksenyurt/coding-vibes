@@ -272,6 +272,17 @@ public class CityLayoutTests
     }
 
     [Fact]
+    public void Content_bounds_of_the_sample_file_are_known()
+    {
+        // District borders reach 32 in from the edge; the canvas extent adds
+        // another 32 of margin on the far side, which the bounds leave out.
+        var layout = Sample();
+
+        Assert.Equal(new LayoutBounds(32, 32, 648, 592), LayoutBounds.Of(layout));
+        Assert.Equal(680, layout.Width);
+    }
+
+    [Fact]
     public void Options_change_the_result()
     {
         var wide = new GridCityLayoutEngine().Arrange(

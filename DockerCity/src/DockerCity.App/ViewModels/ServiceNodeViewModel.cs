@@ -57,6 +57,16 @@ public sealed partial class ServiceNodeViewModel : ObservableObject
 
     public string Badges => string.Join(" · ", BadgeParts());
 
+    // Drawn as a small sentinel on the icon rather than as a text badge.
+    public bool IsSupervised => _service.IsSupervised;
+
+    public string SupervisedText => _service.Restart switch
+    {
+        RestartPolicy.Always => "Sentinel · restart: always",
+        RestartPolicy.UnlessStopped => "Sentinel · restart: unless-stopped",
+        _ => string.Empty
+    };
+
     // --- Detail panel ---
 
     public string ContainerText => _service.ContainerName ?? "(derived by Compose)";
@@ -136,11 +146,6 @@ public sealed partial class ServiceNodeViewModel : ObservableObject
 
     private IEnumerable<string> BadgeParts()
     {
-        if (_service.IsSupervised)
-        {
-            yield return "restarts";
-        }
-
         if (_service is IDataPersisting { HasPersistentData: true })
         {
             yield return "persistent";

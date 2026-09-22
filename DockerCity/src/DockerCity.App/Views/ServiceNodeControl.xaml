@@ -10,11 +10,18 @@
 
     <UserControl.Resources>
         <converters:CategoryToBrushConverter x:Key="CategoryBrush" />
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibility" />
     </UserControl.Resources>
 
-    <StackPanel Width="120" Spacing="4" ToolTipService.ToolTip="{Binding TooltipText}">
+    <StackPanel Width="120"
+                Spacing="4"
+                ToolTipService.ToolTip="{Binding TooltipText}"
+                PointerEntered="OnPointerEntered"
+                PointerExited="OnPointerExited">
 
-        <Grid Width="82" Height="82" HorizontalAlignment="Center">
+        <!-- Only the icon bounces on hover; the labels stay put so they remain
+             readable while the pointer is over them. -->
+        <Grid x:Name="IconHost" Width="82" Height="82" HorizontalAlignment="Center">
 
             <!-- Always present, faded out when not selected. Keeps the control
                  free of value converters and avoids a layout shift on select. -->
@@ -33,6 +40,24 @@
                            FontWeight="SemiBold"
                            HorizontalAlignment="Center"
                            VerticalAlignment="Center" />
+            </Border>
+
+            <!-- The sentinel: this service is brought back by Docker whenever it
+                 stops (restart: always or unless-stopped). -->
+            <Border Width="24"
+                    Height="24"
+                    CornerRadius="12"
+                    Margin="0,-2,-2,0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    BorderThickness="2"
+                    BorderBrush="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+                    Background="{ThemeResource AccentFillColorDefaultBrush}"
+                    Visibility="{Binding IsSupervised, Converter={StaticResource BoolToVisibility}}"
+                    ToolTipService.ToolTip="{Binding SupervisedText}">
+                <FontIcon Glyph="&#xE72C;"
+                          FontSize="11"
+                          Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" />
             </Border>
         </Grid>
 

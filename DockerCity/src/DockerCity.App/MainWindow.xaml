@@ -34,6 +34,8 @@
             <KeyboardAccelerator Modifiers="Control" Key="Number3" Invoked="OnToggleDistrictsAccelerator" />
             <KeyboardAccelerator Key="Escape" Invoked="OnEscapeAccelerator" />
             <KeyboardAccelerator Key="F1" Invoked="OnShortcutsAccelerator" />
+            <!-- Zoom and mini map shortcuts are added in code: Ctrl+Plus and
+                 Ctrl+Minus sit on OEM keys that VirtualKey has no name for. -->
         </Grid.KeyboardAccelerators>
 
         <Grid.RowDefinitions>
@@ -65,6 +67,12 @@
                     <ToggleMenuFlyoutItem x:Name="DetailsItem" Text="Details panel" KeyboardAcceleratorTextOverride="Ctrl+1" Click="OnToggleDetailsClick" />
                     <ToggleMenuFlyoutItem x:Name="LinksItem" Text="Roads" KeyboardAcceleratorTextOverride="Ctrl+2" Click="OnToggleLinksClick" />
                     <ToggleMenuFlyoutItem x:Name="DistrictsItem" Text="District borders" KeyboardAcceleratorTextOverride="Ctrl+3" Click="OnToggleDistrictsClick" />
+                    <ToggleMenuFlyoutItem x:Name="MinimapItem" Text="Mini map" KeyboardAcceleratorTextOverride="Ctrl+4" Click="OnToggleMinimapClick" />
+                    <MenuFlyoutSeparator />
+                    <MenuFlyoutItem Text="Zoom in" KeyboardAcceleratorTextOverride="Ctrl+Plus" Click="OnZoomInClick" />
+                    <MenuFlyoutItem Text="Zoom out" KeyboardAcceleratorTextOverride="Ctrl+Minus" Click="OnZoomOutClick" />
+                    <MenuFlyoutItem Text="Actual size" KeyboardAcceleratorTextOverride="Ctrl+0" Click="OnActualSizeClick" />
+                    <MenuFlyoutItem Text="Fit to window" KeyboardAcceleratorTextOverride="Ctrl+9" Click="OnFitClick" />
                     <MenuFlyoutSeparator />
                     <MenuFlyoutSubItem Text="Theme">
                         <RadioMenuFlyoutItem x:Name="ThemeSystemItem" Text="Use system setting" GroupName="Theme" Click="OnThemeClick" Tag="System" />
@@ -90,13 +98,18 @@
         </Grid>
 
         <!-- ============================ City ============================ -->
-        <ScrollViewer Grid.Row="1"
+        <!-- Zooming is the ScrollViewer's job: Ctrl+wheel and touchpad pinch
+             work out of the box, and the canvas keeps its own coordinates. -->
+        <ScrollViewer x:Name="CityScroller"
+                      Grid.Row="1"
                       Grid.Column="0"
                       HorizontalScrollBarVisibility="Auto"
                       HorizontalScrollMode="Auto"
                       VerticalScrollBarVisibility="Auto"
                       VerticalScrollMode="Auto"
-                      ZoomMode="Disabled"
+                      ZoomMode="Enabled"
+                      MinZoomFactor="0.25"
+                      MaxZoomFactor="3"
                       Visibility="{Binding HasCity, Converter={StaticResource BoolToVisibility}}">
             <!-- The frame gives the export a background: the canvas itself is
                  transparent, and a transparent PNG loses its dark-theme text. -->
@@ -108,6 +121,22 @@
                                      ShowDistricts="{Binding ShowDistricts}" />
             </Border>
         </ScrollViewer>
+
+        <!-- Outside the ScrollViewer, so it neither scrolls nor zooms. -->
+        <Border Grid.Row="1"
+                Grid.Column="0"
+                Margin="0,0,20,20"
+                Padding="4"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                CornerRadius="8"
+                BorderThickness="1"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                Background="{ThemeResource SolidBackgroundFillColorBaseBrush}"
+                Opacity="0.92"
+                Visibility="{Binding IsMinimapVisible, Converter={StaticResource BoolToVisibility}}">
+            <controls:MinimapControl x:Name="Minimap" Width="220" Height="150" />
+        </Border>
 
         <InfoBar Grid.Row="1"
                  Grid.Column="0"
@@ -249,10 +278,27 @@
                 Padding="16,8"
                 BorderThickness="0,1,0,0"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
-            <TextBlock Text="{Binding Status}"
-                       Opacity="0.7"
-                       FontSize="12"
-                       TextTrimming="CharacterEllipsis" />
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Text="{Binding Status}"
+                           Opacity="0.7"
+                           FontSize="12"
+                           VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis" />
+
+                <HyperlinkButton x:Name="ZoomButton"
+                                 Grid.Column="1"
+                                 Content="100%"
+                                 FontSize="12"
+                                 Padding="6,0"
+                                 ToolTipService.ToolTip="Back to actual size (Ctrl+0)"
+                                 Click="OnActualSizeClick"
+                                 Visibility="{Binding HasCity, Converter={StaticResource BoolToVisibility}}" />
+            </Grid>
         </Border>
     </Grid>
 </Window>

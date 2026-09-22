@@ -20,12 +20,12 @@ public sealed class CategoryToBrushConverter : IValueConverter
         [ServiceCategory.Unknown] = Fallback
     };
 
-    public object Convert(object value, Type targetType, object parameter, string language)
-    {
-        var category = value is ServiceCategory known ? known : ServiceCategory.Unknown;
+    public object Convert(object value, Type targetType, object parameter, string language) =>
+        BrushFor(value is ServiceCategory known ? known : ServiceCategory.Unknown);
 
-        return new SolidColorBrush(Palette.TryGetValue(category, out var color) ? color : Fallback);
-    }
+    // The mini map draws figures in code and needs the same colours.
+    public static SolidColorBrush BrushFor(ServiceCategory category) =>
+        new(Palette.TryGetValue(category, out var color) ? color : Fallback);
 
     public object ConvertBack(object value, Type targetType, object parameter, string language) =>
         throw new NotSupportedException();

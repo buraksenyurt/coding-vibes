@@ -20,6 +20,12 @@ internal static class Dialogs
         ("Ctrl+1", "Show or hide the details panel"),
         ("Ctrl+2", "Show or hide roads"),
         ("Ctrl+3", "Show or hide district borders"),
+        ("Ctrl+4", "Show or hide the mini map"),
+        ("Ctrl+Plus / Ctrl+Minus", "Zoom in or out (the numeric keypad works too)"),
+        ("Ctrl+Mouse wheel", "Zoom around the pointer"),
+        ("Ctrl+0", "Actual size (100%)"),
+        ("Ctrl+9", "Fit the city to the window"),
+        ("Drag empty ground", "Pan the city"),
         ("Esc", "Clear the selection"),
         ("F1", "Keyboard shortcuts"),
         ("Drag a .yml file", "Open it by dropping it on the window")

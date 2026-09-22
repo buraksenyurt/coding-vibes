@@ -38,6 +38,10 @@ public sealed partial class MainViewModel : ObservableObject
 
     public ObservableCollection<RecentFileViewModel> RecentFiles { get; } = [];
 
+    // Raised synchronously after a load has filled the collections, before
+    // anything is awaited, so the view can start animating in the same frame.
+    public event EventHandler<CityLoadedEventArgs>? CityLoaded;
+
     [ObservableProperty]
     private string _status = "Open a docker-compose file to build the city.";
 
@@ -64,6 +68,7 @@ public sealed partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsDetailsPanelVisible))]
+    [NotifyPropertyChangedFor(nameof(IsMinimapVisible))]
     private bool _hasCity;
 
     [ObservableProperty]
@@ -87,12 +92,25 @@ public sealed partial class MainViewModel : ObservableObject
     private bool _showDistricts = true;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsMinimapVisible))]
+    private bool _showMinimap = true;
+
+    [ObservableProperty]
     private bool _reopenLastFile;
 
     [ObservableProperty]
     private ThemePreference _theme = ThemePreference.System;
 
     public bool IsDetailsPanelVisible => ShowDetails && HasCity;
+
+    public bool IsMinimapVisible => ShowMinimap && HasCity;
+
+    // --- Phase 9: what fitting to the window and the mini map look at ---
+
+    // The area actually occupied by figures and districts. The canvas is
+    // larger (it never shrinks below 800x600), so its size is not this.
+    [ObservableProperty]
+    private LayoutBounds _contentBounds;
 
     public WindowPlacement? SavedWindow { get; private set; }
 
@@ -126,6 +144,7 @@ public sealed partial class MainViewModel : ObservableObject
                 ShowDetails = await preferences.GetLayerVisibleAsync(AppPreferences.ShowDetailsKey);
                 ShowLinks = await preferences.GetLayerVisibleAsync(AppPreferences.ShowLinksKey);
                 ShowDistricts = await preferences.GetLayerVisibleAsync(AppPreferences.ShowDistrictsKey);
+                ShowMinimap = await preferences.GetLayerVisibleAsync(AppPreferences.ShowMinimapKey);
                 ReopenLastFile = await preferences.GetReopenLastFileAsync();
                 SavedWindow = await preferences.GetWindowAsync();
                 lastFile = await preferences.GetLastFileAsync();
@@ -164,6 +183,7 @@ public sealed partial class MainViewModel : ObservableObject
         try
         {
             var city = await _workspace.LoadAsync(path);
+            var isSameFile = string.Equals(CurrentPath, path, StringComparison.OrdinalIgnoreCase) && HasCity;
 
             _map = city.Map;
             _projectId = city.ProjectId;
@@ -195,11 +215,14 @@ public sealed partial class MainViewModel : ObservableObject
             }
 
             ApplyExtent(city.Layout);
+            ContentBounds = LayoutBounds.Of(city.Layout);
 
             CurrentPath = path;
             OnPropertyChanged(nameof(CurrentFileName));
             HasCity = true;
             IsFileChangedOnDisk = false;
+
+            CityLoaded?.Invoke(this, new CityLoadedEventArgs(isSameFile));
 
             var implicitDistricts = city.Map.Districts.Count(district => district.IsImplicit);
 
@@ -395,6 +418,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         ApplyExtent(layout);
+        ContentBounds = LayoutBounds.Of(layout);
     }
 
     public async Task NodeDroppedAsync(ServiceNodeViewModel node)
@@ -449,6 +473,9 @@ public sealed partial class MainViewModel : ObservableObject
 
     partial void OnShowDistrictsChanged(bool value) =>
         _ = PersistAsync(preferences => preferences.SetLayerVisibleAsync(AppPreferences.ShowDistrictsKey, value));
+
+    partial void OnShowMinimapChanged(bool value) =>
+        _ = PersistAsync(preferences => preferences.SetLayerVisibleAsync(AppPreferences.ShowMinimapKey, value));
 
     partial void OnReopenLastFileChanged(bool value) =>
         _ = PersistAsync(preferences => preferences.SetReopenLastFileAsync(value));
