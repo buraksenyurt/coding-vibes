@@ -216,7 +216,9 @@ Bu yüzden canvas, tema arka planını taşıyan bir `Border`'a sarıldı ve dı
 </Border>
 ```
 
-> **Doğrulanması gereken nokta:** `RenderTargetBitmap`'in `ScrollViewer` içinde ekrana sığmayan kısmı da çizip çizmediği. Bunu belgelerden kesin olarak çıkaramadım; ilk denemede büyük bir haritayla kontrol etmek gerekiyor. Çizmiyorsa Faz 9'da zoom geldiğinde "sığdır ve dışa aktar" bir çözüm olur.
+> **Doğrulandı:** `RenderTargetBitmap`, `ScrollViewer` içinde ekrana sığmayan kısmı da çiziyor. Bunu belgelerden kesin olarak çıkaramamıştım, o yüzden denemeyle kontrol ettik: pencere daraltıldığında `postgres` ve `sonarqube` detay panelinin arkasında kalıp görünmüyordu, ama dışa aktarılan 820×903'lük PNG'de ikisi de `pgadmin → postgres` okuyla birlikte eksiksiz çıktı. Dışa aktarılan şey ekranın bir fotoğrafı değil, `CityFrame` elemanının tamamı.
+>
+> Belgede bulamadığın bir davranışı varsayıma bırakma, küçük bir denemeyle doğrula. Burada deneme beş saniye sürdü.
 
 ### 2.12 Tercihler anında kaydediliyor
 
@@ -353,7 +355,7 @@ Bir veritabanı çağrısı kapıyı atlıyor. Bkz. 2.6.
 
 4. **Monitörü "kaldır".** `AppSettings` tablosundaki `window.placement` değerini elle `-5000,-5000,1200,800,0` yap ve uygulamayı aç. Nerede açıldı? `DisplayArea` kontrolünü kaldırıp tekrar dene.
 
-5. **Büyük harita dışa aktarma.** 40 servisli bir compose dosyası oluştur, pencereyi küçült ve Ctrl+E. PNG'de haritanın tamamı var mı? Yoksa ne yapardın?
+5. **İçeriğe kırp.** Dışa aktarılan PNG, canvas'ın en az 800×600 olma kuralı yüzünden altta ve sağda boşluk taşıyor. `CityLayout`'un bölge sınırlarından içeriğin gerçek kutusunu hesaplayıp resmi ona göre kırpan bir seçenek ekle. Kırpmayı `RenderTargetBitmap` aşamasında mı, piksel dizisi üzerinde mi yaparsın?
 
 6. **Kendi menü öğeni ekle.** "File › Open containing folder" — açık dosyanın klasörünü Explorer'da açsın. Hangi API'yi kullanırdın? Klavye kısayolunu nereye bağlarsın?
 
