@@ -43,6 +43,23 @@ pub fn describe(map: &MetroMap) -> String {
     }
 
     writeln!(out).unwrap();
+    let rows = map
+        .lanes
+        .iter()
+        .map(|l| l.compact_row)
+        .max()
+        .map_or(0, |r| r + 1);
+    for row in 0..rows {
+        let names: Vec<_> = map
+            .lanes
+            .iter()
+            .filter(|l| l.compact_row == row)
+            .map(|l| label(&l.label))
+            .collect();
+        writeln!(out, "compact row {row}: {}", names.join(" · ")).unwrap();
+    }
+
+    writeln!(out).unwrap();
     for t in &map.transitions {
         let kind = match t.kind {
             TransitionKind::Fork => "fork",

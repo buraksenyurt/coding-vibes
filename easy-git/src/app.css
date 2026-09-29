@@ -21,6 +21,11 @@
   --lane-6: #4a3aa7; /* violet */
   --lane-7: #e34948; /* red */
 
+  /* Transition kinds (validated as a set, all pairs) */
+  --kind-fork: #1baf7a;
+  --kind-merge: #4a3aa7;
+  --kind-cherryPick: #eb6834;
+
   font-family: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
   font-size: 14px;
   color: var(--text);
@@ -47,6 +52,10 @@
     --lane-5: #008300;
     --lane-6: #9085e9;
     --lane-7: #e66767;
+
+    --kind-fork: #199e70;
+    --kind-merge: #9085e9;
+    --kind-cherryPick: #d95926;
   }
 }
 
@@ -69,6 +78,10 @@
   --lane-5: #008300;
   --lane-6: #9085e9;
   --lane-7: #e66767;
+
+  --kind-fork: #199e70;
+  --kind-merge: #9085e9;
+  --kind-cherryPick: #d95926;
 }
 
 * { box-sizing: border-box; }

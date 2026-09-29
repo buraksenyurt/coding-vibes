@@ -10,6 +10,11 @@ feature/login                |  <ooo|
 feature/payments             |      <oo|
 feature/old-search (deleted) |           <oo|
 
+compact row 0: main
+compact row 1: develop
+compact row 2: release/1.0 · hotfix/crash · feature/old-search (deleted)
+compact row 3: feature/login · feature/payments
+
 fork        main @1 -> develop @2
 fork        develop @2 -> feature/login @3
 merge       feature/login @5 -> develop @6

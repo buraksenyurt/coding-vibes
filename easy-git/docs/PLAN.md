@@ -257,7 +257,7 @@ Aynı senaryo `tests/fixtures/make-sample-repo.ps1` olarak da verilir — manuel
 | HEAD | Pulse animasyonlu dış halka + "HEAD" rozeti. |
 | Tag | İstasyonun üstünde küçük bayrak + ad. |
 | Geçiş eğrileri | Cubic Bezier, sütun genişliğinin yarısı kadar yatay kontrol noktası; merge'de hedefe ok başı. |
-| Şerit renkleri | 10 renklik, koyu ve açık temada ayırt edilebilir palet; `main` her zaman aynı renk (sabit), diğerleri sırayla. |
+| Şerit renkleri | 8 renklik, renk körlüğü testinden geçmiş, koyu ve açık temada ayrı adımlı palet (Faz 4'te 10'dan 8'e indirildi); `main` her zaman aynı renk (sabit), diğerleri sırayla. |
 | Silinmiş dal şeridi | Kendi renginin %40 opaklığı, etiket italik + "(silinmiş)" |
 
 ### 6.1 Geçiş renklendirme

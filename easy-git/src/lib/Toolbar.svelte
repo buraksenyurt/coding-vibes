@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
   import { repo } from "./repo.svelte";
+  import { view } from "./view.svelte";
 
   let { children }: { children?: Snippet } = $props();
 
@@ -46,6 +47,20 @@
   {/if}
 
   <div class="spacer"></div>
+
+  {#if repo.map}
+    <div class="segmented" role="group" aria-label="Geçiş renkleri">
+      <span class="caption">Geçiş rengi</span>
+      <button class:active={view.colorMode === "kind"} aria-pressed={view.colorMode === "kind"}
+              onclick={() => view.setColorMode("kind")}>Türe göre</button>
+      <button class:active={view.colorMode === "lane"} aria-pressed={view.colorMode === "lane"}
+              onclick={() => view.setColorMode("lane")}>Dala göre</button>
+    </div>
+    <label class="toggle">
+      <input type="checkbox" checked={view.compact} onchange={() => view.toggleCompact()} />
+      Kompakt
+    </label>
+  {/if}
   {@render children?.()}
 </header>
 
@@ -72,6 +87,13 @@
   button:disabled { opacity: 0.5; cursor: default; }
   button.primary { background: var(--accent); border-color: var(--accent); color: white; border-radius: 6px 0 0 6px; }
   .picker .icon { border-radius: 0 6px 6px 0; border-left: none; }
+  .segmented { display: flex; align-items: center; }
+  .caption { color: var(--muted); font-size: 12px; margin-right: 8px; }
+  .segmented button { border-radius: 0; font-size: 12px; padding: 4px 10px; }
+  .segmented button:first-of-type { border-radius: 6px 0 0 6px; }
+  .segmented button:last-of-type { border-radius: 0 6px 6px 0; border-left: none; }
+  .segmented button.active { background: var(--text); color: var(--surface); border-color: var(--text); }
+  .toggle { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); cursor: pointer; }
   .repo { display: flex; gap: 10px; align-items: baseline; }
   .head { color: var(--muted); font-size: 12px; }
   .menu {

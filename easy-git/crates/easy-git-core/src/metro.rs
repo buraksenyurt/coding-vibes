@@ -42,8 +42,10 @@ impl LaneLabel {
 pub struct Lane {
     pub id: LaneId,
     pub label: LaneLabel,
-    /// Vertical position, 0 at the top.
+    /// Vertical position, 0 at the top: one row per lane.
     pub row: usize,
+    /// Row in the compact view, where lanes that never overlap share a row.
+    pub compact_row: usize,
     /// Index into the UI palette. `main`/`master` always gets 0.
     pub color: u8,
     /// Local and remote refs whose history lives on this lane.
@@ -212,6 +214,7 @@ pub fn layout(
     }
 
     assign_rows_and_colors(&mut lanes);
+    compact_rows(&mut lanes, &transitions);
 
     let mut refs_at: BTreeMap<Column, Vec<GitRef>> = BTreeMap::new();
     for r in refs {
@@ -379,6 +382,7 @@ impl LaneBuilder<'_> {
             id,
             label,
             row: id,
+            compact_row: id,
             color: 0,
             refs,
             first_column: *claimed.iter().min().expect("not empty"),
@@ -466,6 +470,46 @@ fn assign_rows_and_colors(lanes: &mut [Lane]) {
             next = next % (PALETTE_SIZE - 1) + 1;
             color
         };
+    }
+}
+
+/// Greedy interval partitioning. A lane occupies its own row from the column
+/// after its fork (the fork curve lands there) to the column before the merge
+/// it flows into (the merge curve leaves there). Lanes are placed, in priority
+/// order, on the first row where they collide with nothing. Priority order
+/// keeps `main` on row 0 and long-lived branches near the top.
+fn compact_rows(lanes: &mut [Lane], transitions: &[Transition]) {
+    /// Empty columns kept between two lanes sharing a row.
+    const GAP: usize = 1;
+
+    let span = |lane: &Lane| {
+        let start = lane
+            .fork_column
+            .map_or(lane.first_column, |fork| fork + 1)
+            .min(lane.first_column);
+        let end = transitions
+            .iter()
+            .filter(|t| t.from_lane == lane.id && t.kind == TransitionKind::Merge)
+            .map(|t| t.to_column - 1)
+            .fold(lane.last_column, usize::max);
+        (start, end)
+    };
+
+    let mut rows: Vec<Vec<(usize, usize)>> = Vec::new();
+    for lane in lanes.iter_mut() {
+        let (start, end) = span(lane);
+        let free = |taken: &Vec<(usize, usize)>| {
+            taken.iter().all(|&(s, e)| end + GAP < s || e + GAP < start)
+        };
+        let row = match rows.iter().position(free) {
+            Some(row) => row,
+            None => {
+                rows.push(Vec::new());
+                rows.len() - 1
+            }
+        };
+        rows[row].push((start, end));
+        lane.compact_row = row;
     }
 }
 
@@ -609,6 +653,41 @@ mod tests {
         let message = format!("Fix\n\n(cherry picked from commit {id})");
         assert_eq!(cherry_pick_source(&message), Some(id.parse().unwrap()));
         assert_eq!(cherry_pick_source("Fix"), None);
+    }
+
+    #[test]
+    fn compact_rows_reuse_space_after_a_merge() {
+        // main: a ---------- m1 ----------- m2
+        //         \-- f1 --/    \-- g1 --/
+        let mut h = FakeHistory::new();
+        let a = h.commit("a", &[]);
+        let f1 = h.commit("f1", &[a]);
+        let m1 = h.commit("Merge branch 'feature/f'", &[a, f1]);
+        let g1 = h.commit("g1", &[m1]);
+        let m2 = h.commit("Merge branch 'feature/g'", &[m1, g1]);
+        h.branch("main", m2);
+        let map = h.build();
+
+        let f = map.lane_named("feature/f").unwrap();
+        let g = map.lane_named("feature/g").unwrap();
+        assert_ne!(f.row, g.row);
+        assert_eq!(f.compact_row, g.compact_row);
+        assert_eq!(map.lane_named("main").unwrap().compact_row, 0);
+    }
+
+    #[test]
+    fn overlapping_lanes_never_share_a_compact_row() {
+        let mut h = FakeHistory::new();
+        let a = h.commit("a", &[]);
+        let f1 = h.commit("f1", &[a]);
+        let g1 = h.commit("g1", &[a]);
+        h.branch("main", a);
+        h.branch("feature/f", f1);
+        h.branch("feature/g", g1);
+        let map = h.build();
+        let f = map.lane_named("feature/f").unwrap();
+        let g = map.lane_named("feature/g").unwrap();
+        assert_ne!(f.compact_row, g.compact_row);
     }
 
     #[test]

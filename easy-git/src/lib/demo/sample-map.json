@@ -270,6 +270,7 @@
       "label": "main",
       "labelKind": "named",
       "row": 0,
+      "compactRow": 0,
       "color": 0,
       "refs": [
         "main",
@@ -284,6 +285,7 @@
       "label": "develop",
       "labelKind": "named",
       "row": 1,
+      "compactRow": 1,
       "color": 1,
       "refs": [
         "develop",
@@ -298,6 +300,7 @@
       "label": "release/1.0",
       "labelKind": "named",
       "row": 2,
+      "compactRow": 2,
       "color": 2,
       "refs": [
         "release/1.0"
@@ -311,6 +314,7 @@
       "label": "hotfix/crash",
       "labelKind": "named",
       "row": 3,
+      "compactRow": 2,
       "color": 3,
       "refs": [
         "hotfix/crash"
@@ -324,6 +328,7 @@
       "label": "feature/login",
       "labelKind": "named",
       "row": 4,
+      "compactRow": 3,
       "color": 4,
       "refs": [
         "feature/login"
@@ -337,6 +342,7 @@
       "label": "feature/payments",
       "labelKind": "named",
       "row": 5,
+      "compactRow": 3,
       "color": 5,
       "refs": [
         "feature/payments"
@@ -350,6 +356,7 @@
       "label": "feature/old-search",
       "labelKind": "inferred",
       "row": 6,
+      "compactRow": 2,
       "color": 6,
       "refs": [],
       "firstColumn": 12,

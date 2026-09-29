@@ -238,7 +238,7 @@ Tek kural, üç sonuç. `git pull` ile oluşan "kendi remote'unu merge etme" dur
 
 ### 3.8 Renk
 
-`main`/`master` her zaman 0 numaralı renk, diğerleri paletteki 1..9 arasında döner. Renklerin kendisi ön yüzde (Faz 5); core sadece indeks verir. Satırlar şimdilik şerit başına bir tane — sıkıştırma Faz 5'te.
+`main`/`master` her zaman 0 numaralı renk, diğerleri paletteki 1..7 arasında döner (palet Faz 4'te 8 renge indi). Renklerin kendisi ön yüzde (Faz 5); core sadece indeks verir. Satırlar şimdilik şerit başına bir tane — sıkıştırma Faz 5'te.
 
 ### 3.9 Testler
 
