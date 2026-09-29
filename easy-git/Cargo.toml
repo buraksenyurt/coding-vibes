@@ -1,0 +1,22 @@
+[workspace]
+resolver = "3"
+members = ["crates/easy-git-core", "crates/easy-git-repo", "src-tauri"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "MIT"
+authors = ["Burak Selim Senyurt"]
+
+[workspace.dependencies]
+easy-git-core = { path = "crates/easy-git-core" }
+easy-git-repo = { path = "crates/easy-git-repo" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+
+# Dependencies are compiled with light optimisation even in debug builds.
+# gix walks thousands of objects; an unoptimised build feels sluggish.
+[profile.dev.package."*"]
+opt-level = 1

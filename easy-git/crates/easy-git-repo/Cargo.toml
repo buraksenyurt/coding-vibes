@@ -1,0 +1,10 @@
+[package]
+name = "easy-git-repo"
+description = "gix adapter: reads a git repository on disk into the easy-git-core model."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+easy-git-core.workspace = true

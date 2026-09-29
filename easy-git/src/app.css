@@ -1,0 +1,26 @@
+:root {
+  --bg: #fafafa;
+  --surface: #ffffff;
+  --text: #1f2328;
+  --muted: #656d76;
+  --border: #d0d7de;
+  --accent: #0969da;
+  font-family: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1e1e1e;
+    --surface: #252526;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --border: #3a3f44;
+    --accent: #4493f8;
+  }
+}
+
+* { box-sizing: border-box; }
+html, body, #app { margin: 0; height: 100%; }

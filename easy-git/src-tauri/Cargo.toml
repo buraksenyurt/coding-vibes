@@ -1,0 +1,22 @@
+[package]
+name = "easy-git"
+description = "A calm, read-only dashboard for git branches."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[lib]
+# The `_lib` suffix avoids a name clash between the lib and bin targets on Windows.
+name = "easy_git_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.7", features = [] }
+
+[dependencies]
+easy-git-core.workspace = true
+easy-git-repo.workspace = true
+tauri = { version = "2.12", features = [] }
+serde.workspace = true
+serde_json.workspace = true

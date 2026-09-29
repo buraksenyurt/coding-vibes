@@ -1,0 +1,9 @@
+[package]
+name = "easy-git-core"
+description = "Domain model and lane layout for easy-git. Knows nothing about gix or Tauri."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]

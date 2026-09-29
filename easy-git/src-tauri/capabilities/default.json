@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Permissions for the main window. Anything not listed here is denied.",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}
