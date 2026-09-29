@@ -1,0 +1,33 @@
+---
+source: crates/easy-git-repo/tests/metro_sample.rs
+expression: describe(&sample_map())
+---
+main                         |oo--------@------@oo|
+develop                      | <o---@----@--@o|
+release/1.0                  |               <o|
+hotfix/crash                 | <-------o|
+feature/login                |  <ooo|
+feature/payments             |      <oo|
+feature/old-search (deleted) |           <oo|
+
+fork        main @1 -> develop @2
+fork        develop @2 -> feature/login @3
+merge       feature/login @5 -> develop @6
+fork        develop @6 -> feature/payments @7
+fork        main @1 -> hotfix/crash @9
+merge       hotfix/crash @9 -> main @10
+merge       hotfix/crash @9 -> develop @11
+fork        develop @11 -> feature/old-search (deleted) @12
+merge       feature/old-search (deleted) @13 -> develop @14
+fork        develop @15 -> release/1.0 @16
+merge       release/1.0 @16 -> main @17
+cherry-pick feature/payments @8 -> main @18
+
+@5   Keep the session after login             feature/login
+@8   Fix rounding in amount formatting        feature/payments
+@9   Fix crash on empty config                hotfix/crash
+@15  Fix typo in docs                         develop, origin/develop
+@16  Bump version to 1.0                      release/1.0
+@17  Merge branch 'release/1.0'               v1.0
+@18  Fix rounding in amount formatting        origin/main
+@19  Update changelog                         main
