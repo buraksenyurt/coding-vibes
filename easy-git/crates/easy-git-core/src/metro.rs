@@ -338,14 +338,14 @@ fn branch_candidates(
     candidates.sort_by(|a, b| (a.0, a.1, &a.2.label).cmp(&(b.0, b.1, &b.2.label)));
 
     let mut result: Vec<Candidate> = candidates.into_iter().map(|(_, _, c)| c).collect();
-    if let Head::Detached(id) = head {
-        if let Some(&column) = index.get(id) {
-            result.push(Candidate {
-                label: "HEAD".into(),
-                refs: vec!["HEAD".into()],
-                tips: vec![column],
-            });
-        }
+    if let Head::Detached(id) = head
+        && let Some(&column) = index.get(id)
+    {
+        result.push(Candidate {
+            label: "HEAD".into(),
+            refs: vec!["HEAD".into()],
+            tips: vec![column],
+        });
     }
     result
 }
@@ -430,16 +430,16 @@ fn transitions(
                 to_column: to,
             });
         }
-        if let Some(&from) = cherry_pick_source(&commit.message).and_then(|id| index.get(&id)) {
-            if lane_of[from] != lane_of[to] {
-                result.push(Transition {
-                    kind: TransitionKind::CherryPick,
-                    from_lane: lane_of[from],
-                    from_column: from,
-                    to_lane: lane_of[to],
-                    to_column: to,
-                });
-            }
+        if let Some(&from) = cherry_pick_source(&commit.message).and_then(|id| index.get(&id))
+            && lane_of[from] != lane_of[to]
+        {
+            result.push(Transition {
+                kind: TransitionKind::CherryPick,
+                from_lane: lane_of[from],
+                from_column: from,
+                to_lane: lane_of[to],
+                to_column: to,
+            });
         }
     }
     result

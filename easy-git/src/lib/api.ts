@@ -2,12 +2,16 @@
 // `invoke` directly, so the IPC surface stays visible in one file.
 //
 // Outside Tauri (plain `npm run dev` in a browser) the functions fall back to
-// a bundled demo map built from the sample repository. That keeps UI work
+// a bundled demo (map, branch stats, commit details) built from the
+// sample repository. That keeps UI work
 // possible without starting the desktop shell.
 
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import type { AppError } from "./bindings/AppError";
+import type { BranchStatsDto } from "./bindings/BranchStatsDto";
+import type { CommitDetailsDto } from "./bindings/CommitDetailsDto";
+import type { DemoBundle } from "./bindings/DemoBundle";
 import type { MetroMapDto } from "./bindings/MetroMapDto";
 import type { RecentRepository } from "./bindings/RecentRepository";
 import type { RepoSummary } from "./bindings/RepoSummary";
@@ -34,15 +38,29 @@ export async function pickFolder(): Promise<string | null> {
 
 export async function openRepository(path: string): Promise<RepoSummary> {
   if (!inTauri()) {
-    const map = await demoMap();
+    const { map } = await demo();
     return { name: "metro-line-story (demo)", path: DEMO_PATH, head: map.head };
   }
   return call<RepoSummary>("open_repository", { path });
 }
 
 export async function getMetroMap(limit?: number): Promise<MetroMapDto> {
-  if (!inTauri()) return demoMap();
+  if (!inTauri()) return (await demo()).map;
   return call<MetroMapDto>("get_metro_map", { limit });
+}
+
+export async function getCommitDetails(id: string): Promise<CommitDetailsDto> {
+  if (!inTauri()) {
+    const found = (await demo()).details.find((d) => d.id === id);
+    if (!found) throw new Error(`commit ${id} is not on the map`);
+    return found;
+  }
+  return call<CommitDetailsDto>("get_commit_details", { id });
+}
+
+export async function getBranchStats(): Promise<BranchStatsDto[]> {
+  if (!inTauri()) return (await demo()).stats;
+  return call<BranchStatsDto[]>("get_branch_stats");
 }
 
 export async function recentRepositories(): Promise<RecentRepository[]> {
@@ -50,7 +68,7 @@ export async function recentRepositories(): Promise<RecentRepository[]> {
   return call<RecentRepository[]>("recent_repositories");
 }
 
-async function demoMap(): Promise<MetroMapDto> {
-  const module = await import("./demo/sample-map.json");
-  return module.default as unknown as MetroMapDto;
+async function demo(): Promise<DemoBundle> {
+  const module = await import("./demo/demo-bundle.json");
+  return module.default as unknown as DemoBundle;
 }

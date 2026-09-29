@@ -183,15 +183,30 @@ export function transitionColor(t: TransitionDto, lanes: LaneDto[], mode: ColorM
 
 `app.css`'e üç yeni değişken: `--kind-fork`, `--kind-merge`, `--kind-cherryPick` — açık ve koyu tema için ayrı değerlerle.
 
-**Ok başı** tek bir `<marker>` tanımıyla, her merge'de rengine uyarak:
+**Ok başı** için ilk akla gelen SVG'nin `<marker>` elemanı:
 
 ```svelte
-<marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
-  <path d="M 0 0 L 8 4 L 0 8 z" fill="context-stroke" />
-</marker>
+<marker id="arrow" …><path d="M 0 0 L 8 4 L 0 8 z" fill="context-stroke" /></marker>
 ```
 
-`fill="context-stroke"` (SVG 2): marker'ı kullanan çizginin rengini al. Böylece 8 renk için 8 ayrı marker tanımlamaya gerek kalmıyor. WebView2 (Chromium) bunu destekliyor.
+`fill="context-stroke"` (SVG 2) marker'ın, onu kullanan çizginin rengini almasını sağlar; WebView2'de (Chromium) çalışıyor. Ama uygulamayı Linux'ta WebKitGTK ile denediğimizde ok başları **siyah** çıktı: o motor `context-stroke`'u desteklemiyor. Her renk için ayrı marker tanımlamak yerine ok başını kendi `path`'i olarak çiziyoruz. Merge dönüşü hedefe her zaman yatay girdiği için ok hep sağa bakıyor; hesap basit:
+
+```ts
+export function arrowHead(column: number, row: number): string {
+  const tip = x(column) - MERGE_RADIUS - 1.5;   // istasyonun halkasının hemen önü
+  const cy = y(row);
+  return `M ${tip - 7} ${cy - 4} L ${tip} ${cy} L ${tip - 7} ${cy + 4} z`;
+}
+```
+
+```svelte
+{#if t.kind === "merge"}
+  <path d={arrowHead(t.toColumn, rowOfLane[t.toLane])} class="arrow"
+        fill={transitionColor(t, map.lanes, view.colorMode)} />
+{/if}
+```
+
+Ders: WebView tabanlı masaüstü uygulamasında "tarayıcı" tek değil. Windows'ta WebView2, macOS'ta WKWebView, Linux'ta WebKitGTK. Yeni bir CSS/SVG özelliği kullanmadan önce üçünü de düşün.
 
 ### 3.5 Görünüm tercihleri — `view.svelte.ts`
 
@@ -260,7 +275,7 @@ Sağ alt köşede, haritanın üstünde duran küçük bir kutu. Moda göre içe
 | Belirti | Sebep / çözüm |
 |---|---|
 | Uzun yatay geçişler yanlış renkte | Ray (`trackSpan`) fork'tan sonrasını kapsamıyor; yatay kısım geçişin rengini alıyor. |
-| Ok başları siyah | Tarayıcı `context-stroke` desteklemiyor. Eski motorlarda her renk için ayrı marker gerekir. |
+| Ok başları siyah | `<marker>` + `context-stroke` kullanılmış; WebKitGTK desteklemiyor. Ok başını ayrı `path` olarak çiz (3.4). |
 | Geçişin üzerine gelmek zor | Görünmez `.hit` ikizi yok ya da `pointer-events: stroke` unutulmuş. |
 | Kompakt modda iki dal üst üste | `span` aralığı yanlış; core testleri (`overlapping_lanes_never_share_a_compact_row`) bunu yakalamalı. |
 | Kompakt düğmesine basınca harita güncellenmiyor | `rowOf` `$derived` değil düz bir fonksiyon; `view.compact`'a bağımlılık izlenmiyor. |
@@ -269,7 +284,7 @@ Sağ alt köşede, haritanın üstünde duran küçük bir kutu. Moda göre içe
 
 - Kübik Bezier ile "kısa dönüş, uzun düz yol" metro makası.
 - Renklendirmede iki soru (ne oldu / nereden geldi) ve ikincil kodlama (ok, kesikli çizgi).
-- SVG `<marker>` ve `context-stroke`.
+- SVG `<marker>`/`context-stroke` ve WebView motorları arasındaki farklar.
 - Aralık bölümleme ile satır sıkıştırma; closure'ların ödünç alma sınırları.
 - Hover için geniş, görünmez isabet alanı; türetilmiş `focus` durumu ile soluklaştırma.
 - Görünüm tercihlerini `localStorage`'da güvenli saklamak.

@@ -11,6 +11,7 @@ mod metro;
 mod model;
 mod priority;
 mod source;
+mod stats;
 
 #[cfg(test)]
 mod testing;
@@ -25,6 +26,10 @@ pub use metro::{
 pub use model::{Commit, GitRef, Head, RefKind, Signature, Timestamp};
 pub use priority::BranchPriority;
 pub use source::{HistorySource, SourceError};
+pub use stats::{
+    BranchStats, DEFAULT_STALE_DAYS, Upstream, base_branch, branch_stats, branches_containing,
+    reachable,
+};
 
 /// Name of the product, shared by every layer.
 pub const PRODUCT_NAME: &str = "easy-git";

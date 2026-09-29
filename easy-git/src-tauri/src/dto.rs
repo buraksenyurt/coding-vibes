@@ -4,7 +4,10 @@
 //! `ts-rs` generates a matching TypeScript file for every type marked
 //! `#[ts(export)]` when `cargo test` runs, so the two sides never drift.
 
-use easy_git_core::{GitRef, Head, LaneLabel, MetroMap, RefKind, TransitionKind};
+use easy_git_core::{
+    BranchStats, Column, GitRef, Head, LaneLabel, MetroMap, RefKind, Signature, TransitionKind,
+    branches_containing,
+};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
@@ -231,6 +234,158 @@ impl From<&MetroMap> for MetroMapDto {
     }
 }
 
+#[derive(Debug, Clone, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct PersonDto {
+    pub name: String,
+    pub email: String,
+    #[ts(type = "number")]
+    pub time: i64,
+    /// Minutes east of UTC, as recorded in the commit.
+    pub offset_minutes: i32,
+}
+
+impl From<&Signature> for PersonDto {
+    fn from(s: &Signature) -> Self {
+        Self {
+            name: s.name.clone(),
+            email: s.email.clone(),
+            time: s.time.seconds,
+            offset_minutes: s.time.offset_minutes,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct ParentDto {
+    pub id: String,
+    pub short_id: String,
+    /// `null` when the parent lies beyond the loaded history window.
+    pub column: Option<usize>,
+}
+
+#[derive(Debug, Clone, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct CommitDetailsDto {
+    pub id: String,
+    pub short_id: String,
+    pub column: usize,
+    pub lane: String,
+    pub summary: String,
+    pub message: String,
+    pub author: PersonDto,
+    pub committer: PersonDto,
+    pub parents: Vec<ParentDto>,
+    /// Branches whose history contains this commit.
+    pub branches: Vec<String>,
+    /// Tags pointing exactly at this commit.
+    pub tags: Vec<String>,
+}
+
+impl CommitDetailsDto {
+    pub fn new(map: &MetroMap, column: Column) -> Self {
+        let commit = &map.commits[column];
+        let tags = map
+            .refs_at
+            .get(&column)
+            .map(|refs| {
+                refs.iter()
+                    .filter(|r| r.kind == RefKind::Tag)
+                    .map(|r| r.name.clone())
+                    .collect()
+            })
+            .unwrap_or_default();
+        Self {
+            id: commit.id.to_hex(),
+            short_id: commit.id.short(),
+            column,
+            lane: map.lane(map.lane_of[column]).label.text().to_owned(),
+            summary: commit.summary.clone(),
+            message: commit.message.clone(),
+            author: PersonDto::from(&commit.author),
+            committer: PersonDto::from(&commit.committer),
+            parents: commit
+                .parents
+                .iter()
+                .map(|p| ParentDto {
+                    id: p.to_hex(),
+                    short_id: p.short(),
+                    column: map.column_of(p),
+                })
+                .collect(),
+            branches: branches_containing(map, column),
+            tags,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct UpstreamDto {
+    pub name: String,
+    pub ahead: usize,
+    pub behind: usize,
+}
+
+#[derive(Debug, Clone, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct BranchStatsDto {
+    pub name: String,
+    pub is_remote_only: bool,
+    pub lane: Option<usize>,
+    pub tip_column: usize,
+    pub ahead: usize,
+    pub behind: usize,
+    pub merged: bool,
+    pub stale: bool,
+    #[ts(type = "number")]
+    pub last_activity: i64,
+    pub commit_count: usize,
+    pub authors: Vec<String>,
+    pub upstream: Option<UpstreamDto>,
+}
+
+impl From<&BranchStats> for BranchStatsDto {
+    fn from(s: &BranchStats) -> Self {
+        Self {
+            name: s.name.clone(),
+            is_remote_only: s.is_remote_only,
+            lane: s.lane,
+            tip_column: s.tip_column,
+            ahead: s.ahead,
+            behind: s.behind,
+            merged: s.merged,
+            stale: s.stale,
+            last_activity: s.last_activity,
+            commit_count: s.commit_count,
+            authors: s.authors.clone(),
+            upstream: s.upstream.as_ref().map(|u| UpstreamDto {
+                name: u.name.clone(),
+                ahead: u.ahead,
+                behind: u.behind,
+            }),
+        }
+    }
+}
+
+/// Everything the browser-only demo mode needs, in one file. Only built by
+/// the `export_demo_map` test, hence `allow(dead_code)`.
+#[allow(dead_code)]
+#[derive(Debug, Clone, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct DemoBundle {
+    pub map: MetroMapDto,
+    pub stats: Vec<BranchStatsDto>,
+    pub details: Vec<CommitDetailsDto>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -238,11 +393,31 @@ mod tests {
     use easy_git_repo::GixSource;
     use easy_git_repo::fixture::build_sample_repo;
 
-    fn sample_dto() -> MetroMapDto {
+    fn sample_map() -> MetroMap {
         let root = tempfile::tempdir().unwrap();
         let sample = build_sample_repo(root.path()).unwrap();
         let source = GixSource::open(&sample.work_dir).unwrap();
-        MetroMapDto::from(&build_metro_map(&source, &Default::default()).unwrap())
+        build_metro_map(&source, &Default::default()).unwrap()
+    }
+
+    fn sample_dto() -> MetroMapDto {
+        MetroMapDto::from(&sample_map())
+    }
+
+    #[test]
+    fn commit_details_list_parents_branches_and_tags() {
+        let map = sample_map();
+        let tagged = map
+            .commits
+            .iter()
+            .position(|c| c.summary == "Merge branch 'release/1.0'")
+            .unwrap();
+        let details = CommitDetailsDto::new(&map, tagged);
+        assert_eq!(details.tags, ["v1.0"]);
+        assert_eq!(details.parents.len(), 2);
+        assert!(details.parents.iter().all(|p| p.column.is_some()));
+        assert_eq!(details.branches, ["main", "origin/main"]);
+        assert_eq!(details.lane, "main");
     }
 
     #[test]
@@ -267,8 +442,21 @@ mod tests {
     #[ignore]
     fn export_demo_map() {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../src/lib/demo/sample-map.json");
+            .join("../src/lib/demo/demo-bundle.json");
         std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-        std::fs::write(&path, serde_json::to_string_pretty(&sample_dto()).unwrap()).unwrap();
+        let map = sample_map();
+        // A fixed "now" a week after the sample, so the demo never turns stale.
+        let now = map.commits.last().unwrap().committer.time.seconds + 7 * 86_400;
+        let bundle = DemoBundle {
+            map: MetroMapDto::from(&map),
+            stats: easy_git_core::branch_stats(&map, now, easy_git_core::DEFAULT_STALE_DAYS)
+                .iter()
+                .map(BranchStatsDto::from)
+                .collect(),
+            details: (0..map.commits.len())
+                .map(|c| CommitDetailsDto::new(&map, c))
+                .collect(),
+        };
+        std::fs::write(&path, serde_json::to_string_pretty(&bundle).unwrap()).unwrap();
     }
 }

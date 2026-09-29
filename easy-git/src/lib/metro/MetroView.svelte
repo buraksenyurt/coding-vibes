@@ -2,11 +2,14 @@
   import { tick } from "svelte";
   import type { LaneDto } from "../bindings/LaneDto";
   import type { MetroMapDto } from "../bindings/MetroMapDto";
+  import { ago } from "../format";
+  import { repo } from "../repo.svelte";
   import { view } from "../view.svelte";
   import Legend from "./Legend.svelte";
+  import Tooltip from "./Tooltip.svelte";
   import {
     COLUMN_WIDTH, HEADER_HEIGHT, LABEL_WIDTH, MERGE_RADIUS, ROW_HEIGHT, STATION_RADIUS,
-    canvasSize, dateTicks, laneColor, trackSpan, transitionColor, transitionPath, x, y,
+    KIND_LABELS, arrowHead, canvasSize, dateTicks, laneColor, trackSpan, transitionColor, transitionPath, x, y,
   } from "./geometry";
 
   let { map }: { map: MetroMapDto } = $props();
@@ -14,9 +17,21 @@
   let scroller: HTMLDivElement | undefined = $state();
   /** Index of the transition under the pointer, if any. */
   let hovered = $state<number | null>(null);
+  /** Column of the station under the pointer, if any. */
+  let hoveredStation = $state<number | null>(null);
+  let pointer = $state({ x: 0, y: 0 });
 
-  const rowOf = $derived((lane: LaneDto) => (view.compact ? lane.compactRow : lane.row));
-  const rowOfLane = $derived(map.lanes.map((lane) => rowOf(lane)));
+  const hidden = $derived(repo.hiddenLanes);
+  const visible = (lane: number) => !hidden.has(lane);
+
+  // Rows of visible lanes, renumbered so hidden lanes leave no gaps.
+  const rowOfLane = $derived.by(() => {
+    const raw = map.lanes.map((lane) => (view.compact ? lane.compactRow : lane.row));
+    const used = [...new Set(map.lanes.filter((l) => visible(l.id)).map((l) => raw[l.id]))].sort((a, b) => a - b);
+    const renumber = new Map(used.map((row, i) => [row, i]));
+    return raw.map((row) => renumber.get(row) ?? -1);
+  });
+  const rowOf = $derived((lane: LaneDto) => rowOfLane[lane.id]);
   const size = $derived(canvasSize(map, rowOf));
   const ticks = $derived(dateTicks(map));
   const columnOf = $derived(new Map(map.commits.map((c, i) => [c.id, i])));
@@ -27,7 +42,7 @@
   /** Label column: one entry per row; in compact mode a row may hold several lanes. */
   const rows = $derived.by(() => {
     const byRow = new Map<number, LaneDto[]>();
-    for (const lane of map.lanes) {
+    for (const lane of map.lanes.filter((l) => visible(l.id))) {
       const row = rowOf(lane);
       byRow.set(row, [...(byRow.get(row) ?? []), lane]);
     }
@@ -36,12 +51,25 @@
       .map(([row, lanes]) => ({ row, lanes: lanes.sort((a, b) => b.lastColumn - a.lastColumn) }));
   });
 
-  // What stays lit while a transition is hovered.
+  // What stays lit: a hovered transition wins over a selected branch.
   const focus = $derived.by(() => {
-    if (hovered === null) return null;
-    const t = map.transitions[hovered];
-    return { lanes: new Set([t.fromLane, t.toLane]), columns: new Set([t.fromColumn, t.toColumn]) };
+    if (hovered !== null) {
+      const t = map.transitions[hovered];
+      return { lanes: new Set([t.fromLane, t.toLane]), columns: new Set([t.fromColumn, t.toColumn]) };
+    }
+    const sel = repo.selection;
+    if (sel?.kind === "branch") {
+      const lane = repo.stats.find((s) => s.name === sel.name)?.lane;
+      if (lane === null || lane === undefined) return null;
+      const columns = new Set(map.commits.flatMap((c, i) => (c.lane === lane ? [i] : [])));
+      return { lanes: new Set([lane]), columns };
+    }
+    return null;
   });
+  const selectedColumn = $derived(repo.selection?.kind === "commit" ? repo.selection.column : null);
+  const shownTransitions = $derived(
+    map.transitions.map((t, i) => ({ t, i })).filter(({ t }) => visible(t.fromLane) && visible(t.toLane)),
+  );
   const dimLane = (id: number) => focus !== null && !focus.lanes.has(id);
   const dimStation = (column: number) => focus !== null && !focus.columns.has(column);
 
@@ -51,6 +79,22 @@
       if (scroller) scroller.scrollLeft = scroller.scrollWidth;
     });
   });
+
+  // Someone asked to see a column (parent link, branch tip): centre it.
+  $effect(() => {
+    const target = repo.scrollTarget;
+    if (target === null || !scroller) return;
+    scroller.scrollTo({ left: x(target) - (scroller.clientWidth - LABEL_WIDTH) / 2, behavior: "smooth" });
+    repo.scrollTarget = null;
+  });
+
+  function track(event: PointerEvent) {
+    pointer = { x: event.clientX, y: event.clientY };
+  }
+
+  function onKey(event: KeyboardEvent) {
+    if (event.key === "Escape") repo.clearSelection();
+  }
 </script>
 
 <div class="scroller" bind:this={scroller}>
@@ -75,12 +119,6 @@
     </div>
 
     <svg width={size.width} height={size.height} role="img" aria-label="Dalların metro haritası">
-      <defs>
-        <marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
-          <path d="M 0 0 L 8 4 L 0 8 z" fill="context-stroke" />
-        </marker>
-      </defs>
-
       <!-- 1. Date ruler -->
       <g class="ruler">
         {#each ticks as t (t.column)}
@@ -91,7 +129,7 @@
 
       <!-- 2. Lane tracks -->
       <g class="tracks">
-        {#each map.lanes as lane (lane.id)}
+        {#each map.lanes.filter((l) => visible(l.id)) as lane (lane.id)}
           <line
             x1={x(spans[lane.id].from)} x2={x(spans[lane.id].to)}
             y1={y(rowOfLane[lane.id])} y2={y(rowOfLane[lane.id])}
@@ -108,7 +146,7 @@
 
       <!-- 3. Transitions -->
       <g class="transitions">
-        {#each map.transitions as t, i (i)}
+        {#each shownTransitions as { t, i } (i)}
           {@const d = transitionPath(t, rowOfLane[t.fromLane], rowOfLane[t.toLane])}
           <path
             {d}
@@ -116,34 +154,52 @@
             class:dimmed={focus !== null && hovered !== i}
             class:lit={hovered === i}
             stroke={transitionColor(t, map.lanes, view.colorMode)}
-            marker-end={t.kind === "merge" ? "url(#arrow)" : undefined}
           />
+          {#if t.kind === "merge"}
+            <path d={arrowHead(t.toColumn, rowOfLane[t.toLane])} class="arrow"
+                  class:dimmed={focus !== null && hovered !== i}
+                  fill={transitionColor(t, map.lanes, view.colorMode)} />
+          {/if}
           <!-- Wide invisible twin: a 2px line is too thin to hover. -->
           <path {d} class="hit" role="presentation"
-                onpointerenter={() => (hovered = i)} onpointerleave={() => (hovered = null)} />
+                onpointerenter={(e) => { hovered = i; track(e); }} onpointermove={track}
+                onpointerleave={() => (hovered = null)} />
         {/each}
       </g>
 
       <!-- 4. Stations -->
       <g class="stations">
         {#each map.commits as commit, column (commit.id)}
-          {@const lane = map.lanes[commit.lane]}
-          {@const cx = x(column)}
-          {@const cy = y(rowOfLane[commit.lane])}
-          <g class:dimmed={dimStation(column)}>
-            {#if commit.isMerge}
-              <circle {cx} {cy} r={MERGE_RADIUS} class="merge-outer" stroke={laneColor(lane.color)} />
-              <circle {cx} {cy} r={MERGE_RADIUS - 3.5} fill={laneColor(lane.color)} class="dot" />
-            {:else}
-              <circle {cx} {cy} r={STATION_RADIUS} fill={laneColor(lane.color)} class="dot" />
-            {/if}
-          </g>
+          {#if visible(commit.lane)}
+            {@const lane = map.lanes[commit.lane]}
+            {@const cx = x(column)}
+            {@const cy = y(rowOfLane[commit.lane])}
+            <g class:dimmed={dimStation(column)}>
+              {#if selectedColumn === column}
+                <circle {cx} {cy} r="11" class="selected-ring" />
+              {/if}
+              {#if commit.isMerge}
+                <circle {cx} {cy} r={MERGE_RADIUS} class="merge-outer" stroke={laneColor(lane.color)} />
+                <circle {cx} {cy} r={MERGE_RADIUS - 3.5} fill={laneColor(lane.color)} class="dot" />
+              {:else}
+                <circle {cx} {cy} r={STATION_RADIUS} fill={laneColor(lane.color)} class="dot" />
+              {/if}
+              <!-- Hit target larger than the mark; a click selects the commit. -->
+              <circle {cx} {cy} r="11" class="station-hit" role="button" tabindex="-1"
+                      aria-label="{commit.shortId} {commit.summary}"
+                      onpointerenter={(e) => { hoveredStation = column; track(e); }}
+                      onpointermove={track}
+                      onpointerleave={() => (hoveredStation = null)}
+                      onclick={() => repo.selectCommit(column)}
+                      onkeydown={(e) => e.key === "Enter" && repo.selectCommit(column)} />
+            </g>
+          {/if}
         {/each}
       </g>
 
       <!-- 5. Markers: tags and HEAD -->
       <g class="markers" class:dimmed={focus !== null}>
-        {#each tags as tag (tag.name)}
+        {#each tags.filter((t) => visible(map.commits[t.column].lane)) as tag (tag.name)}
           {@const cx = x(tag.column)}
           {@const cy = y(rowOfLane[map.commits[tag.column].lane])}
           <line class="flagpole" x1={cx} x2={cx} y1={cy - 8} y2={cy - 17} />
@@ -152,7 +208,7 @@
             <text class="flag-text" x="5" y="-1.5">{tag.name}</text>
           </g>
         {/each}
-        {#if headColumn !== undefined}
+        {#if headColumn !== undefined && visible(map.commits[headColumn].lane)}
           {@const cx = x(headColumn)}
           {@const cy = y(rowOfLane[map.commits[headColumn].lane])}
           <circle class="head-ring" cx={cx} cy={cy} r="10" />
@@ -163,6 +219,24 @@
   </div>
 </div>
 <Legend />
+
+<svelte:window onkeydown={onKey} />
+
+{#if hoveredStation !== null}
+  {@const c = map.commits[hoveredStation]}
+  <Tooltip x={pointer.x} y={pointer.y}>
+    <div class="tip-head"><span class="mono">{c.shortId}</span> · {c.authorName} · {ago(c.time)}</div>
+    <div class="tip-body">{c.summary}</div>
+    <div class="tip-foot">{map.lanes[c.lane].label}{c.isMerge ? " · merge commit" : ""}</div>
+  </Tooltip>
+{:else if hovered !== null}
+  {@const t = map.transitions[hovered]}
+  <Tooltip x={pointer.x} y={pointer.y}>
+    <div class="tip-head">{KIND_LABELS[t.kind]}</div>
+    <div class="tip-body">{map.lanes[t.fromLane].label} → {map.lanes[t.toLane].label}</div>
+    <div class="tip-foot">{map.commits[t.toColumn].shortId} · {ago(map.commits[t.toColumn].time)}</div>
+  </Tooltip>
+{/if}
 
 <style>
   .scroller {
@@ -228,4 +302,11 @@
   @media (prefers-reduced-motion: reduce) { .head-ring { animation: none; } }
 
   .dimmed { opacity: 0.15; transition: opacity 120ms; }
+  .station-hit { fill: transparent; cursor: pointer; outline: none; }
+  .selected-ring { fill: none; stroke: var(--accent); stroke-width: 2; }
+
+  .tip-head { color: var(--text-secondary); margin-bottom: 2px; }
+  .tip-body { font-weight: 600; }
+  .tip-foot { color: var(--muted); margin-top: 2px; }
+  .mono { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; }
 </style>

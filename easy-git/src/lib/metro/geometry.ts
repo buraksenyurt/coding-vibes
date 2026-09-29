@@ -99,6 +99,18 @@ export function transitionPath(t: TransitionDto, fromRow: number, toRow: number)
   }
 }
 
+/**
+ * Arrow head just before a merge station, pointing right (the merge bend
+ * always arrives horizontally). Drawn as its own path instead of an SVG
+ * `<marker>`: `fill="context-stroke"` works in WebView2 but not in every
+ * WebView, and one marker per colour would be clumsy.
+ */
+export function arrowHead(column: number, row: number): string {
+  const tip = x(column) - MERGE_RADIUS - 1.5;
+  const cy = y(row);
+  return `M ${tip - 7} ${cy - 4} L ${tip} ${cy} L ${tip - 7} ${cy + 4} z`;
+}
+
 /** Colour of a transition under the chosen mode. */
 export function transitionColor(t: TransitionDto, lanes: LaneDto[], mode: ColorMode): string {
   if (mode === "kind") return `var(--kind-${t.kind})`;

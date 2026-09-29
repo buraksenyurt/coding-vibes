@@ -1,10 +1,10 @@
 # easy-git — Proje Plan Dokümanı
 
 > **Atölye:** Fikirler Atölyesi
-> **Doküman sürümü:** v1.0 — 29 Eylül 2026
+> **Doküman sürümü:** v1.1 — 30 Eylül 2026
 > **Dokümanlar:** bu klasör (`easy-git/docs`)
 > **Kod:** `C:\Users\burak\Development\coding-vibes\easy-git`
-> **Durum:** Taslak — onay bekliyor
+> **Durum:** MVP tamamlandı (Faz 0–6) — sıradaki: Faz 7
 
 ---
 
@@ -465,15 +465,15 @@ Dosya adlandırma: `NN-konu-adi.md`, `docs/tutorial/` altında. Dokümanlar Tür
 
 ## 10. MVP Kabul Kriterleri
 
-- [ ] Klasör seçici ile yerel bir repo açılabiliyor; git reposu olmayan klasörde anlaşılır hata veriliyor
-- [ ] Fixture repo açıldığında 6 isimli + 1 çıkarımlı (`feature/old-search`) şerit görünüyor
-- [ ] Dallar yatay şeritler halinde, eskiden yeniye soldan sağa diziliyor; açılışta en güncel kısım görünüyor
-- [ ] Fork, merge ve cherry-pick geçişleri farklı renklerde; lejant mevcut; iki renklendirme modu çalışıyor
-- [ ] `HEAD` ve `v1.0` tag'i doğru istasyonda işaretli
-- [ ] Kenar çubuğunda ahead/behind, merged ve bayat dal bilgisi doğru
-- [ ] Commit'e tıklayınca detay paneli; hover'da tooltip
-- [ ] `cargo test --workspace` yeşil (core birim + fixture snapshot testleri)
-- [ ] Faz 0–6 dokümanları yazılmış
+- [x] Klasör seçici ile yerel bir repo açılabiliyor; git reposu olmayan klasörde anlaşılır hata veriliyor
+- [x] Fixture repo açıldığında 6 isimli + 1 çıkarımlı (`feature/old-search`) şerit görünüyor
+- [x] Dallar yatay şeritler halinde, eskiden yeniye soldan sağa diziliyor; açılışta en güncel kısım görünüyor
+- [x] Fork, merge ve cherry-pick geçişleri farklı renklerde; lejant mevcut; iki renklendirme modu çalışıyor
+- [x] `HEAD` ve `v1.0` tag'i doğru istasyonda işaretli
+- [x] Kenar çubuğunda ahead/behind, merged ve bayat dal bilgisi doğru
+- [x] Commit'e tıklayınca detay paneli; hover'da tooltip
+- [x] `cargo test --workspace` yeşil (core birim + fixture snapshot testleri)
+- [x] Faz 0–6 dokümanları yazılmış
 
 ---
 
@@ -490,6 +490,25 @@ Dosya adlandırma: `NN-konu-adi.md`, `docs/tutorial/` altında. Dokümanlar Tür
 
 ---
 
-## 12. Sonraki Adım
+## 12. Uygulama Notları (Faz 0–6)
 
-Plan onaylanınca **Faz 0 — `docs/tutorial/00-kurulum-ve-iskelet.md`**: araç zincirinin kurulumu, Tauri + Svelte iskeletinin oluşturulması, Cargo workspace'e iki crate'in eklenmesi ve ilk boş pencerenin açılması.
+Uygulama sırasında plandan ayrılan ya da netleşen noktalar:
+
+| Konu | Plan | Uygulama | Neden |
+|---|---|---|---|
+| Rust sürümü | 1.85 (edition 2024) | **1.90** | Tauri eklentileri (dialog, store) 1.90 istiyor |
+| Şerit paleti | 10 renk | **8 renk**, sabit sıra | Renk körlüğü doğrulamasından geçen palet 8 renk; dal adı her zaman yazılı olduğu için tekrar sorun değil |
+| Fixture | `make-sample-repo.ps1` | Rust modülü + `cargo run --example make-sample-repo` | Testlerle aynı kaynak, platformdan bağımsız |
+| Geçiş çizimi | Bezier eğrisi | Kısa dönüş + hattın rengiyle uzun düz yol | Uzun S eğrileri dalın nerede başladığını bulanıklaştırıyordu |
+| Ok başı | SVG `<marker>` | Ayrı `path` | `context-stroke` WebKitGTK'de yok; ok başları siyah çıkıyordu |
+| Satır sıkıştırma | Varsayılan | **İsteğe bağlı** "Kompakt" görünüm | Aynı satırı paylaşan dallar etiket sütununu kalabalıklaştırıyor |
+| Commit detayı | Değişen dosya sayısı | Ertelendi | Tree diff gerektiriyor; Faz 6 "Kendin dene" görevi |
+| Görünüm tercihleri | — | `localStorage` | Makineye özel, kaybolursa zararsız; son açılanlar ise Rust tarafında store eklentisinde |
+
+Fixture repo'nun beklenen durumu testlerle ve `insta` snapshot'ı ile doğrulanıyor: 6 isimli + 1 çıkarımlı hat, 5 merge, 1 cherry-pick; kompakt görünümde 7 satır 4'e iniyor.
+
+---
+
+## 13. Sonraki Adım
+
+**Faz 7 — Canlı izleme** (`docs/tutorial/07-canli-izleme.md`): `notify` ile `.git` altındaki ref değişikliklerini izleyip haritayı kendiliğinden yenilemek.

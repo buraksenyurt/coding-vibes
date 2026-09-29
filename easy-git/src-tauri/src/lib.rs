@@ -18,6 +18,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::open_repository,
             commands::get_metro_map,
+            commands::get_commit_details,
+            commands::get_branch_stats,
             commands::recent_repositories,
         ])
         .run(tauri::generate_context!())

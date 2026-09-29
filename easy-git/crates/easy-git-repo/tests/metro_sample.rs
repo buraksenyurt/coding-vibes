@@ -51,3 +51,32 @@ fn fast_forwarded_branch_leaves_no_lane() {
 fn snapshot() {
     insta::assert_snapshot!(describe(&sample_map()));
 }
+
+#[test]
+fn branch_stats_tell_the_story() {
+    let map = sample_map();
+    let stats = easy_git_core::branch_stats(&map, 1_767_900_000, 30);
+    let get = |name: &str| stats.iter().find(|s| s.name == name).unwrap();
+
+    let main = get("main");
+    let upstream = main.upstream.as_ref().unwrap();
+    assert_eq!(
+        (upstream.name.as_str(), upstream.ahead, upstream.behind),
+        ("origin/main", 1, 0)
+    );
+
+    assert!(get("feature/login").merged);
+    assert!(get("hotfix/crash").merged);
+    assert!(get("release/1.0").merged);
+
+    let payments = get("feature/payments");
+    assert!(!payments.merged);
+    assert_eq!(payments.commit_count, 2);
+    assert_eq!(payments.authors, ["Ayla Kaya"]);
+    // release/1.0 was cut from develop's tip and merged into main, so main
+    // already contains all of develop; develop only lacks main's own commits.
+    let develop = get("develop");
+    assert_eq!(develop.ahead, 0);
+    assert!(develop.merged);
+    assert!(develop.behind > 0);
+}
