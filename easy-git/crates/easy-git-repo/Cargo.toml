@@ -8,3 +8,9 @@ license.workspace = true
 
 [dependencies]
 easy-git-core.workspace = true
+thiserror.workspace = true
+# Only what a read-only viewer needs; the default feature set is much larger.
+gix = { version = "0.88", default-features = false, features = ["sha1", "max-performance-safe"] }
+
+[dev-dependencies]
+tempfile = "3"
