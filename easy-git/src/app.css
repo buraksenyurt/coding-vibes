@@ -1,10 +1,26 @@
+/* Design tokens. Chart colours come from a validated categorical palette
+   (8 hues, fixed order) with separate light and dark steps. */
 :root {
-  --bg: #fafafa;
-  --surface: #ffffff;
-  --text: #1f2328;
-  --muted: #656d76;
-  --border: #d0d7de;
-  --accent: #0969da;
+  color-scheme: light;
+  --bg: #f9f9f7;
+  --surface: #fcfcfb;
+  --text: #0b0b0b;
+  --text-secondary: #52514e;
+  --muted: #898781;
+  --border: #e1e0d9;
+  --grid: #eeede8;
+  --accent: #2a78d6;
+  --danger: #d03b3b;
+
+  --lane-0: #2a78d6; /* blue: always main/master */
+  --lane-1: #eb6834; /* orange */
+  --lane-2: #1baf7a; /* aqua */
+  --lane-3: #eda100; /* yellow */
+  --lane-4: #e87ba4; /* magenta */
+  --lane-5: #008300; /* green */
+  --lane-6: #4a3aa7; /* violet */
+  --lane-7: #e34948; /* red */
+
   font-family: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
   font-size: 14px;
   color: var(--text);
@@ -12,15 +28,49 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #1e1e1e;
-    --surface: #252526;
-    --text: #e6edf3;
-    --muted: #8b949e;
-    --border: #3a3f44;
-    --accent: #4493f8;
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0d0d0d;
+    --surface: #1a1a19;
+    --text: #ffffff;
+    --text-secondary: #c3c2b7;
+    --muted: #898781;
+    --border: #383835;
+    --grid: #262624;
+    --accent: #3987e5;
+
+    --lane-0: #3987e5;
+    --lane-1: #d95926;
+    --lane-2: #199e70;
+    --lane-3: #c98500;
+    --lane-4: #d55181;
+    --lane-5: #008300;
+    --lane-6: #9085e9;
+    --lane-7: #e66767;
   }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0d0d0d;
+  --surface: #1a1a19;
+  --text: #ffffff;
+  --text-secondary: #c3c2b7;
+  --muted: #898781;
+  --border: #383835;
+  --grid: #262624;
+  --accent: #3987e5;
+
+  --lane-0: #3987e5;
+  --lane-1: #d95926;
+  --lane-2: #199e70;
+  --lane-3: #c98500;
+  --lane-4: #d55181;
+  --lane-5: #008300;
+  --lane-6: #9085e9;
+  --lane-7: #e66767;
 }
 
 * { box-sizing: border-box; }
 html, body, #app { margin: 0; height: 100%; }
+body { background: var(--bg); }

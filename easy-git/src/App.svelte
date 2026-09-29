@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import Toolbar from "./lib/Toolbar.svelte";
+  import MetroView from "./lib/metro/MetroView.svelte";
   import { repo } from "./lib/repo.svelte";
 
   onMount(() => {
@@ -17,10 +18,7 @@
     {:else if repo.loading}
       <div class="message">Repository okunuyor…</div>
     {:else if repo.map}
-      <div class="message">
-        {repo.map.commits.length} commit · {repo.map.lanes.length} hat · {repo.map.transitions.length} geçiş
-        {#if repo.map.truncated}<br /><small>Eski geçmiş sınır nedeniyle kesildi.</small>{/if}
-      </div>
+      <MetroView map={repo.map} />
     {:else}
       <div class="message empty">
         <h1>easy-git</h1>

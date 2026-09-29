@@ -17,7 +17,7 @@ pub type Column = usize;
 pub type LaneId = usize;
 
 /// How many distinct lane colours the UI palette offers.
-pub const PALETTE_SIZE: u8 = 10;
+pub const PALETTE_SIZE: u8 = 8;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum LaneLabel {
