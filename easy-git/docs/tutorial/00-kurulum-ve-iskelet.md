@@ -48,7 +48,7 @@ Workspace'in yan etkisi: tüm crate'ler kökteki tek `target/` klasörüne derle
 | Araç | Kontrol komutu | Not |
 |---|---|---|
 | Visual Studio Build Tools — *Desktop development with C++* | — | Rust'ın MSVC linker'ı için şart |
-| Rust (MSVC toolchain) | `rustc --version` | En az **1.85** (edition 2024) |
+| Rust (MSVC toolchain) | `rustc --version` | En az **1.90** (Tauri eklentileri bunu istiyor; edition 2024 için de yeterli) |
 | Node.js LTS | `node --version` | 20+ |
 | WebView2 | — | Windows 11'de hazır gelir |
 
@@ -67,7 +67,7 @@ members = ["crates/easy-git-core", "crates/easy-git-repo", "src-tauri"]
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.90"
 license = "MIT"
 authors = ["Burak Selim Senyurt"]
 

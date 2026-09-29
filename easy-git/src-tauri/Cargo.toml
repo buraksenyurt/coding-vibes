@@ -18,5 +18,12 @@ tauri-build = { version = "2.7", features = [] }
 easy-git-core.workspace = true
 easy-git-repo.workspace = true
 tauri = { version = "2.12", features = [] }
+tauri-plugin-dialog = "2.8"
+tauri-plugin-store = "2.5"
 serde.workspace = true
 serde_json.workspace = true
+thiserror.workspace = true
+ts-rs = "12"
+
+[dev-dependencies]
+tempfile = "3"
