@@ -43,6 +43,34 @@ cargo test --workspace
 npm run check
 ```
 
+## Dağıtım (başka bir Windows makinesi için)
+
+Visual Studio 2022'nin **x64 Native Tools Command Prompt**'u içinden:
+
+```powershell
+npm install
+npm run tauri build
+```
+
+Çıktılar proje kökündeki `target` altında:
+
+| Dosya | Ne zaman |
+|---|---|
+| `target\release\bundle\nsis\easy-git_<sürüm>_x64-setup.exe` | **Önerilen.** Kullanıcı bazında kurar, yönetici izni istemez. |
+| `target\release\bundle\msi\easy-git_<sürüm>_x64_en-US.msi` | Tüm makineye kurulum; yönetici izni ister. |
+| `target\release\easy-git.exe` | Kurulumsuz, tek dosya. Ön yüz exe'ye gömülü. |
+
+Hedef makinede Rust, Node, Visual Studio ya da **git gerekmez** (repo gix ile doğrudan okunur). WebView2 Windows 11'de hazır; eksikse kurulum dosyası indirip kurar. C çalışma zamanı `.cargo/config.toml` içindeki `+crt-static` ayarıyla exe'ye gömülü, `VCRUNTIME140.dll` aranmaz.
+
+Bilinen durumlar:
+
+- **"Windows bilgisayarınızı korudu" uyarısı:** kurulum dosyası imzasız. *Ek bilgi → Yine de çalıştır.* Kaldırmak için bir kod imzalama sertifikası `tauri.conf.json` → `bundle.windows` altına eklenir.
+- **MSI adımı `light.exe` hatası verirse:** Windows'ta VBScript isteğe bağlı özelliği kapalı olabilir. Açabilir ya da `tauri.conf.json` → `bundle.targets` değerini `["nsis"]` yapabilirsin.
+- **İlk `tauri build`** WiX ve NSIS araçlarını internetten indirir.
+- **`LNK1104: cannot open file 'msvcrt.lib'`:** Rust, C++ bileşenleri eksik bir Visual Studio kurulumunu (ör. bir Insiders sürümü) seçmiş. Komutları VS 2022 Native Tools Command Prompt'tan çalıştır ya da o kuruluma *Desktop development with C++* workload'unu ekle.
+
+Yeni sürüm çıkarırken `src-tauri\tauri.conf.json` içindeki `version` ile kökteki `Cargo.toml` → `[workspace.package] version` birlikte artırılmalı; kurulum dosyasının adı ve Windows'un yükseltme algılaması bu numaraya bağlı.
+
 ## Yapı
 
 ```

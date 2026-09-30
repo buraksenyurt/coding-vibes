@@ -1,3 +1,8 @@
 [env]
 # ts-rs writes the generated TypeScript types here (relative to the workspace root).
 TS_RS_EXPORT_DIR = { value = "src/lib/bindings", relative = true }
+
+# Link the C runtime statically on Windows, so the release build does not need
+# VCRUNTIME140.dll on the target machine.
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]

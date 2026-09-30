@@ -283,6 +283,7 @@ cargo test --workspace
 | Belirti | Sebep / çözüm |
 |---|---|
 | `link.exe not found` | Visual Studio Build Tools'ta C++ workload eksik. |
+| `LNK1104: cannot open file 'msvcrt.lib'` | Makinede birden fazla Visual Studio var ve Rust C++ bileşenleri eksik olanı (ör. Insiders) seçmiş. Komutları **x64 Native Tools Command Prompt for VS 2022**'dan çalıştır ya da o kuruluma *Desktop development with C++* ekle. |
 | `icons/icon.ico not found` | 3.5'teki `tauri icon` komutu çalıştırılmamış. |
 | Pencere açılıyor ama boş ve beyaz | Vite 1420'de çalışmıyor; `strictPort` sayesinde port çakışması varsa terminalde hata görürsün. |
 | `edition 2024 is unstable` | Rust sürümü eski; `rustup update`. |
