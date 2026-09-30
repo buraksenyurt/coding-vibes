@@ -21,6 +21,7 @@ pub fn run() {
             commands::get_commit_details,
             commands::get_branch_stats,
             commands::recent_repositories,
+            commands::forget_recent_repository,
         ])
         .run(tauri::generate_context!())
         .expect("error while running easy-git");

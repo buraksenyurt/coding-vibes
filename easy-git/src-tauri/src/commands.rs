@@ -33,6 +33,7 @@ fn cached_map(state: &AppState) -> Result<Arc<MetroMap>, AppError> {
 #[tauri::command]
 pub async fn open_repository(
     path: String,
+    remember: Option<bool>,
     app: AppHandle,
     state: State<'_, AppState>,
 ) -> Result<RepoSummary, AppError> {
@@ -62,13 +63,17 @@ pub async fn open_repository(
         head: HeadDto::from(&head),
     };
     state.set_source(source);
-    recent::remember(
-        &app,
-        RecentRepository {
-            name: summary.name.clone(),
-            path: summary.path.clone(),
-        },
-    );
+    // A refresh passes `remember: false`, so a repository the user just
+    // removed from the recent list does not sneak back in.
+    if remember.unwrap_or(true) {
+        recent::remember(
+            &app,
+            RecentRepository {
+                name: summary.name.clone(),
+                path: summary.path.clone(),
+            },
+        );
+    }
     Ok(summary)
 }
 
@@ -139,5 +144,13 @@ pub fn get_branch_stats(state: State<'_, AppState>) -> Result<Vec<BranchStatsDto
 
 #[tauri::command]
 pub fn recent_repositories(app: AppHandle) -> Vec<RecentRepository> {
+    recent::load(&app)
+}
+
+/// Removes one entry from the recent list and returns what is left.
+/// Only the list changes; the repository on disk is never touched.
+#[tauri::command]
+pub fn forget_recent_repository(path: String, app: AppHandle) -> Vec<RecentRepository> {
+    recent::forget(&app, &path);
     recent::load(&app)
 }

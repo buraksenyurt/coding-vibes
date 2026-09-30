@@ -47,12 +47,13 @@ export async function pickFolder(): Promise<string | null> {
   return typeof selected === "string" ? selected : null;
 }
 
-export async function openRepository(path: string): Promise<RepoSummary> {
+/** `remember: false` opens without touching the recent list (used by refresh). */
+export async function openRepository(path: string, remember = true): Promise<RepoSummary> {
   if (!inTauri()) {
     const { map } = await demo();
     return { name: "metro-line-story (demo)", path: DEMO_PATH, head: map.head };
   }
-  return call<RepoSummary>("open_repository", { path });
+  return call<RepoSummary>("open_repository", { path, remember });
 }
 
 export async function getMetroMap(limit?: number): Promise<MetroMapDto> {
@@ -77,6 +78,11 @@ export async function getBranchStats(): Promise<BranchStatsDto[]> {
 export async function recentRepositories(): Promise<RecentRepository[]> {
   if (!inTauri()) return [{ name: "metro-line-story (demo)", path: DEMO_PATH }];
   return call<RecentRepository[]>("recent_repositories");
+}
+
+export async function forgetRecentRepository(path: string): Promise<RecentRepository[]> {
+  if (!inTauri()) return [];
+  return call<RecentRepository[]>("forget_recent_repository", { path });
 }
 
 async function demo(): Promise<DemoBundle> {

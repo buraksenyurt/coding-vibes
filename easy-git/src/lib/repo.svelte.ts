@@ -51,14 +51,18 @@ class RepoState {
     await this.open(entry.path, entry.name);
   }
 
-  /** `recentName` is set when the path came from the recent list. */
-  async open(path: string, recentName?: string) {
+  /**
+   * `recentName` is set when the path came from the recent list.
+   * `remember` is false for a refresh: re-reading the open repository should
+   * not put it back into a recent list the user just trimmed.
+   */
+  async open(path: string, recentName?: string, remember = true) {
     const samePath = this.summary?.path === path;
     this.loading = true;
     this.error = null;
     this.notice = null;
     try {
-      this.summary = await api.openRepository(path);
+      this.summary = await api.openRepository(path, remember);
       this.map = await api.getMetroMap();
       this.stats = await api.getBranchStats();
       if (!samePath) this.hiddenLanes = new Set();
@@ -101,7 +105,17 @@ class RepoState {
   }
 
   async refresh() {
-    if (this.summary) await this.open(this.summary.path);
+    if (this.summary) await this.open(this.summary.path, undefined, false);
+  }
+
+  /** Removes an entry from the recent list; the repository itself is untouched. */
+  async forgetRecent(entry: RecentRepository) {
+    try {
+      this.recent = await api.forgetRecentRepository(entry.path);
+      this.notice = { tone: "info", text: `“${entry.name}” son kullanılanlar listesinden çıkarıldı.` };
+    } catch (e) {
+      this.notice = { tone: "error", text: e instanceof Error ? e.message : String(e) };
+    }
   }
 
   async selectCommit(column: number, scroll = false) {

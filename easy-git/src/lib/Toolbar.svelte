@@ -24,22 +24,43 @@
     }
   });
 
+  let picker: HTMLDivElement | undefined = $state();
+
   async function openRecent(item: RecentRepository) {
     menuOpen = false;
     await repo.openRecent(item);
   }
+
+  async function forget(item: RecentRepository) {
+    await repo.forgetRecent(item);
+    if (repo.recent.length === 0) menuOpen = false;
+  }
+
+  // Close the menu on a click outside it or on Escape.
+  function onWindowClick(event: MouseEvent) {
+    if (menuOpen && picker && !picker.contains(event.target as Node)) menuOpen = false;
+  }
+  function onWindowKey(event: KeyboardEvent) {
+    if (menuOpen && event.key === "Escape") menuOpen = false;
+  }
 </script>
 
+<svelte:window onclick={onWindowClick} onkeydown={onWindowKey} />
+
 <header class="toolbar">
-  <div class="picker">
+  <div class="picker" bind:this={picker}>
     <button class="primary" onclick={() => repo.pickAndOpen()} disabled={repo.loading}>Repo seç</button>
     <button class="icon" aria-label="Son açılanlar" onclick={() => (menuOpen = !menuOpen)} disabled={repo.recent.length === 0}>▾</button>
     {#if menuOpen}
       <ul class="menu" role="menu">
         {#each repo.recent as item (item.path)}
-          <li><button role="menuitem" onclick={() => openRecent(item)} title={item.path}>
-            <strong>{item.name}</strong><span>{item.path}</span>
-          </button></li>
+          <li>
+            <button class="entry" role="menuitem" onclick={() => openRecent(item)} title={item.path}>
+              <strong>{item.name}</strong><span>{item.path}</span>
+            </button>
+            <button class="forget" onclick={() => forget(item)}
+                    aria-label="{item.name} listeden çıkar" title="Listeden çıkar (repo silinmez)">×</button>
+          </li>
         {/each}
       </ul>
     {/if}
@@ -126,14 +147,31 @@
     border-radius: 8px;
     box-shadow: 0 8px 24px rgb(0 0 0 / 0.2);
   }
-  .menu button {
-    width: 100%;
+  .menu li { display: flex; align-items: center; border-radius: 4px; }
+  .menu li:hover { background: var(--bg); }
+  .menu .forget {
+    flex: none;
+    width: 28px;
+    height: 28px;
+    margin-right: 2px;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    line-height: 1;
+    color: var(--muted);
+    opacity: 0;
+  }
+  .menu li:hover .forget, .menu .forget:focus-visible { opacity: 1; }
+  .menu .forget:hover { color: var(--danger); background: var(--surface); }
+  .menu .entry {
+    flex: 1;
+    min-width: 0;
     border: none;
     text-align: left;
     display: flex;
     flex-direction: column;
     border-radius: 4px;
   }
-  .menu button:hover { background: var(--bg); }
   .menu span { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 </style>

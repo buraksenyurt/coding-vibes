@@ -317,4 +317,19 @@ let source = match opened {
 
 `NoticeBar.svelte` araç çubuğunun hemen altında duruyor. Bilgi mesajları 8 saniye sonra kendiliğinden kayboluyor; hata mesajları kapatılana kadar kalıyor. Zamanlayıcı bir `$effect` içinde kuruluyor ve efektin döndürdüğü temizleme fonksiyonu (`clearTimeout`) yeni bir mesaj geldiğinde eskisinin zamanlayıcısını iptal ediyor.
 
-**Kendin dene:** menüdeki her satıra bir "×" düğmesi ekleyip listeden elle çıkarmayı sağla. Rust'ta `recent::forget` hazır; ona bir command yazman ve capability'lere dokunmadan (kendi command'ların zaten izinli) çağırman yeterli.
+**Elle çıkarma.** Menüdeki her satırın sağında, fareyle üzerine gelince beliren bir "×" var. Tıklamak yalnızca listeyi değiştirir, diskteki repoya dokunmaz. Rust'ta `recent::forget` zaten hazırdı; ona ince bir command giydirmek yetti:
+
+```rust
+#[tauri::command]
+pub fn forget_recent_repository(path: String, app: AppHandle) -> Vec<RecentRepository> {
+    recent::forget(&app, &path);
+    recent::load(&app)
+}
+```
+
+Kalan listeyi döndürmesi, ön yüzün ikinci bir çağrı yapmadan menüyü güncellemesini sağlıyor. Kendi command'larımız capability dosyasına eklenmeden çağrılabildiği için izin tarafında bir değişiklik gerekmedi.
+
+İki ayrıntı:
+
+- **Yenile listeyi geri doldurmasın.** Açık olan repoyu listeden çıkarıp ⟳'e basınca `open_repository` onu yeniden "son açılan" olarak kaydediyordu. Command'a isteğe bağlı bir `remember` parametresi eklendi; yenileme `remember: false` ile çağırıyor. Tauri, JS'ten gelmeyen argümanı `Option<bool>` için `None` olarak veriyor, bu yüzden eski çağrılar olduğu gibi çalışıyor.
+- **Menü dışına tıklayınca ya da `Esc` ile kapanma.** `<svelte:window onclick>` ile tıklamanın menünün içinde olup olmadığı `picker.contains(event.target)` ile kontrol ediliyor. Birkaç kaydı art arda silebilmek için "×" menüyü kapatmıyor; liste boşalınca menü kendiliğinden kapanıyor.
