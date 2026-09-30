@@ -22,6 +22,12 @@
       <th>Scor(10 Üzerinden)</th>
    </tr>
    <tr>
+   <td valign="top"><strong>Easy Git (Tauri App/Rust)</strong></td>
+      <td valign="top"><strong>Tarih:</strong> Eylül 2026<br><strong>Tanım:</strong>Git branch'lerini görüntüleyen, branch oluşumlarının biraz daha kolay anlaşılmasını sağlayan eğitici bir uygulama .<br><strong>Geliştirici:</strong> Claude Opus 5.5 (Coworks Mode)<br><strong>Dil:</strong> Rust,Tauri<br><strong>Zorluk:</strong> Orta<br><strong> Ayrılan Süre:</strong> ~2 Saat  </td>
+      <td valign="top">DockerCity çalışmasında olduğu gibi öncesinde bir plan dosyası hazırlatıldı ve tüm çalışma fazlandırılararak uygulamaya geçirildi. Uygulama, Git branch'lerini doğru şekilde okuyup görselleştirdi ve kullanıcıya branch oluşumlarını daha anlaşılır bir şekilde sundu. Sadece Windows makinede çalışma zamanında Build Tools eksikliği nedeniyle bir sorun oluştu. Developer Command Prompt for Visual Studio 2022 üzerinden çalıştırmak sorunu çözdü. Burada ekstra bir hata-çözüm session'ı gerçekleştirildi. Ancak gerekli detaylar dokümana eklendi.</td>
+      <td>9</td>
+   </tr>
+   <tr>
       <td valign="top"><strong>DockerCity (WinUI App)</strong></td>
       <td valign="top"><strong>Tarih:</strong> Eylül 2026<br><strong>Tanım:</strong> Bir docker compose dosyası içerisinde servisleri gösteren Windows tabanlı bir dashboard uygulaması.<br><strong>Geliştirici:</strong> Claude Opus (Coworks Mode)<br><strong>Dil:</strong> C#<br><strong>Zorluk:</strong> Yüksek<br><strong> Ayrılan Süre:</strong> ~3 Saat  </td>
       <td valign="top">Bu seferki çalışmada önce bir plan dosyası hazırlandı ve tüm çalışma fazlandırılararak uygulamaya geçirildi. Uygulama, docker-compose dosyalarını doğru şekilde okuyup servisleri UI üzerinde başarılı bir şekilde gösterdi. Sürük bırak, bilgi baloncuğu, layout rest gibi özellikler tamamlandı. MVP kısmına kadar işlemler 6 ayrı fazda tamamlandı. Tek eksik yanı MVP aşamasına gelindiğinde session limitinin dolması oldu. Hevesim kursağımda kaldı :D </td>

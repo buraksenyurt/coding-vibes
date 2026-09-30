@@ -120,3 +120,15 @@ docs                   plan ve tutorial serisi
 | [06](docs/tutorial/06-etkilesim-ve-paneller.md) | Tooltip, detay paneli, ahead/behind, bayat dal |
 
 Plan ve sonraki fazlar: [docs/PLAN.md](docs/PLAN.md)
+
+## Örnek Çalışma Zamanı Çıktısı
+
+![easy-git-runtime-1](EasyGitRuntime_00.png)
+
+Kompakt görünüm;
+
+![easy-git-runtime-2](EasyGitRuntime_01.png)
+
+Belli bir dal seçimi;
+
+![easy-git-runtime-3](EasyGitRuntime_02.png)
