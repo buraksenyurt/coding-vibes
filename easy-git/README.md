@@ -133,3 +133,7 @@ Kompakt görünüm;
 Belli bir dal seçimi;
 
 ![easy-git-runtime-3](EasyGitRuntime_02.png)
+
+Gece/Gündüz modu eklendikten sonra;
+
+![easy-git-runtime-4](EasyGitRuntime_03.png)
