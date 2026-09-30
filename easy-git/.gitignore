@@ -14,3 +14,8 @@ node_modules/
 
 # Output of scripts/git-flow-demo.sh when run with the default folder
 git-flow-sandbox/
+
+# SonarQube scan outputs (scripts/sonar-scan.ps1 / sonar-scan.sh)
+clippy.json
+lcov.info
+.scannerwork/
