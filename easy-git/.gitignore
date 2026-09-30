@@ -11,3 +11,6 @@ node_modules/
 # Snapshot review leftovers
 *.snap.new
 *.pending-snap
+
+# Output of scripts/git-flow-demo.sh when run with the default folder
+/git-flow-sandbox/

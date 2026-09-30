@@ -43,6 +43,32 @@ cargo test --workspace
 npm run check
 ```
 
+## Hızlı deneme: git flow örneği
+
+Uzak bir repoya bağlanmadan, git flow modeline göre dallanmış hayali bir repo üretip easy-git'te açabilirsin. Windows'ta **Git Bash** içinden (Git for Windows ile gelir), Linux/macOS'ta herhangi bir terminalden:
+
+```bash
+./scripts/git-flow-demo.sh              # ./git-flow-sandbox klasörüne kurar
+./scripts/git-flow-demo.sh ~/gf-deneme  # ya da istediğin klasöre
+```
+
+Betik son iki aya yayılan, bugün biten bir hikâye yazar; senin git ayarlarına ve kimliğine dokunmaz:
+
+| Dal | Durum | easy-git'te beklenen |
+|---|---|---|
+| `main`, `develop` | yaşıyor | en üstteki iki hat; `v1.0.0` ve `v1.0.1` tag bayrakları `main`'de |
+| `feature/user-auth`, `feature/product-search` | merge edildi, silindi | "silinmiş dal" hatları, adları merge mesajından |
+| `feature/shopping-cart` | önce `develop`'u içine aldı, sonra merge edildi, silindi | `develop` → dal yönünde bir merge oku |
+| `release/1.0.0`, `hotfix/1.0.1` | `main` ve `develop`'a merge edildi, silindi | aynı daldan iki hedefe iki merge |
+| `feature/wishlist` | 7 hafta önce bırakıldı | kenar çubuğunda **bayat** rozeti |
+| `feature/payment-gateway`, `release/1.1.0` | devam ediyor | açık uçlu hatlar |
+
+Arayüzü açmadan metin çizimini görmek için:
+
+```bash
+cargo run -p easy-git-repo --example describe-repo -- ./git-flow-sandbox
+```
+
 ## Dağıtım (başka bir Windows makinesi için)
 
 Visual Studio 2022'nin **x64 Native Tools Command Prompt**'u içinden:
