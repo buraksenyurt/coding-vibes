@@ -8,7 +8,7 @@ Git dallarını **metro haritası** gibi gösteren, salt okunur bir Windows masa
 
 ## Neler var (MVP — Faz 0–6)
 
-- Yerel makineden repo seçme, son açılanlar listesi
+- Yerel makineden repo seçme, son açılanlar listesi (taşınmış ya da silinmiş repolar bilgi verilerek listeden çıkarılır)
 - Dallar yatay hatlar halinde; açılışta en güncel commit'ler görünür
 - Fork, merge ve cherry-pick geçişleri — **türe göre** ya da **dala göre** renklendirme, lejant
 - Silinmiş ama merge edilmiş dalların adı merge mesajından geri bulunur

@@ -285,3 +285,36 @@ npm run tauri dev
 1. Kenar çubuğuna bir arama kutusu ekle; yazdıkça dal listesi süzülsün.
 2. Detay paneline "bu commit'te değişen dosya sayısı" ekle. İpucu: gix ile commit'in tree'sini ilk parent'ınkiyle karşılaştır (`tree.changes()`); bu yeni bir command ve `spawn_blocking` gerektirir.
 3. Klavye ile gezinme: seçili commit varken `←`/`→` aynı hattaki önceki/sonraki istasyona geçsin.
+
+---
+
+## Ek — Taşınmış ya da silinmiş repolar
+
+Son açılanlar listesi bir yol listesi; yollar zamanla bayatlar. Repo taşınır, klasörün adı değişir ya da silinir. Kural basit: **listeden açılmaya çalışılan bir repo artık açılamıyorsa kullanıcıya nedenini söyle ve listeden çıkar.**
+
+**Rust tarafı.** `open_repository` iki durumu ayırt ediyor: klasör yok (`ErrorKind::NotFound`) ve klasör var ama git reposu değil (`ErrorKind::NotARepository`). İkisinde de yol listeden düşürülüyor:
+
+```rust
+let source = match opened {
+    Ok(source) => source,
+    Err(err) => {
+        if matches!(err.kind, ErrorKind::NotFound | ErrorKind::NotARepository) {
+            recent::forget(&app, &path);
+        }
+        return Err(err);
+    }
+};
+```
+
+`recent::forget`, Faz 3'teki `push_front` gibi saf bir yardımcıya (`without`) dayanıyor ve Windows yollarının büyük/küçük harf duyarsızlığını hesaba katıyor (`C:\Repo` = `c:\repo`). Kendi birim testi var.
+
+**Ön yüz tarafı.** Hata artık sadece mesaj değil, **türünü** de taşıyor. `api.ts`'teki `ApiError`, Rust'ın gönderdiği `kind` alanını saklıyor; `ErrorKind` tipi `ts-rs` ile üretildiği için yeni tür (`"notFound"`) TypeScript'e kendiliğinden geldi.
+
+`repo.openRecent(entry)` bir hata alınca:
+
+- Tür `notFound` ya da `notARepository` ise bir **bilgi şeridi** gösteriyor: *"“eski-proje” açılamadı: klasör bulunamadı (taşınmış, adı değişmiş ya da silinmiş olabilir). Son kullanılanlar listesinden çıkarıldı."* Ardından listeyi Rust'tan yeniden okuyor.
+- Başka bir hata ise ve ekranda zaten bir harita varsa, harita yerinde kalıyor; hata aynı şeritte kırmızı çizgiyle gösteriliyor. Eskiden her hata haritayı kaldırıp tam ekran hata sayfası açıyordu.
+
+`NoticeBar.svelte` araç çubuğunun hemen altında duruyor. Bilgi mesajları 8 saniye sonra kendiliğinden kayboluyor; hata mesajları kapatılana kadar kalıyor. Zamanlayıcı bir `$effect` içinde kuruluyor ve efektin döndürdüğü temizleme fonksiyonu (`clearTimeout`) yeni bir mesaj geldiğinde eskisinin zamanlayıcısını iptal ediyor.
+
+**Kendin dene:** menüdeki her satıra bir "×" düğmesi ekleyip listeden elle çıkarmayı sağla. Rust'ta `recent::forget` hazır; ona bir command yazman ve capability'lere dokunmadan (kendi command'ların zaten izinli) çağırman yeterli.

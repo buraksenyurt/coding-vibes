@@ -21,7 +21,21 @@ pub fn load<R: Runtime>(app: &AppHandle<R>) -> Vec<RecentRepository> {
 }
 
 pub fn remember<R: Runtime>(app: &AppHandle<R>, entry: RecentRepository) {
-    let list = push_front(load(app), entry);
+    save(app, push_front(load(app), entry));
+}
+
+/// Drops `path` from the list. Returns whether it was there.
+pub fn forget<R: Runtime>(app: &AppHandle<R>, path: &str) -> bool {
+    let before = load(app);
+    let after = without(before.clone(), path);
+    let removed = after.len() != before.len();
+    if removed {
+        save(app, after);
+    }
+    removed
+}
+
+fn save<R: Runtime>(app: &AppHandle<R>, list: Vec<RecentRepository>) {
     if let Ok(store) = app.store(STORE_FILE) {
         store.set(KEY, serde_json::to_value(list).unwrap_or_default());
         // Losing the recent list is not worth an error dialog.
@@ -29,9 +43,19 @@ pub fn remember<R: Runtime>(app: &AppHandle<R>, entry: RecentRepository) {
     }
 }
 
+/// Windows paths are case-insensitive: `C:\Repo` and `c:\repo` are one folder.
+fn same_path(a: &str, b: &str) -> bool {
+    a.eq_ignore_ascii_case(b)
+}
+
+fn without(mut list: Vec<RecentRepository>, path: &str) -> Vec<RecentRepository> {
+    list.retain(|r| !same_path(&r.path, path));
+    list
+}
+
 /// Most recent first, no duplicates, capped.
-fn push_front(mut list: Vec<RecentRepository>, entry: RecentRepository) -> Vec<RecentRepository> {
-    list.retain(|r| !r.path.eq_ignore_ascii_case(&entry.path));
+fn push_front(list: Vec<RecentRepository>, entry: RecentRepository) -> Vec<RecentRepository> {
+    let mut list = without(list, &entry.path);
     list.insert(0, entry);
     list.truncate(MAX_RECENT);
     list
@@ -53,6 +77,13 @@ mod tests {
         let list = push_front(vec![repo("a"), repo("b")], repo("B"));
         let paths: Vec<_> = list.iter().map(|r| r.path.as_str()).collect();
         assert_eq!(paths, ["B", "a"]);
+    }
+
+    #[test]
+    fn forgets_a_path_regardless_of_case() {
+        let list = without(vec![repo(r"C:\Old\Repo"), repo("b")], r"c:\old\repo");
+        let paths: Vec<_> = list.iter().map(|r| r.path.as_str()).collect();
+        assert_eq!(paths, ["b"]);
     }
 
     #[test]

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import NoticeBar from "./lib/NoticeBar.svelte";
   import Toolbar from "./lib/Toolbar.svelte";
   import MetroView from "./lib/metro/MetroView.svelte";
   import DetailPanel from "./lib/panels/DetailPanel.svelte";
@@ -13,6 +14,7 @@
 
 <div class="shell">
   <Toolbar />
+  <NoticeBar />
 
   {#if repo.map && !repo.error}
     <div class="body">

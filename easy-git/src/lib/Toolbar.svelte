@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
+  import type { RecentRepository } from "./bindings/RecentRepository";
   import { repo } from "./repo.svelte";
   import { view } from "./view.svelte";
 
@@ -23,9 +24,9 @@
     }
   });
 
-  async function openRecent(path: string) {
+  async function openRecent(item: RecentRepository) {
     menuOpen = false;
-    await repo.open(path);
+    await repo.openRecent(item);
   }
 </script>
 
@@ -36,7 +37,7 @@
     {#if menuOpen}
       <ul class="menu" role="menu">
         {#each repo.recent as item (item.path)}
-          <li><button role="menuitem" onclick={() => openRecent(item.path)} title={item.path}>
+          <li><button role="menuitem" onclick={() => openRecent(item)} title={item.path}>
             <strong>{item.name}</strong><span>{item.path}</span>
           </button></li>
         {/each}

@@ -12,6 +12,7 @@ import type { AppError } from "./bindings/AppError";
 import type { BranchStatsDto } from "./bindings/BranchStatsDto";
 import type { CommitDetailsDto } from "./bindings/CommitDetailsDto";
 import type { DemoBundle } from "./bindings/DemoBundle";
+import type { ErrorKind } from "./bindings/ErrorKind";
 import type { MetroMapDto } from "./bindings/MetroMapDto";
 import type { RecentRepository } from "./bindings/RecentRepository";
 import type { RepoSummary } from "./bindings/RepoSummary";
@@ -20,13 +21,23 @@ export const inTauri = (): boolean => "__TAURI_INTERNALS__" in window;
 
 const DEMO_PATH = "demo://metro-line-story";
 
-/** Rust errors arrive as plain `{ kind, message }` objects; turn them into `Error`s. */
+/** An `Error` that remembers which `ErrorKind` Rust reported. */
+export class ApiError extends Error {
+  constructor(
+    public readonly kind: ErrorKind | "unknown",
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
+/** Rust errors arrive as plain `{ kind, message }` objects; turn them into `ApiError`s. */
 async function call<T>(command: string, args?: Record<string, unknown>): Promise<T> {
   try {
     return await invoke<T>(command, args);
   } catch (raw) {
     const err = raw as Partial<AppError>;
-    throw new Error(err?.message ?? String(raw));
+    throw new ApiError(err?.kind ?? "unknown", err?.message ?? String(raw));
   }
 }
 

@@ -2,11 +2,17 @@
 // `repo.map` re-renders when it changes; no stores, no subscriptions.
 
 import * as api from "./api";
+import { ApiError } from "./api";
 import type { BranchStatsDto } from "./bindings/BranchStatsDto";
 import type { CommitDetailsDto } from "./bindings/CommitDetailsDto";
 import type { MetroMapDto } from "./bindings/MetroMapDto";
 import type { RecentRepository } from "./bindings/RecentRepository";
 import type { RepoSummary } from "./bindings/RepoSummary";
+
+export interface Notice {
+  tone: "info" | "error";
+  text: string;
+}
 
 export type Selection = { kind: "commit"; column: number } | { kind: "branch"; name: string } | null;
 
@@ -17,6 +23,8 @@ class RepoState {
   recent = $state<RecentRepository[]>([]);
   loading = $state(false);
   error = $state<string | null>(null);
+  /** A short message shown above the map; unlike `error` it keeps the map on screen. */
+  notice = $state<Notice | null>(null);
 
   selection = $state<Selection>(null);
   details = $state<CommitDetailsDto | null>(null);
@@ -38,10 +46,17 @@ class RepoState {
     if (path) await this.open(path);
   }
 
-  async open(path: string) {
+  /** Opens an entry of the "recently opened" menu. */
+  async openRecent(entry: RecentRepository) {
+    await this.open(entry.path, entry.name);
+  }
+
+  /** `recentName` is set when the path came from the recent list. */
+  async open(path: string, recentName?: string) {
     const samePath = this.summary?.path === path;
     this.loading = true;
     this.error = null;
+    this.notice = null;
     try {
       this.summary = await api.openRepository(path);
       this.map = await api.getMetroMap();
@@ -50,10 +65,39 @@ class RepoState {
       await this.restoreSelection();
       await this.loadRecent();
     } catch (e) {
-      this.error = e instanceof Error ? e.message : String(e);
+      this.reportOpenFailure(e, path, recentName);
     } finally {
       this.loading = false;
     }
+  }
+
+  private async reportOpenFailure(e: unknown, path: string, recentName?: string) {
+    const kind = e instanceof ApiError ? e.kind : "unknown";
+    const message = e instanceof Error ? e.message : String(e);
+    const gone = kind === "notFound" || kind === "notARepository";
+
+    if (gone && recentName !== undefined) {
+      // Rust has already dropped the entry; refresh the menu and say why.
+      const reason = kind === "notFound"
+        ? "klasör bulunamadı (taşınmış, adı değişmiş ya da silinmiş olabilir)"
+        : "klasör artık bir git reposu değil";
+      this.notice = {
+        tone: "info",
+        text: `“${recentName}” açılamadı: ${reason}. Son kullanılanlar listesinden çıkarıldı.`,
+      };
+      await this.loadRecent();
+      return;
+    }
+    const text = kind === "notFound" ? `Klasör bulunamadı: ${path}`
+      : kind === "notARepository" ? `Seçilen klasör bir git reposu değil: ${path}`
+      : message;
+    // With a map on screen, keep it and show a notice instead of the error page.
+    if (this.map) this.notice = { tone: "error", text };
+    else this.error = text;
+  }
+
+  dismissNotice() {
+    this.notice = null;
   }
 
   async refresh() {

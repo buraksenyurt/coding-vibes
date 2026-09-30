@@ -36,9 +36,24 @@ pub async fn open_repository(
     app: AppHandle,
     state: State<'_, AppState>,
 ) -> Result<RepoSummary, AppError> {
-    let source = tauri::async_runtime::spawn_blocking(move || GixSource::open(PathBuf::from(path)))
-        .await
-        .map_err(join_error)??;
+    let opened = {
+        let path = path.clone();
+        tauri::async_runtime::spawn_blocking(move || open_checked(&path))
+            .await
+            .map_err(join_error)?
+    };
+
+    let source = match opened {
+        Ok(source) => source,
+        Err(err) => {
+            // A recent entry that no longer opens is dead weight: drop it so
+            // the menu stops offering it. The front end tells the user.
+            if matches!(err.kind, ErrorKind::NotFound | ErrorKind::NotARepository) {
+                recent::forget(&app, &path);
+            }
+            return Err(err);
+        }
+    };
 
     let head = source.head()?;
     let summary = RepoSummary {
@@ -55,6 +70,18 @@ pub async fn open_repository(
         },
     );
     Ok(summary)
+}
+
+/// Tells "the folder is gone" apart from "the folder is not a repository".
+fn open_checked(path: &str) -> Result<GixSource, AppError> {
+    let folder = PathBuf::from(path);
+    if !folder.is_dir() {
+        return Err(AppError::new(
+            ErrorKind::NotFound,
+            format!("'{path}' could not be found"),
+        ));
+    }
+    Ok(GixSource::open(folder)?)
 }
 
 #[tauri::command]

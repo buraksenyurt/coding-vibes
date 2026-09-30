@@ -16,6 +16,8 @@ pub struct AppError {
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub enum ErrorKind {
+    /// The folder does not exist any more (moved, renamed or deleted).
+    NotFound,
     NotARepository,
     NoRepositoryOpen,
     ReadFailed,
