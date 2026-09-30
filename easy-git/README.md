@@ -137,3 +137,7 @@ Belli bir dal seçimi;
 Gece/Gündüz modu eklendikten sonra;
 
 ![easy-git-runtime-4](EasyGitRuntime_03.png)
+
+Listeden repo kaldırma
+
+![easy-git-runtime-5](EasyGitRuntime_04.png)
