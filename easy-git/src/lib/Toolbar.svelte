@@ -7,6 +7,12 @@
 
   let menuOpen = $state(false);
 
+  const themes = [
+    { value: "system", icon: "◐", label: "Sistem temasını izle" },
+    { value: "light", icon: "☀", label: "Gündüz modu" },
+    { value: "dark", icon: "☾", label: "Gece modu" },
+  ] as const;
+
   const headLabel = $derived.by(() => {
     const head = repo.summary?.head;
     if (!head) return "";
@@ -61,6 +67,13 @@
       Kompakt
     </label>
   {/if}
+
+  <div class="segmented theme" role="group" aria-label="Tema">
+    {#each themes as t (t.value)}
+      <button class:active={view.theme === t.value} aria-pressed={view.theme === t.value}
+              aria-label={t.label} title={t.label} onclick={() => view.setTheme(t.value)}>{t.icon}</button>
+    {/each}
+  </div>
   {@render children?.()}
 </header>
 
@@ -91,7 +104,9 @@
   .caption { color: var(--muted); font-size: 12px; margin-right: 8px; }
   .segmented button { border-radius: 0; font-size: 12px; padding: 4px 10px; }
   .segmented button:first-of-type { border-radius: 6px 0 0 6px; }
-  .segmented button:last-of-type { border-radius: 0 6px 6px 0; border-left: none; }
+  .segmented button:last-of-type { border-radius: 0 6px 6px 0; }
+  .segmented button + button { border-left: none; }
+  .segmented.theme button { width: 30px; padding: 4px 0; font-size: 13px; }
   .segmented button.active { background: var(--text); color: var(--surface); border-color: var(--text); }
   .toggle { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); cursor: pointer; }
   .repo { display: flex; gap: 10px; align-items: baseline; }

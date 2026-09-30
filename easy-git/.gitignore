@@ -13,4 +13,4 @@ node_modules/
 *.pending-snap
 
 # Output of scripts/git-flow-demo.sh when run with the default folder
-/git-flow-sandbox/
+git-flow-sandbox/

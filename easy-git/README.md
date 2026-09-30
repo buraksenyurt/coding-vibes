@@ -14,7 +14,8 @@ Git dallarını **metro haritası** gibi gösteren, salt okunur bir Windows masa
 - Silinmiş ama merge edilmiş dalların adı merge mesajından geri bulunur
 - Kenar çubuğu: ana dala göre ↑önde ↓geride, merge edildi ✓, bayat dal, remote durumu ☁
 - Commit ve geçişlerde tooltip; tıklayınca detay paneli (parent'lar arasında gezinme)
-- Dal gizleme/öne çıkarma, kompakt görünüm, açık/koyu tema
+- Dal gizleme/öne çıkarma, kompakt görünüm
+- Gece/gündüz modu: Windows temasını izle (varsayılan), ya da araç çubuğundan ☀ / ☾ ile sabitle; seçim hatırlanır
 
 ![Koyu tema, geçiş vurgusu](docs/images/dark-kind.png)
 

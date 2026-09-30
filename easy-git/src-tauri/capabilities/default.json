@@ -3,5 +3,5 @@
   "identifier": "default",
   "description": "Permissions for the main window. Anything not listed here is denied.",
   "windows": ["main"],
-  "permissions": ["core:default", "dialog:allow-open"]
+  "permissions": ["core:default", "core:window:allow-set-theme", "dialog:allow-open"]
 }
