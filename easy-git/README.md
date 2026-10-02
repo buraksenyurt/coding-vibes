@@ -44,6 +44,12 @@ cargo test --workspace
 npm run check
 ```
 
+`describe` metninin performansını ölçmek için:
+
+```powershell
+cargo bench -p easy-git-core --bench describe
+```
+
 ## Hızlı deneme: git flow örneği
 
 Uzak bir repoya bağlanmadan, git flow modeline göre dallanmış hayali bir repo üretip easy-git'te açabilirsin. Windows'ta **Git Bash** içinden (Git for Windows ile gelir), Linux/macOS'ta herhangi bir terminalden:
