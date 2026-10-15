@@ -22,6 +22,11 @@
       <th>Scor(10 Üzerinden)</th>
    </tr>
    <tr>
+   <td valign="top"><strong>GitDash (Zig CLI)</strong></td>
+      <td valign="top"><strong>Tarih:</strong> Ekim 2026<br><strong>Tanım:</strong> Copilot CLI'daki aktivite takvimi görünümünden esinlenen yerel Git tabanlı bir CLI uygulaması<br><strong>Geliştirici:</strong> GPT 6, High Effort <br><strong>Dil:</strong> Zig, 0.17<br><strong>Zorluk:</strong> Basit<br><strong> Ayrılan Süre:</strong> ~2 Saat  </td>
+      <td valign="top">Hazırlanan öğretiyi birebir takip ederek uygulamayı geliştirdim. Hatasız çalıştığını ifade edebilirim. Basit bir öğreti gibi görünmesine rağmen içerisinde Zig dilinin önemli özellikleri *(allocator kullanımı, error handling, defer gibi)* barındırıyor.</td>
+      <td>10</td>
+   </tr>
    <td valign="top"><strong>Easy Git (Tauri App/Rust)</strong></td>
       <td valign="top"><strong>Tarih:</strong> Eylül 2026<br><strong>Tanım:</strong>Git branch'lerini görüntüleyen, branch oluşumlarının biraz daha kolay anlaşılmasını sağlayan eğitici bir uygulama .<br><strong>Geliştirici:</strong> Claude Opus 5.5 (Coworks Mode)<br><strong>Dil:</strong> Rust,Tauri<br><strong>Zorluk:</strong> Orta<br><strong> Ayrılan Süre:</strong> ~2 Saat  </td>
       <td valign="top">DockerCity çalışmasında olduğu gibi öncesinde bir plan dosyası hazırlatıldı ve tüm çalışma fazlandırılararak uygulamaya geçirildi. Uygulama, Git branch'lerini doğru şekilde okuyup görselleştirdi ve kullanıcıya branch oluşumlarını daha anlaşılır bir şekilde sundu. Sadece Windows makinede çalışma zamanında Build Tools eksikliği nedeniyle bir sorun oluştu. Developer Command Prompt for Visual Studio 2022 üzerinden çalıştırmak sorunu çözdü. Burada ekstra bir hata-çözüm session'ı gerçekleştirildi. Ancak gerekli detaylar dokümana eklendi.</td>

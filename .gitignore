@@ -603,3 +603,7 @@ go.sum.bak
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Zig Cache folders and outputs
+.zig-cache/
+zig-out/
