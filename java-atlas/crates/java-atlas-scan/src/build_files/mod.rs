@@ -72,5 +72,6 @@ fn plain(root: &Path) -> ProjectFacts {
             external_deps: Vec::new(),
         }],
         warnings: Vec::new(),
+        libraries: Vec::new(),
     }
 }

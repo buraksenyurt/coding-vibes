@@ -1,28 +1,33 @@
 //! java-atlas-scan — the eyes of java-atlas.
 //!
 //! Everything that touches the disk or a parser lives here: build files
-//! (phase 1, [`build_files`]) and Java sources via tree-sitter (phase 2,
-//! [`sources`]). The output is plain data ("facts") that java-atlas-core
-//! understands.
+//! (phase 1, [`build_files`]), Java sources via tree-sitter (phase 2,
+//! [`sources`]) and library jars in local caches (phase 3, [`jars`]). The
+//! output is plain data ("facts") that java-atlas-core understands.
 
 pub mod build_files;
+pub mod jars;
 mod paths;
 pub mod sources;
 
 use std::path::Path;
 
 pub use build_files::read_build;
+pub use jars::{LibraryCache, ScanOptions};
 pub use sources::{Progress, read_sources};
 
 use java_atlas_core::facts::ProjectFacts;
 
-/// Reads a whole project: build files first, then every source file.
+/// Reads a whole project: build files, every source file, and the package
+/// lists of the declared libraries found in the caches of `options`.
 pub fn read_project(
     root: &Path,
+    options: &ScanOptions,
     on_progress: &(dyn Fn(Progress) + Sync),
 ) -> Result<ProjectFacts, ScanError> {
     let mut facts = read_build(root)?;
     read_sources(root, &mut facts, on_progress)?;
+    jars::index_libraries(&mut facts, options);
     Ok(facts)
 }
 

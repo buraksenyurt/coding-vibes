@@ -693,6 +693,7 @@ pub fn read(root: &Path) -> Result<ProjectFacts, ScanError> {
         build_system: BuildSystem::Maven,
         modules,
         warnings: reader.warnings,
+        libraries: Vec::new(),
     })
 }
 

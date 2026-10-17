@@ -550,6 +550,7 @@ pub fn read(root: &Path) -> Result<ProjectFacts, ScanError> {
         build_system: BuildSystem::Gradle,
         modules,
         warnings,
+        libraries: Vec::new(),
     })
 }
 

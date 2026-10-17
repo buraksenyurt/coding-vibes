@@ -1,6 +1,6 @@
 # Faz 2 — tree-sitter ile Java Kaynaklarını Okumak
 
-> **Önceki:** [01 — Build dosyalarını okumak](01-build-dosyalari.md) · **Sonraki:** 03 — Graf ve analiz *(yazılacak)*
+> **Önceki:** [01 — Build dosyalarını okumak](01-build-dosyalari.md) · **Sonraki:** [03 — Graf ve analiz](03-graf-ve-analiz.md)
 
 ## 1. Bu bölümde ne yapacağız
 

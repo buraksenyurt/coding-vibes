@@ -6,7 +6,7 @@
 use std::path::PathBuf;
 
 use java_atlas_core::facts::{BuildSystem, Scope, VersionSource};
-use java_atlas_scan::{ScanError, read_build};
+use java_atlas_scan::{ScanError, ScanOptions, read_build};
 
 fn sample(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -152,19 +152,24 @@ mod sources {
 
     #[test]
     fn atlas_bank_sources_snapshot() {
-        let facts = read_project(&sample("atlas-bank"), &|_| {}).unwrap();
+        let facts = read_project(&sample("atlas-bank"), &ScanOptions::default(), &|_| {}).unwrap();
         insta::assert_snapshot!(facts.describe_sources());
     }
 
     #[test]
     fn atlas_shop_sources_snapshot() {
-        let facts = read_project(&sample("atlas-shop-gradle"), &|_| {}).unwrap();
+        let facts = read_project(
+            &sample("atlas-shop-gradle"),
+            &ScanOptions::default(),
+            &|_| {},
+        )
+        .unwrap();
         insta::assert_snapshot!(facts.describe_sources());
     }
 
     #[test]
     fn every_file_lands_in_its_module() {
-        let facts = read_project(&sample("atlas-bank"), &|_| {}).unwrap();
+        let facts = read_project(&sample("atlas-bank"), &ScanOptions::default(), &|_| {}).unwrap();
         let count = |id: &str| facts.module(id).unwrap().files.len();
         assert_eq!(
             count("com.atlasbank:atlas-bank"),
@@ -186,7 +191,7 @@ mod sources {
 
     #[test]
     fn jpms_is_read_only_where_declared() {
-        let facts = read_project(&sample("atlas-bank"), &|_| {}).unwrap();
+        let facts = read_project(&sample("atlas-bank"), &ScanOptions::default(), &|_| {}).unwrap();
         let jpms = |id: &str| facts.module(id).unwrap().jpms.as_ref();
 
         let domain = jpms("com.atlasbank:bank-domain").unwrap();
@@ -210,7 +215,7 @@ mod sources {
 
     #[test]
     fn the_tricky_cases_are_all_captured() {
-        let facts = read_project(&sample("atlas-bank"), &|_| {}).unwrap();
+        let facts = read_project(&sample("atlas-bank"), &ScanOptions::default(), &|_| {}).unwrap();
 
         // Wildcard import
         let service = file(&facts, "AccountService.java");
@@ -272,9 +277,11 @@ mod sources {
     #[test]
     fn progress_reaches_the_total() {
         let seen = Mutex::new(Vec::new());
-        let facts = read_project(&sample("atlas-shop-gradle"), &|p: Progress| {
-            seen.lock().unwrap().push(p)
-        })
+        let facts = read_project(
+            &sample("atlas-shop-gradle"),
+            &ScanOptions::default(),
+            &|p: Progress| seen.lock().unwrap().push(p),
+        )
         .unwrap();
         let seen = seen.into_inner().unwrap();
         let total = facts.file_count();
@@ -316,7 +323,7 @@ fn inherited_source_directories_are_honoured() {
     )
     .unwrap();
 
-    let facts = java_atlas_scan::read_project(&root, &|_| {}).unwrap();
+    let facts = java_atlas_scan::read_project(&root, &ScanOptions::default(), &|_| {}).unwrap();
     fs::remove_dir_all(&root).ok();
 
     let lib = facts.module("g:lib").unwrap();

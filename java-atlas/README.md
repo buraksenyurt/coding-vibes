@@ -36,6 +36,7 @@ Gereksinimler ve platforma özel notlar: [docs/tutorial/00-kurulum-ve-iskelet.md
 - [Faz 0 — Kurulum ve iskelet](docs/tutorial/00-kurulum-ve-iskelet.md)
 - [Faz 1 — Build dosyalarını okumak](docs/tutorial/01-build-dosyalari.md)
 - [Faz 2 — tree-sitter ile Java kaynaklarını okumak](docs/tutorial/02-tree-sitter-ile-java.md)
+- [Faz 3 — Bağımlılık grafı ve analiz](docs/tutorial/03-graf-ve-analiz.md)
 
 Build dosyalarından ne okunduğunu görmek için:
 
@@ -43,4 +44,6 @@ Build dosyalarından ne okunduğunu görmek için:
 cargo run -p java-atlas-scan --example inspect -- samples/atlas-bank
 # kaynak dosyalarla birlikte:
 cargo run -p java-atlas-scan --example inspect -- samples/atlas-bank --sources
+# çözümlenmiş graf: döngüler, JPMS ihlalleri, bulgular, metrikler
+cargo run -p java-atlas-scan --example inspect -- samples/atlas-bank --atlas
 ```

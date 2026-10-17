@@ -1,10 +1,10 @@
 # java-atlas — Proje Plan Dokümanı
 
 > **Atölye:** Fikirler Atölyesi
-> **Doküman sürümü:** v1.2 — 18 Ekim 2026
+> **Doküman sürümü:** v1.3 — 18 Ekim 2026
 > **Dokümanlar:** bu klasör (`java-atlas/docs`)
 > **Kod:** `coding-vibes/java-atlas`
-> **Durum:** Faz 0–2 tamamlandı — sıradaki: Faz 3
+> **Durum:** Faz 0–3 tamamlandı — sıradaki: Faz 4
 
 ---
 
@@ -404,7 +404,7 @@ MVP = **Faz 0 → Faz 7**. Sonrası cila ve genişleme.
 
 ---
 
-### Faz 3 — Bağımlılık grafı ve analiz
+### Faz 3 — Bağımlılık grafı ve analiz ✅
 `docs/tutorial/03-graf-ve-analiz.md`
 
 - Sembol tablosu, string interning, arena graf
@@ -507,7 +507,7 @@ Dosya adlandırma: `NN-konu-adi.md`, `docs/tutorial/` altında. Dokümanlar Tür
 - [ ] Tarama sırasında ilerleme gösteriliyor
 - [ ] Ülke ölçeğinde bölgeler, otoyollar, adalar ve feribot hatları görünüyor
 - [ ] Bölge ve şehir ölçeklerine yakınlaşılabiliyor; ekmek kırıntısıyla geri dönülebiliyor
-- [ ] `service.account ↔ service.audit` döngüsü kırmızı; `bank-api → persistence.internal` kaçak geçiş olarak işaretli
+- [ ] `service.account ↔ service.audit` ve `persistence ↔ persistence.internal` döngüleri kırmızı; `bank-api → persistence.internal` kaçak geçiş olarak işaretli
 - [ ] `commons-lang3` kullanılmayan bağımlılık olarak soluk
 - [ ] Bir yola tıklayınca kanıt listesi (`dosya:satır`) görünüyor
 - [ ] Ca / Ce / I metrikleri detay panelinde
@@ -549,10 +549,17 @@ Dosya adlandırma: `NN-konu-adi.md`, `docs/tutorial/` altında. Dokümanlar Tür
 | Ayrıştırılamayan dosya | `ScanError::NoTree` | Uyarı | Tek dosya tüm taramayı durdurmamalı |
 | Gramer sınırı | — | `Object @Nullable ... args` (varargs tip annotation'ı) sözdizimi hatası veriyor | tree-sitter-java 0.23; dosyanın geri kalanı okunuyor, uyarı üretiliyor |
 | Ölçüm | — | Release, 2 çekirdek: Commons Lang 628 dosya ~0,45 sn; Guava 1.556 dosya ~0,85 sn (tek iş parçacığıyla ~2 sn) | Faz 9'daki önbellek ihtiyacı için referans |
+| Dış artifact eşleme | jar → groupId öneki → bilinmiyor | jar → **ad puanlaması** → bilinmiyor (`MatchMethod::Jar` / `Name`) | Sadece önek, Guava'da Truth, JUnit 4, Jimfs gibi kütüphaneleri kaçırdı; puanlama artifactId kelimelerini de kullanıyor, farklı groupId'ler arasında eşitlikte tahmin yapmıyor |
+| Jar indeksi | `zip` (Faz 3) | `ScanOptions { library_caches }`; `~/.m2` ve Gradle `files-2.1` düzenleri; sadece central directory okunuyor | Testler önbelleksiz (`ScanOptions::default()`), aksi hâlde snapshot'lar makineye bağlı olurdu |
+| Kenar kaynağı | Tip → tip | Dosyanın **ilk üst seviye tipi** → hedef | Faz 2 referansları dosya başına topluyor; iç tipler dış tipin dosyasında |
+| Ağırlık | `weight: u32` | `Weight { main, test }` | Döngüler ve metrikler sadece ana kodla; test filtresi aynı ayrımı kullanacak |
+| Kullanılmayan bağımlılık | Tüm beyanlar | Kalıtılmış ve `runtime` kapsamlı beyanlar hariç | Kök POM'daki JUnit beş modülde gürültü yapıyordu; `runtime` tanımı gereği kodda görünmez |
+| `atlas-bank` beklentisi | 1 döngü | **2 döngü**: planlanan `service.account ⇄ service.audit` + `persistence ⇄ persistence.internal` (fabrika/arayüz kalıbı) | Analiz haklı; gerçek projelerdeki en tipik döngü olduğu için örnekte bırakıldı. Ayrıca `bank-service → bank-common` beyan edilmemiş (dolaylı) bulundu |
+| Ölçüm (analiz) | — | Guava 1.556 dosya ~50 ms, Commons Lang ~12 ms | Tarama süresinin yanında ihmal edilebilir |
 | `quick-xml` | 0.3x API | 0.42: `xml10_content()`, varlıklar `Event::GeneralRef` | İnternetteki örneklerin çoğu eski API'yi kullanıyor |
 
 ---
 
 ## 13. Sonraki Adım
 
-**Faz 3 — Bağımlılık grafı ve analiz** (`docs/tutorial/03-graf-ve-analiz.md`): sembol tablosu, ad çözümleme, dış artifact eşleme, tip → paket → modül toplama, Tarjan ile döngüler, JPMS kontrolleri ve Ca/Ce/I metrikleri.
+**Faz 4 — Tauri köprüsü** (`docs/tutorial/04-tauri-kopru.md`): `open_project` command'ı, `Channel<ScanProgress>` ile canlı ilerleme, DTO'lar ve `ts-rs`, ölçek/odak bazlı görünüm isteği, son açılan projeler.

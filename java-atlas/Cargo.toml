@@ -22,6 +22,8 @@ toml = "1"
 ignore = "0.4"
 insta = "1"
 rayon = "1"
+# Only the central directory of jars is read: no decompression features needed.
+zip = { version = "9", default-features = false }
 streaming-iterator = "0.1"
 
 # Dependencies are compiled with light optimisation even in debug builds.

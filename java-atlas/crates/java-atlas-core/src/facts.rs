@@ -265,6 +265,22 @@ pub struct ProjectFacts {
     /// Modules in a stable order (declaration order, root first).
     pub modules: Vec<ModuleFacts>,
     pub warnings: Vec<ScanWarning>,
+    /// Package lists of declared libraries whose jar was found in a local
+    /// Maven/Gradle cache (phase 3). Empty when no cache was searched.
+    pub libraries: Vec<LibraryIndex>,
+}
+
+/// The packages inside one library jar: the reliable way to know that
+/// `org.slf4j.Logger` comes from `org.slf4j:slf4j-api`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LibraryIndex {
+    pub group: String,
+    pub artifact: String,
+    pub version: String,
+    /// Where the jar was found (absolute; for the details panel).
+    pub jar: String,
+    /// Sorted, distinct package names.
+    pub packages: Vec<String>,
 }
 
 impl ProjectFacts {
@@ -456,6 +472,7 @@ mod tests {
                 },
             ],
             warnings: vec![],
+            libraries: vec![],
         }
     }
 
