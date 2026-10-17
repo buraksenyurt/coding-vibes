@@ -1,0 +1,13 @@
+[package]
+name = "java-atlas-scan"
+description = "Reads a Java project from disk (build files and sources) and produces facts for java-atlas-core."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+java-atlas-core.workspace = true
+thiserror.workspace = true
+tree-sitter.workspace = true
+tree-sitter-java.workspace = true

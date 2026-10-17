@@ -1,0 +1,13 @@
+# Rust
+/target/
+
+# Node / Vite
+node_modules/
+/dist/
+
+# Tauri generated schemas
+/src-tauri/gen/
+
+# Snapshot review leftovers
+*.snap.new
+*.pending-snap
