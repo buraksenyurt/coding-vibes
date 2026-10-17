@@ -19,6 +19,8 @@ java-atlas-core.workspace = true
 java-atlas-scan.workspace = true
 tauri = { version = "2.12", features = [] }
 tauri-plugin-dialog = "2.8"
+tauri-plugin-store = "2.5"
+ts-rs = "12"
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true

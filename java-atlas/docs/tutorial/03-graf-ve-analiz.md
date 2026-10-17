@@ -1,6 +1,6 @@
 # Faz 3 — Bağımlılık Grafı ve Analiz
 
-> **Önceki:** [02 — tree-sitter ile Java](02-tree-sitter-ile-java.md) · **Sonraki:** 04 — Tauri köprüsü *(yazılacak)*
+> **Önceki:** [02 — tree-sitter ile Java](02-tree-sitter-ile-java.md) · **Sonraki:** [04 — Tauri köprüsü](04-tauri-kopru.md)
 
 ## 1. Bu bölümde ne yapacağız
 

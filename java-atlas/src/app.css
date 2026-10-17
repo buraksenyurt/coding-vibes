@@ -9,6 +9,8 @@
   --accent: #2f6f9f;
   --ok: #2e7d4f;
   --bad: #c0392b;
+  --warn: #e0b341;
+  --hover: #eef2f5;
   color-scheme: light dark;
   font-family: system-ui, "Segoe UI", Roboto, Ubuntu, sans-serif;
   font-size: 14px;
@@ -26,6 +28,8 @@
     --accent: #6aa9d8;
     --ok: #5cc28a;
     --bad: #ff6b6b;
+    --warn: #e6c25a;
+    --hover: #24323e;
   }
 }
 
@@ -34,21 +38,6 @@
 html, body, #app { height: 100%; margin: 0; }
 
 body { background: var(--sea); color: var(--ink); }
-
-.shell { display: grid; grid-template-rows: auto 1fr auto; height: 100%; }
-
-.toolbar, .status {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 14px;
-  background: var(--panel);
-  border-bottom: 1px solid var(--border);
-}
-
-.status { border-bottom: none; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; justify-content: space-between; }
-
-.project { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 button.primary {
   background: var(--accent);
@@ -60,12 +49,15 @@ button.primary {
   cursor: pointer;
 }
 button.primary:hover { filter: brightness(1.08); }
-button.primary:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
-
-.sea { display: grid; place-items: center; overflow: hidden; }
-.map { width: min(90%, 900px); height: auto; }
-.land { fill: var(--land); stroke: var(--land-edge); stroke-width: 2; }
-.hint { fill: var(--muted); font-size: 16px; }
-
-.ok { color: var(--ok); }
-.bad { color: var(--bad); }
+button.primary:disabled { opacity: 0.6; cursor: default; }
+button.ghost {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 9px;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+button.ghost:hover { background: var(--hover); }
+button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

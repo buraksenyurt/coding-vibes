@@ -186,3 +186,139 @@ fn a_cached_jar_turns_a_guess_into_a_fact() {
         )]
     );
 }
+
+// ---------------------------------------------------------------------------
+// Phase 4: views
+// ---------------------------------------------------------------------------
+
+mod views {
+    use super::*;
+    use java_atlas_core::Scale;
+    use java_atlas_core::atlas::ViewFilters;
+
+    fn names(a: &Atlas, ids: &[java_atlas_core::atlas::NodeId]) -> Vec<String> {
+        ids.iter().map(|id| a.node(*id).fqn.clone()).collect()
+    }
+
+    fn roads(a: &Atlas, v: &java_atlas_core::atlas::View) -> Vec<String> {
+        v.edges
+            .iter()
+            .map(|e| {
+                format!(
+                    "{} → {} {}",
+                    a.node(e.from).name,
+                    a.node(e.to).name,
+                    e.weight.main
+                )
+            })
+            .collect()
+    }
+
+    #[test]
+    fn country_shows_modules_and_every_island() {
+        let a = atlas("atlas-bank");
+        let v = a.view(Scale::Country, None, ViewFilters::default());
+        assert_eq!(v.members.len(), 5);
+        // commons-lang3 is unused but still an island; junit only has test roads.
+        assert_eq!(
+            names(&a, &v.neighbours),
+            [
+                "org.junit.jupiter:junit-jupiter",
+                "org.apache.commons:commons-lang3",
+                "org.slf4j:slf4j-api",
+                "com.fasterxml.jackson.core:jackson-databind"
+            ]
+        );
+        assert!(
+            roads(&a, &v).iter().all(|r| !r.contains("junit")),
+            "test roads are filtered out"
+        );
+    }
+
+    #[test]
+    fn region_folds_foreign_packages_into_their_module() {
+        let a = atlas("atlas-bank");
+        let api = a.find("com.atlasbank:bank-api").unwrap();
+        let v = a.view(Scale::Region, Some(api), ViewFilters::default());
+        assert_eq!(names(&a, &v.members), ["com.atlasbank.api"]);
+        assert_eq!(
+            roads(&a, &v),
+            [
+                // persistence.internal + … → the bank-persistence region at the border
+                "com.atlasbank.api → bank-persistence 3",
+                "com.atlasbank.api → bank-service 9",
+                "com.atlasbank.api → slf4j-api 4",
+                "com.atlasbank.api → jackson-databind 3",
+            ]
+        );
+    }
+
+    #[test]
+    fn city_shows_buildings_and_incoming_roads() {
+        let a = atlas("atlas-bank");
+        let audit = a.find("com.atlasbank.service.audit").unwrap();
+        let v = a.view(
+            Scale::City,
+            Some(audit),
+            ViewFilters {
+                tests: true,
+                ..ViewFilters::default()
+            },
+        );
+        assert_eq!(
+            names(&a, &v.members),
+            [
+                "com.atlasbank.service.audit.AuditEntry",
+                "com.atlasbank.service.audit.AuditLog"
+            ]
+        );
+        let r = roads(&a, &v);
+        assert!(r.contains(&"AuditLog → AuditEntry 3".to_owned()), "{r:?}");
+        assert!(
+            r.contains(&"AuditLog → com.atlasbank.service.account 2".to_owned()),
+            "{r:?}"
+        );
+        assert!(
+            r.contains(&"com.atlasbank.service.account → AuditLog 3".to_owned()),
+            "incoming: {r:?}"
+        );
+    }
+
+    #[test]
+    fn keys_are_stable_and_unique() {
+        let a = atlas("atlas-bank");
+        let index = a.key_index();
+        assert_eq!(index.len(), a.nodes.len());
+        let package = a.find("com.atlasbank.common").unwrap();
+        assert_eq!(
+            a.key(package),
+            "p:com.atlasbank:bank-common|com.atlasbank.common"
+        );
+        assert_eq!(index[&a.key(package)], package);
+    }
+
+    #[test]
+    fn evidence_works_across_levels() {
+        let a = atlas("atlas-bank");
+        let api = a.find("com.atlasbank.api").unwrap();
+        let persistence = a.find("com.atlasbank:bank-persistence").unwrap();
+        let ev = a.evidence_between(api, persistence, 10);
+        // The import (line 3) and the first use of the name (line 16). Line 17
+        // uses it again, but facts keep one line per name and file.
+        let lines: Vec<u32> = ev.iter().map(|e| e.line).collect();
+        assert_eq!(lines, [3, 16]);
+    }
+
+    #[test]
+    fn sizes_add_up() {
+        let a = atlas("atlas-bank");
+        let sizes = a.sizes();
+        let module = a.find("com.atlasbank:bank-common").unwrap();
+        let money = a.find("com.atlasbank.common.Money").unwrap();
+        let ids = a.find("com.atlasbank.common.Ids").unwrap();
+        assert_eq!(
+            sizes[module.index()],
+            sizes[money.index()] + sizes[ids.index()]
+        );
+    }
+}

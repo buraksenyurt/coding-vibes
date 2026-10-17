@@ -1,10 +1,10 @@
 # java-atlas — Proje Plan Dokümanı
 
 > **Atölye:** Fikirler Atölyesi
-> **Doküman sürümü:** v1.3 — 18 Ekim 2026
+> **Doküman sürümü:** v1.4 — 18 Ekim 2026
 > **Dokümanlar:** bu klasör (`java-atlas/docs`)
 > **Kod:** `coding-vibes/java-atlas`
-> **Durum:** Faz 0–3 tamamlandı — sıradaki: Faz 4
+> **Durum:** Faz 0–4 tamamlandı — sıradaki: Faz 5
 
 ---
 
@@ -419,7 +419,7 @@ MVP = **Faz 0 → Faz 7**. Sonrası cila ve genişleme.
 
 ---
 
-### Faz 4 — Tauri köprüsü
+### Faz 4 — Tauri köprüsü ✅
 `docs/tutorial/04-tauri-kopru.md`
 
 - `AppState`, command'lar, `spawn_blocking`
@@ -556,10 +556,16 @@ Dosya adlandırma: `NN-konu-adi.md`, `docs/tutorial/` altında. Dokümanlar Tür
 | Kullanılmayan bağımlılık | Tüm beyanlar | Kalıtılmış ve `runtime` kapsamlı beyanlar hariç | Kök POM'daki JUnit beş modülde gürültü yapıyordu; `runtime` tanımı gereği kodda görünmez |
 | `atlas-bank` beklentisi | 1 döngü | **2 döngü**: planlanan `service.account ⇄ service.audit` + `persistence ⇄ persistence.internal` (fabrika/arayüz kalıbı) | Analiz haklı; gerçek projelerdeki en tipik döngü olduğu için örnekte bırakıldı. Ayrıca `bank-service → bank-common` beyan edilmemiş (dolaylı) bulundu |
 | Ölçüm (analiz) | — | Guava 1.556 dosya ~50 ms, Commons Lang ~12 ms | Tarama süresinin yanında ihmal edilebilir |
+| Görünüm mantığı | Tauri tarafında | Core'da `Atlas::view(scale, focus, filters)`; Tauri sadece DTO'ya çeviriyor | İş kuralı (katlama, filtreler) Tauri'siz test edilebilsin |
+| Komutlar | `open_project`, `get_atlas_view`, `get_node_details`, `get_edge_evidence` | Aynı + `recent_projects`, `forget_recent_project`; ilerleme `Channel<ScanEvent>` (etiketli enum) | Kanal mesajları 40 ms'de bir kısılıyor, son dosya her zaman gönderiliyor |
+| Düğüm kimliği | `NodeId` | Ön yüze **kararlı anahtar** (`m:`, `p:<modül>\|<paket>`, `t:`, `l:`, `j:`, `u:`) | İndeksler taramadan taramaya değişir; Faz 8'de seçim korunacak |
+| Kanıt sorgusu | Kenar başına | `evidence_between(from, to)`: her seviye ve karışık seviyeler (paket → modül) için tip kenarlarından | Bölge görünümündeki katlanmış yolların da kanıtı olmalı |
+| Ön yüz (Faz 4) | Konsolda özet | Rapor paneli + ülke verisinin liste önizlemesi; `VITE_AUTO_OPEN` ile açılışta proje | Faz 5'e kadar sonuçları görünür kılmak; ekran görüntüleri klasör seçicisiz alınabilsin |
+| Türkçe arayüz | — | `text-transform: uppercase` + `lang="tr"` → "BUİLD"; İngilizce kelimeler `lang="en"` | Yerelleştirme tuzağı |
 | `quick-xml` | 0.3x API | 0.42: `xml10_content()`, varlıklar `Event::GeneralRef` | İnternetteki örneklerin çoğu eski API'yi kullanıyor |
 
 ---
 
 ## 13. Sonraki Adım
 
-**Faz 4 — Tauri köprüsü** (`docs/tutorial/04-tauri-kopru.md`): `open_project` command'ı, `Channel<ScanProgress>` ile canlı ilerleme, DTO'lar ve `ts-rs`, ölçek/odak bazlı görünüm isteği, son açılan projeler.
+**Faz 5 — Harita yerleşimi ve ilk çizim** (`docs/tutorial/05-treemap-ve-cizim.md`): squarified treemap (core), ada yerleşimi, `AtlasView.svelte` ile SVG, `viewBox` pan/zoom; Faz 4'teki `CountryPreview` listesinin yerini harita alır.

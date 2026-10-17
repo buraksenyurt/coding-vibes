@@ -15,6 +15,9 @@
 mod analysis;
 mod describe;
 mod resolve;
+mod view;
+
+pub use view::{View, ViewEdge, ViewFilters};
 
 use crate::facts::{JpmsFacts, ProjectFacts, TypeKind};
 
@@ -29,7 +32,7 @@ impl NodeId {
 }
 
 /// How an external package was tied to a declared library.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum MatchMethod {
     /// The package was found inside the library's jar (local Maven/Gradle cache).
     Jar,

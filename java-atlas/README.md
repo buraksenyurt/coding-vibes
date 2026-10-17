@@ -25,6 +25,7 @@ src                      Svelte ön yüz
 ```bash
 npm install
 npm run tauri dev        # geliştirme
+VITE_AUTO_OPEN=$PWD/samples/atlas-bank npm run tauri dev   # açılışta örnek projeyi aç
 cargo test --workspace   # testler
 ```
 
@@ -37,6 +38,7 @@ Gereksinimler ve platforma özel notlar: [docs/tutorial/00-kurulum-ve-iskelet.md
 - [Faz 1 — Build dosyalarını okumak](docs/tutorial/01-build-dosyalari.md)
 - [Faz 2 — tree-sitter ile Java kaynaklarını okumak](docs/tutorial/02-tree-sitter-ile-java.md)
 - [Faz 3 — Bağımlılık grafı ve analiz](docs/tutorial/03-graf-ve-analiz.md)
+- [Faz 4 — Tauri köprüsü](docs/tutorial/04-tauri-kopru.md)
 
 Build dosyalarından ne okunduğunu görmek için:
 
