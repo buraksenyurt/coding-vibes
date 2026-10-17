@@ -14,9 +14,11 @@
 
 mod analysis;
 mod describe;
+mod layout;
 mod resolve;
 mod view;
 
+pub use layout::{Archipelago, LAND, Layout};
 pub use view::{View, ViewEdge, ViewFilters};
 
 use crate::facts::{JpmsFacts, ProjectFacts, TypeKind};

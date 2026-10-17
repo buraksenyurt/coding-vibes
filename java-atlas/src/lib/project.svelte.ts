@@ -21,6 +21,9 @@ class ProjectStore {
   error = $state<string | null>(null);
   filters = $state<ViewFiltersDto>({ tests: false, jdk: false, external: true });
 
+  /** The report panel next to the map; hidden to give the map the whole window. */
+  showReport = $state(true);
+
   /** Path of the project being scanned or shown. */
   path = $state<string | null>(null);
 

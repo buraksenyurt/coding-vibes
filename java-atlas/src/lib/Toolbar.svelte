@@ -41,6 +41,7 @@
       <span class="muted">{project.summary.buildSystem} · {project.summary.modules} modül · {project.summary.packages} paket</span>
     </div>
     <div class="group filters" role="group" aria-label="Filtreler">
+      <button class="ghost" class:active={project.showReport} onclick={() => (project.showReport = !project.showReport)} aria-pressed={project.showReport}>Rapor</button>
       <label><input type="checkbox" checked={project.filters.tests} onchange={(e) => project.setFilters({ tests: e.currentTarget.checked })} /> Test</label>
       <label><input type="checkbox" checked={project.filters.jdk} onchange={(e) => project.setFilters({ jdk: e.currentTarget.checked })} /> JDK</label>
       <label><input type="checkbox" checked={project.filters.external} onchange={(e) => project.setFilters({ external: e.currentTarget.checked })} /> Dış</label>
@@ -66,6 +67,7 @@
   .muted { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .filters label { display: flex; align-items: center; gap: 4px; color: var(--muted); font-size: 13px; cursor: pointer; }
   .filters { margin-left: auto; gap: 12px; }
+  .ghost.active { background: var(--hover); border-color: var(--accent); }
 
   .menu { position: relative; }
   .menu summary {

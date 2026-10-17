@@ -1,10 +1,10 @@
 # java-atlas — Proje Plan Dokümanı
 
 > **Atölye:** Fikirler Atölyesi
-> **Doküman sürümü:** v1.4 — 18 Ekim 2026
+> **Doküman sürümü:** v1.5 — 18 Ekim 2026
 > **Dokümanlar:** bu klasör (`java-atlas/docs`)
 > **Kod:** `coding-vibes/java-atlas`
-> **Durum:** Faz 0–4 tamamlandı — sıradaki: Faz 5
+> **Durum:** Faz 0–5 tamamlandı — sıradaki: Faz 6
 
 ---
 
@@ -432,7 +432,7 @@ MVP = **Faz 0 → Faz 7**. Sonrası cila ve genişleme.
 
 ---
 
-### Faz 5 — Harita yerleşimi ve ilk çizim
+### Faz 5 — Harita yerleşimi ve ilk çizim ✅
 `docs/tutorial/05-treemap-ve-cizim.md`
 
 - Squarified treemap (Rust, core içinde), test edilebilir geometri
@@ -562,10 +562,16 @@ Dosya adlandırma: `NN-konu-adi.md`, `docs/tutorial/` altında. Dokümanlar Tür
 | Kanıt sorgusu | Kenar başına | `evidence_between(from, to)`: her seviye ve karışık seviyeler (paket → modül) için tip kenarlarından | Bölge görünümündeki katlanmış yolların da kanıtı olmalı |
 | Ön yüz (Faz 4) | Konsolda özet | Rapor paneli + ülke verisinin liste önizlemesi; `VITE_AUTO_OPEN` ile açılışta proje | Faz 5'e kadar sonuçları görünür kılmak; ekran görüntüleri klasör seçicisiz alınabilsin |
 | Türkçe arayüz | — | `text-transform: uppercase` + `lang="tr"` → "BUİLD"; İngilizce kelimeler `lang="en"` | Yerelleştirme tuzağı |
+| Yerleşim kapsamı | Ölçek başına yerleşim | **Tek dünya**: kara → bölge → şehir → bina, hepsi iç içe treemap, tek koordinat sisteminde | Yakınlaşma sadece kamera hareketi; uzaktan görülen şehir yaklaşınca aynı yerde |
+| Küçük parçalar | Alan tamamen orantılı | Her çocuk ebeveyninin en az %3'ü (`MIN_SHARE`) | Küçük modüller/paketler görünür ve tıklanabilir kalsın |
+| Ada yerleşimi | Denizde sütun | Takımadalar **raf yerleşimiyle** (640 birim genişlik) | Tek sütun Guava'da dört sütuna taştı, kara ekranda küçücük kaldı |
+| Alt paketler | Mahalle olarak iç içe | MVP'de düz (her paket bir şehir) | Faz 5 "Kendin dene" görevi |
+| Çift tıklama | `dblclick` | Kendi algılama (400 ms) + sürükleme eşiği (4 px) ile pointer capture | WebKitGTK'da `dblclick` SVG grubuna gelmedi; erken capture tıklamaları `<svg>`'ye yönlendiriyordu |
+| Rapor paneli | Sabit | Araç çubuğundaki **Rapor** düğmesiyle gizlenebiliyor | Harita tüm pencereyi kullanabilsin |
 | `quick-xml` | 0.3x API | 0.42: `xml10_content()`, varlıklar `Event::GeneralRef` | İnternetteki örneklerin çoğu eski API'yi kullanıyor |
 
 ---
 
 ## 13. Sonraki Adım
 
-**Faz 5 — Harita yerleşimi ve ilk çizim** (`docs/tutorial/05-treemap-ve-cizim.md`): squarified treemap (core), ada yerleşimi, `AtlasView.svelte` ile SVG, `viewBox` pan/zoom; Faz 4'teki `CountryPreview` listesinin yerini harita alır.
+**Faz 6 — Yollar ve semantik zoom** (`docs/tutorial/06-yollar-ve-zoom.md`): otoyol/karayolu/feribot çizimi, kalınlık ölçeği ve yön okları; ülke → bölge → şehir geçişleri ve "uçarak" yaklaşma animasyonu, ekmek kırıntısı; döngü ve kaçak geçiş görselleri, lejant.

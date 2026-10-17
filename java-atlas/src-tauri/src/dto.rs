@@ -199,6 +199,39 @@ pub struct MetricsDto {
     pub instability: Option<f64>,
 }
 
+/// A rectangle in world units (y grows downwards, like SVG).
+#[derive(Debug, Clone, Copy, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct RectDto {
+    pub x: f64,
+    pub y: f64,
+    pub w: f64,
+    pub h: f64,
+}
+
+/// The faint shape of a child: city outlines inside a region, building
+/// outlines inside a city. Texture, not interaction.
+#[derive(Debug, Clone, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct OutlineDto {
+    pub key: String,
+    pub parent: String,
+    pub rect: RectDto,
+    pub is_test: bool,
+    pub type_kind: Option<TypeKindDto>,
+}
+
+#[derive(Debug, Clone, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct ArchipelagoDto {
+    /// groupId, or "?" for packages no library explains.
+    pub name: String,
+    pub frame: RectDto,
+}
+
 /// One drawable thing: region, city, building, island or mainland.
 #[derive(Debug, Clone, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
@@ -224,6 +257,8 @@ pub struct NodeDto {
     pub version: Option<String>,
     /// Libraries: "jar", "name", "mixed" or `None` when unused.
     pub matched_by: Option<String>,
+    /// Where it sits on the map.
+    pub rect: Option<RectDto>,
 }
 
 #[derive(Debug, Clone, Serialize, TS)]
@@ -249,6 +284,13 @@ pub struct AtlasViewDto {
     pub members: Vec<NodeDto>,
     pub neighbours: Vec<NodeDto>,
     pub edges: Vec<ViewEdgeDto>,
+    /// The whole map, for "fit to window".
+    pub world: RectDto,
+    pub land: RectDto,
+    /// The JDK coast, when the JDK filter is on and the code uses the JDK.
+    pub mainland: Option<RectDto>,
+    pub archipelagos: Vec<ArchipelagoDto>,
+    pub outlines: Vec<OutlineDto>,
 }
 
 /// A neighbour in the details panel.

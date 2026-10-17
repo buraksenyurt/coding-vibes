@@ -6,9 +6,11 @@
 //!
 //! - [`facts`] (phases 1–2): the vocabulary the scanner speaks.
 //! - [`atlas`] (phase 3): the resolved and analysed dependency graph.
+//! - [`geometry`] (phase 5): rectangles and the squarified treemap behind the map.
 
 pub mod atlas;
 pub mod facts;
+pub mod geometry;
 pub mod intern;
 
 /// The three zoom levels of the atlas (see PLAN.md, section 3.1).

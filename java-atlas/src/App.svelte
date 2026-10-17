@@ -4,7 +4,7 @@
   import Toolbar from "./lib/Toolbar.svelte";
   import ScanOverlay from "./lib/ScanOverlay.svelte";
   import ReportPanel from "./lib/panels/ReportPanel.svelte";
-  import CountryPreview from "./lib/panels/CountryPreview.svelte";
+  import AtlasView from "./lib/atlas/AtlasView.svelte";
 
   let info = $state<AppInfo | null>(null);
 
@@ -24,9 +24,13 @@
 
   <main>
     {#if project.summary}
-      <div class="workspace">
-        <ReportPanel />
-        <CountryPreview />
+      <div class="workspace" class:full={!project.showReport}>
+        {#if project.showReport}
+          <ReportPanel />
+        {/if}
+        {#if project.country}
+          <AtlasView view={project.country} />
+        {/if}
       </div>
     {:else}
       <div class="sea">
@@ -63,6 +67,7 @@
   .shell { display: grid; grid-template-rows: auto 1fr auto; height: 100%; }
   main { position: relative; min-height: 0; }
   .workspace { display: grid; grid-template-columns: minmax(320px, 400px) 1fr; height: 100%; min-height: 0; }
+  .workspace.full { grid-template-columns: 1fr; }
   .sea { display: grid; place-items: center; height: 100%; }
   .map { width: min(90%, 900px); height: auto; }
   .land { fill: var(--land); stroke: var(--land-edge); stroke-width: 2; }

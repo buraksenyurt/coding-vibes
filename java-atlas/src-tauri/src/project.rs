@@ -8,9 +8,11 @@ use std::time::{Duration, Instant};
 
 use java_atlas_core::Scale;
 use java_atlas_core::atlas::{
-    Atlas, Edge, FindingKind, Level, MatchMethod, NodeId, NodeKind, ViewFilters, ViolationKind,
+    Atlas, Edge, FindingKind, Layout, Level, MatchMethod, NodeId, NodeKind, ViewFilters,
+    ViolationKind,
 };
 use java_atlas_core::facts::{BuildSystem, TypeKind};
+use java_atlas_core::geometry::Rect;
 use java_atlas_scan::{ScanOptions, jars, read_build, read_sources};
 
 use crate::dto::*;
@@ -23,6 +25,7 @@ const PROGRESS_INTERVAL: Duration = Duration::from_millis(40);
 pub struct OpenProject {
     pub atlas: Atlas,
     pub summary: ProjectSummary,
+    layout: Layout,
     keys: HashMap<String, NodeId>,
     sizes: Vec<u32>,
     /// Packages in a cycle, mapped to the cycle's index.
@@ -119,6 +122,15 @@ fn method_name(m: MatchMethod) -> &'static str {
     }
 }
 
+fn rect(r: Rect) -> RectDto {
+    RectDto {
+        x: r.x,
+        y: r.y,
+        w: r.w,
+        h: r.h,
+    }
+}
+
 pub fn scale(s: ScaleDto) -> Scale {
     match s {
         ScaleDto::Country => Scale::Country,
@@ -130,6 +142,7 @@ pub fn scale(s: ScaleDto) -> Scale {
 impl OpenProject {
     fn new(atlas: Atlas, mut summary: ProjectSummary) -> Self {
         let keys = atlas.key_index();
+        let layout = atlas.layout();
         let sizes = atlas.sizes();
         let mut cycle_of = HashMap::new();
         let mut modules_in_cycle = HashSet::new();
@@ -142,6 +155,7 @@ impl OpenProject {
         let mut project = OpenProject {
             atlas,
             summary: summary.clone(),
+            layout,
             keys,
             sizes,
             cycle_of,
@@ -236,6 +250,7 @@ impl OpenProject {
             }),
             version,
             matched_by,
+            rect: self.layout.rect(id).map(rect),
         }
     }
 
@@ -339,6 +354,49 @@ impl OpenProject {
                 violation: self.crosses_border(e.from, e.to),
             })
             .collect();
+        // Children of the members, drawn faintly as texture.
+        let outlines = match scale(request.scale) {
+            Scale::City => Vec::new(),
+            _ => {
+                let members: HashSet<NodeId> = view.members.iter().copied().collect();
+                self.atlas
+                    .nodes
+                    .iter()
+                    .filter(|n| n.parent.is_some_and(|p| members.contains(&p)))
+                    .filter(|n| filters.tests || !n.is_test)
+                    .filter_map(|n| {
+                        Some(OutlineDto {
+                            key: self.atlas.key(n.id),
+                            parent: self.atlas.key(n.parent?),
+                            rect: rect(self.layout.rect(n.id)?),
+                            is_test: n.is_test,
+                            type_kind: match n.kind {
+                                NodeKind::Type { kind, .. } => Some(type_kind(kind)),
+                                _ => None,
+                            },
+                        })
+                    })
+                    .collect()
+            }
+        };
+        let shown: HashSet<NodeId> = view.neighbours.iter().copied().collect();
+        let archipelagos = self
+            .layout
+            .archipelagos
+            .iter()
+            .filter(|a| a.islands.iter().any(|i| shown.contains(i)))
+            .map(|a| ArchipelagoDto {
+                name: a.name.clone(),
+                frame: rect(a.frame),
+            })
+            .collect();
+        let mainland = (filters.jdk
+            && view
+                .neighbours
+                .iter()
+                .any(|id| self.atlas.node(*id).kind == NodeKind::Jdk))
+        .then(|| rect(self.layout.mainland));
+
         Ok(AtlasViewDto {
             scale: request.scale,
             focus: focus.map(|f| self.node_dto(f)),
@@ -349,6 +407,11 @@ impl OpenProject {
                 .map(|id| self.node_dto(*id))
                 .collect(),
             edges,
+            world: rect(self.layout.world),
+            land: rect(self.layout.land),
+            mainland,
+            archipelagos,
+            outlines,
         })
     }
 

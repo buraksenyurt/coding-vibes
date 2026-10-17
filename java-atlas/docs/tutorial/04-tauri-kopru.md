@@ -1,6 +1,6 @@
 # Faz 4 — Tauri Köprüsü
 
-> **Önceki:** [03 — Graf ve analiz](03-graf-ve-analiz.md) · **Sonraki:** 05 — Treemap ve çizim *(yazılacak)*
+> **Önceki:** [03 — Graf ve analiz](03-graf-ve-analiz.md) · **Sonraki:** [05 — Harita yerleşimi ve ilk çizim](05-treemap-ve-cizim.md)
 
 ## 1. Bu bölümde ne yapacağız
 

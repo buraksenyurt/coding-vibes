@@ -322,3 +322,66 @@ mod views {
         );
     }
 }
+
+// ---------------------------------------------------------------------------
+// Phase 5: layout
+// ---------------------------------------------------------------------------
+
+mod layout {
+    use super::*;
+    use java_atlas_core::atlas::LAND;
+
+    #[test]
+    fn every_tile_sits_inside_its_parent() {
+        for name in ["atlas-bank", "atlas-shop-gradle"] {
+            let a = atlas(name);
+            let l = a.layout();
+            for n in &a.nodes {
+                let Some(r) = l.rect(n.id) else {
+                    panic!("{} has no place on the map", n.fqn);
+                };
+                match n.parent {
+                    Some(p) => assert!(
+                        l.rect(p).unwrap().contains(&r),
+                        "{} escapes its parent",
+                        n.fqn
+                    ),
+                    None if matches!(n.kind, NodeKind::Module { .. }) => assert!(LAND.contains(&r)),
+                    // Islands and ports are in the sea, never on the land.
+                    None => assert!(
+                        r.right() <= LAND.x || r.x >= LAND.right(),
+                        "{} is on land",
+                        n.fqn
+                    ),
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn bigger_modules_get_bigger_regions() {
+        let a = atlas("atlas-bank");
+        let l = a.layout();
+        let area = |name: &str| l.rect(a.find(name).unwrap()).unwrap().area();
+        // bank-service has twice the code of bank-common.
+        assert!(area("com.atlasbank:bank-service") > area("com.atlasbank:bank-common"));
+    }
+
+    #[test]
+    fn islands_group_into_archipelagos_by_group_id() {
+        let a = atlas("atlas-shop-gradle");
+        let l = a.layout();
+        let names: Vec<&str> = l.archipelagos.iter().map(|g| g.name.as_str()).collect();
+        // org.slf4j has two islands (api + simple) and is the busiest group.
+        assert_eq!(names[0], "org.slf4j");
+        assert_eq!(l.archipelagos[0].islands.len(), 2);
+        assert!(l.world.contains(&l.archipelagos[0].frame));
+    }
+
+    #[test]
+    fn the_layout_is_deterministic() {
+        let first = atlas("atlas-bank").layout();
+        let second = atlas("atlas-bank").layout();
+        assert_eq!(first, second);
+    }
+}

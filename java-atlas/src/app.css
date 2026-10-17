@@ -11,6 +11,16 @@
   --bad: #c0392b;
   --warn: #e0b341;
   --hover: #eef2f5;
+  --border-ink: #6d6250;
+  /* Region fills: soft "political map" pastels of similar lightness. */
+  --region-0: #efd9b4;
+  --region-1: #cfe3b8;
+  --region-2: #f2c9b8;
+  --region-3: #c9dceb;
+  --region-4: #e3cde8;
+  --region-5: #f3e3a6;
+  --region-6: #bfe1d6;
+  --region-7: #e8cfcf;
   color-scheme: light dark;
   font-family: system-ui, "Segoe UI", Roboto, Ubuntu, sans-serif;
   font-size: 14px;
@@ -30,6 +40,15 @@
     --bad: #ff6b6b;
     --warn: #e6c25a;
     --hover: #24323e;
+    --border-ink: #b9ad95;
+    --region-0: #5a4a33;
+    --region-1: #3f5236;
+    --region-2: #5c3e33;
+    --region-3: #34495a;
+    --region-4: #4d3d55;
+    --region-5: #5a5030;
+    --region-6: #2f5048;
+    --region-7: #553c3c;
   }
 }
 
