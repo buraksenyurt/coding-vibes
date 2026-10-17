@@ -34,3 +34,10 @@ Gereksinimler ve platforma özel notlar: [docs/tutorial/00-kurulum-ve-iskelet.md
 
 - [Plan](docs/PLAN.md)
 - [Faz 0 — Kurulum ve iskelet](docs/tutorial/00-kurulum-ve-iskelet.md)
+- [Faz 1 — Build dosyalarını okumak](docs/tutorial/01-build-dosyalari.md)
+
+Build dosyalarından ne okunduğunu görmek için:
+
+```bash
+cargo run -p java-atlas-scan --example inspect -- samples/atlas-bank
+```

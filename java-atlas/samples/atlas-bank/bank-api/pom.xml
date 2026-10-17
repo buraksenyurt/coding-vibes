@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.atlasbank</groupId>
+    <artifactId>atlas-bank</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>bank-api</artifactId>
+  <!-- Overrides the inherited packaging; still a code module. -->
+  <packaging>jar</packaging>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.atlasbank</groupId>
+      <artifactId>bank-service</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <!-- Not in dependencyManagement: the version comes from a parent property. -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <!-- bank-persistence is NOT declared, yet AccountController reaches into it. -->
+  </dependencies>
+</project>

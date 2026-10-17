@@ -1,6 +1,6 @@
 # Faz 0 — Atölye Kurulumu ve İskelet
 
-> **Önceki:** [PLAN.md](../PLAN.md) · **Sonraki:** 01 — Build dosyalarını okumak *(yazılacak)*
+> **Önceki:** [PLAN.md](../PLAN.md) · **Sonraki:** [01 — Build dosyalarını okumak](01-build-dosyalari.md)
 
 ## 1. Bu bölümde ne yapacağız
 

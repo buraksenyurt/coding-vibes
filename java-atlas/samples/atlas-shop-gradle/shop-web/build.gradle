@@ -1,0 +1,15 @@
+// Groovy DSL on purpose: same reader, different syntax.
+plugins {
+    id 'application'
+}
+
+dependencies {
+    implementation project(':shop-catalog')
+    implementation 'io.javalin:javalin:6.4.0'
+    implementation libs.bundles.logging
+    testImplementation libs.junit.jupiter
+}
+
+application {
+    mainClass = 'com.atlasshop.web.ShopServer'
+}

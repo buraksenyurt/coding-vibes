@@ -11,3 +11,9 @@ java-atlas-core.workspace = true
 thiserror.workspace = true
 tree-sitter.workspace = true
 tree-sitter-java.workspace = true
+quick-xml.workspace = true
+toml.workspace = true
+ignore.workspace = true
+
+[dev-dependencies]
+insta.workspace = true

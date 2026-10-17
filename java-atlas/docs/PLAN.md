@@ -1,10 +1,10 @@
 # java-atlas — Proje Plan Dokümanı
 
 > **Atölye:** Fikirler Atölyesi
-> **Doküman sürümü:** v1.0 — 17 Ekim 2026
+> **Doküman sürümü:** v1.1 — 18 Ekim 2026
 > **Dokümanlar:** bu klasör (`java-atlas/docs`)
 > **Kod:** `coding-vibes/java-atlas`
-> **Durum:** Faz 0 tamamlandı — sıradaki: Faz 1
+> **Durum:** Faz 0–1 tamamlandı — sıradaki: Faz 2
 
 ---
 
@@ -126,7 +126,7 @@ coding-vibes/java-atlas/
 │   ├── java-atlas-core/           # Domain modeli, graf analizi, yerleşim algoritması
 │   │                              # dosya sisteminden, tree-sitter'dan ve Tauri'den habersiz
 │   └── java-atlas-scan/           # Diskteki proje → core'un anladığı "olgular" (facts)
-│       ├── build/                 #   pom.xml, settings.gradle(.kts), build.gradle(.kts), libs.versions.toml
+│       ├── build_files/           #   pom.xml, settings.gradle(.kts), build.gradle(.kts), libs.versions.toml
 │       └── java/                  #   tree-sitter ile .java ve module-info.java
 ├── src-tauri/                     # Tauri uygulaması: command'lar, state, plugin'ler
 ├── src/                           # Svelte + TypeScript ön yüz
@@ -268,7 +268,7 @@ DockerCity'deki `samples/docker-compose.yml`, easy-git'teki "Metro Hattı Hikây
 |---|---|---|
 | 1 | Kök `pom.xml` (`packaging=pom`), `<modules>` ile 5 modül, `<properties>` içinde sürümler, `dependencyManagement` | Parent kalıtımı, `${...}` çözümleme |
 | 2 | `bank-common` → hiçbir iç modüle bağımlı değil | Yaprak bölge |
-| 3 | `bank-domain` → `bank-common`; `module-info.java` var, sadece `domain.model` export ediliyor | JPMS sınırı, export edilen/edilmeyen paket |
+| 3 | `bank-domain` → `bank-common`; `module-info.java` var, `requires transitive` ile `bank-common`, `domain.model` ve `domain.rules` export ediliyor | JPMS sınırı, transitive requires |
 | 4 | `bank-persistence` → `bank-domain`; `persistence.internal` paketi export edilmiyor | Gizli şehir |
 | 5 | `bank-service` → `bank-domain`, `bank-persistence`; `service.account` ↔ `service.audit` döngüsü | Döngü (trafik kilidi) |
 | 6 | `bank-api` → `bank-service`; bir sınıf `persistence.internal`'ı kullanıyor | JPMS kaçak geçiş + beyan edilmemiş modül bağımlılığı |
@@ -375,7 +375,7 @@ MVP = **Faz 0 → Faz 7**. Sonrası cila ve genişleme.
 
 ---
 
-### Faz 1 — Build dosyalarını okumak
+### Faz 1 — Build dosyalarını okumak ✅
 `docs/tutorial/01-build-dosyalari.md`
 
 - `samples/atlas-bank` ve `samples/atlas-shop-gradle` örnek projelerinin yazılması
@@ -538,9 +538,15 @@ Dosya adlandırma: `NN-konu-adi.md`, `docs/tutorial/` altında. Dokümanlar Tür
 | Konu | Plan | Uygulama | Neden |
 |---|---|---|---|
 | Tauri sürümü | 2.x | 2.x (crates.io'da 3.0 alpha var) | Kararlı sürüm; easy-git ile aynı kalıplar |
+| Örnek projeler | Faz 1'de build dosyaları | Build dosyaları **ve Java kaynakları** Faz 1'de yazıldı | Faz 2–3 aynı örneklerle çalışacak; Maven örneği `javac` ile (JPMS dahil), Gradle örneği `gradle dependencies` ile doğrulandı |
+| `bank-domain` JPMS | Sadece `domain.model` export | `model` + `rules` export | `bank-service` `domain.rules`'u kullanıyor; tek ve net bir kaçak geçiş örneği (`bank-api → persistence.internal`) kalsın diye |
+| `atlas-shop-gradle` | `implementation(project(":shop-core"))` | `api(project(":shop-core"))` | `Product` public API'sinde `Sku` var; `implementation` ile `shop-web` derlenmezdi. `ModuleDep.exposed` alanı bu yüzden eklendi |
+| Modül bağımlılığı olgusu | `module_deps: Vec<String>` | `Vec<ModuleDep { target, scope, exposed }>` | Test kapsamlı modül bağımlılıkları ve Gradle `api` bilgisi kaybolmasın |
+| Gradle kök projesi | — | Alt projesi olan ve `src/` klasörü olmayan kök **toplayıcı** sayılır | Maven'daki `packaging=pom` karşılığı |
+| `quick-xml` | 0.3x API | 0.42: `xml10_content()`, varlıklar `Event::GeneralRef` | İnternetteki örneklerin çoğu eski API'yi kullanıyor |
 
 ---
 
 ## 13. Sonraki Adım
 
-**Faz 1 — Build dosyalarını okumak** (`docs/tutorial/01-build-dosyalari.md`): örnek projeleri yazmak ve `pom.xml` / Gradle dosyalarından modül grafını çıkarmak.
+**Faz 2 — Java kaynaklarını okumak** (`docs/tutorial/02-tree-sitter-ile-java.md`): tree-sitter ile `package`, `import`, tip bildirimleri ve `module-info.java`; `rayon` ile paralel ayrıştırma.

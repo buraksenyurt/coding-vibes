@@ -1,19 +1,41 @@
 //! java-atlas-scan — the eyes of java-atlas.
 //!
 //! Everything that touches the disk or a parser lives here: build files
-//! (phase 1) and Java sources via tree-sitter (phase 2). The output is plain
-//! data ("facts") that java-atlas-core understands.
-//!
-//! Phase 0 only proves that the tree-sitter toolchain works: the Java grammar
-//! is a C library compiled by a build script, so a missing C compiler shows up
-//! here first, not three phases later.
+//! (phase 1, [`build_files`]) and Java sources via tree-sitter (phase 2). The output
+//! is plain data ("facts") that java-atlas-core understands.
+
+pub mod build_files;
+mod paths;
+
+pub use build_files::read_build;
 
 use thiserror::Error;
 use tree_sitter::Parser;
 
 /// Errors raised while scanning a project.
+///
+/// Only problems that make the whole scan meaningless are errors. A single
+/// odd dependency line becomes a [`java_atlas_core::facts::ScanWarning`].
 #[derive(Debug, Error)]
 pub enum ScanError {
+    /// The folder has no build file and no `.java` file.
+    #[error(
+        "'{path}' does not look like a Java project (no pom.xml, no Gradle build, no .java files)"
+    )]
+    NotAJavaProject { path: String },
+    /// A file could not be read.
+    #[error("cannot read '{path}': {source}")]
+    Io {
+        path: String,
+        #[source]
+        source: std::io::Error,
+    },
+    /// A `pom.xml` is not well-formed XML.
+    #[error("'{path}' is not a valid POM: {message}")]
+    Xml { path: String, message: String },
+    /// `gradle/libs.versions.toml` is not valid TOML.
+    #[error("'{path}' is not a valid version catalog: {message}")]
+    Toml { path: String, message: String },
     /// The tree-sitter runtime refused the Java grammar (version mismatch).
     #[error("the Java grammar could not be loaded: {0}")]
     Grammar(#[from] tree_sitter::LanguageError),
@@ -74,7 +96,9 @@ mod tests {
     #[test]
     fn reads_a_single_segment_package_name() {
         assert_eq!(
-            declared_package("package app; class A {}").unwrap().as_deref(),
+            declared_package("package app; class A {}")
+                .unwrap()
+                .as_deref(),
             Some("app")
         );
     }

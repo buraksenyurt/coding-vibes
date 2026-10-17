@@ -4,8 +4,10 @@
 //! into an *atlas*: a resolved dependency graph plus a map layout.
 //! It never touches the disk; the scanner crate feeds it.
 //!
-//! Phase 0 only defines the vocabulary of the map. The real model arrives in
-//! phase 1 (facts) and phase 3 (graph).
+//! Phase 1 adds [`facts`]: the vocabulary the scanner speaks.
+//! The graph arrives in phase 3.
+
+pub mod facts;
 
 /// The three zoom levels of the atlas (see PLAN.md, section 3.1).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
