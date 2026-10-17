@@ -1,6 +1,6 @@
 # Faz 1 — Build Dosyalarını Okumak
 
-> **Önceki:** [00 — Kurulum ve iskelet](00-kurulum-ve-iskelet.md) · **Sonraki:** 02 — tree-sitter ile Java *(yazılacak)*
+> **Önceki:** [00 — Kurulum ve iskelet](00-kurulum-ve-iskelet.md) · **Sonraki:** [02 — tree-sitter ile Java](02-tree-sitter-ile-java.md)
 
 ## 1. Bu bölümde ne yapacağız
 

@@ -18,7 +18,7 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 use java_atlas_core::facts::{
-    BuildSystem, ExternalDep, ModuleDep, ModuleFacts, ProjectFacts, ScanWarning, Scope,
+    BuildSystem, ExternalDep, ModuleDep, ModuleFacts, ProjectFacts, ScanWarning, Scope, SourceRoot,
     VersionSource,
 };
 use quick_xml::Reader;
@@ -64,6 +64,9 @@ pub(crate) struct RawPom {
     pub modules: Vec<String>,
     pub dependencies: Vec<RawDep>,
     pub managed: Vec<RawDep>,
+    /// `<build><sourceDirectory>` / `<testSourceDirectory>`; inherited by children.
+    pub source_directory: Option<String>,
+    pub test_source_directory: Option<String>,
 }
 
 const DEPENDENCY: &[&str] = &["project", "dependencies", "dependency"];
@@ -154,6 +157,8 @@ fn close(stack: &[String], text: &str, pom: &mut RawPom, dep: &mut Option<RawDep
         ["project", "artifactId"] => pom.artifact = value(),
         ["project", "version"] => pom.version = value(),
         ["project", "packaging"] => pom.packaging = value(),
+        ["project", "build", "sourceDirectory"] => pom.source_directory = value(),
+        ["project", "build", "testSourceDirectory"] => pom.test_source_directory = value(),
 
         ["project", "parent", field] => {
             if let Some(parent) = pom.parent.as_mut() {
@@ -286,6 +291,8 @@ struct Effective {
     deps: Vec<(RawDep, bool)>,
     /// Coordinates of a parent that is not part of the project.
     outside_parent: Option<String>,
+    source_directory: Option<String>,
+    test_source_directory: Option<String>,
 }
 
 struct MavenReader {
@@ -457,6 +464,16 @@ fn merge(
         (Some(_), Some(p)) => p.outside_parent.clone(),
     };
 
+    // Build folders are inherited, but resolved against each module's own folder.
+    let source_directory = raw
+        .source_directory
+        .clone()
+        .or_else(|| parent.and_then(|p| p.source_directory.clone()));
+    let test_source_directory = raw
+        .test_source_directory
+        .clone()
+        .or_else(|| parent.and_then(|p| p.test_source_directory.clone()));
+
     Effective {
         raw,
         group,
@@ -466,7 +483,42 @@ fn merge(
         managed,
         deps,
         outside_parent,
+        source_directory,
+        test_source_directory,
     }
+}
+
+/// Declared source folders, relative to the module folder. Empty when the
+/// module follows the convention.
+fn source_roots(m: &Effective) -> Vec<SourceRoot> {
+    if m.source_directory.is_none() && m.test_source_directory.is_none() {
+        return Vec::new();
+    }
+    // `${project.basedir}/src` and `src` mean the same folder.
+    let mut props = m.props.clone();
+    for key in ["project.basedir", "basedir"] {
+        props.insert(key.into(), String::new());
+    }
+    let resolve = |dir: &Option<String>, default: &str| {
+        dir.as_deref()
+            .map(|d| {
+                interpolate(d, &props)
+                    .value
+                    .trim_start_matches('/')
+                    .replace('\\', "/")
+            })
+            .unwrap_or_else(|| default.to_owned())
+    };
+    vec![
+        SourceRoot {
+            path: resolve(&m.source_directory, "src/main/java"),
+            is_test: false,
+        },
+        SourceRoot {
+            path: resolve(&m.test_source_directory, "src/test/java"),
+            is_test: true,
+        },
+    ]
 }
 
 fn scope_of(word: &str) -> Option<Scope> {
@@ -544,6 +596,9 @@ pub fn read(root: &Path) -> Result<ProjectFacts, ScanError> {
             path: relative_slash(&root, dir),
             build_file: relative_slash(&root, pom_path),
             aggregator: m.raw.packaging.as_deref() == Some("pom"),
+            source_roots: source_roots(m),
+            jpms: None,
+            files: Vec::new(),
             module_deps: Vec::new(),
             external_deps: Vec::new(),
         };

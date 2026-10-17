@@ -110,8 +110,141 @@ pub struct ModuleFacts {
     pub build_file: String,
     /// Only groups other modules (Maven `pom` packaging, Gradle root without sources).
     pub aggregator: bool,
+    /// Source folders declared in the build file, relative to the module folder.
+    /// Empty means the convention: `src/main/java` and `src/test/java`.
+    pub source_roots: Vec<SourceRoot>,
     pub module_deps: Vec<ModuleDep>,
     pub external_deps: Vec<ExternalDep>,
+    /// Present when the module has a `module-info.java` (phase 2).
+    pub jpms: Option<JpmsFacts>,
+    /// Every `.java` file under the module's source roots (phase 2).
+    pub files: Vec<SourceFileFacts>,
+}
+
+// ---------------------------------------------------------------------------
+// Source facts (phase 2)
+// ---------------------------------------------------------------------------
+
+/// The flavour of a type declaration; decides the building's shape on the map.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum TypeKind {
+    Class,
+    Interface,
+    Enum,
+    Record,
+    Annotation,
+}
+
+impl fmt::Display for TypeKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            TypeKind::Class => "class",
+            TypeKind::Interface => "interface",
+            TypeKind::Enum => "enum",
+            TypeKind::Record => "record",
+            TypeKind::Annotation => "@interface",
+        })
+    }
+}
+
+/// A type declared in a file. Member types are included with a dotted name.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TypeFacts {
+    /// Simple name; member types are `Outer.Inner`.
+    pub name: String,
+    pub kind: TypeKind,
+    pub is_public: bool,
+    /// First line of the declaration (1-based).
+    pub line: u32,
+    /// Number of lines the declaration spans; sizes the building.
+    pub lines: u32,
+}
+
+/// One `import` line, as written.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ImportFacts {
+    /// Without `import`, `static`, `.*` and `;`: `com.x.Money`, `com.x.Money.zero`, `com.x`.
+    pub path: String,
+    pub is_static: bool,
+    /// `import com.x.*;` / `import static com.x.Y.*;`
+    pub on_demand: bool,
+    pub line: u32,
+}
+
+/// A name in the code that *may* denote a type. Resolved (or discarded) in
+/// phase 3 against imports, the package and the symbol table.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct NameRef {
+    /// `Account`, `Account.Status` or `java.util.concurrent.atomic.AtomicLong`.
+    pub name: String,
+    /// First line where it appears.
+    pub line: u32,
+    /// How many times it appears in the file.
+    pub count: u32,
+}
+
+/// Everything read from one `.java` file.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SourceFileFacts {
+    /// Relative to the project root, `/` separated.
+    pub path: String,
+    /// Declared package; `""` for the default package.
+    pub package: String,
+    /// Lives under a test source root.
+    pub is_test: bool,
+    pub lines: u32,
+    pub imports: Vec<ImportFacts>,
+    pub types: Vec<TypeFacts>,
+    /// Sorted by name, one entry per distinct name.
+    pub references: Vec<NameRef>,
+    /// tree-sitter found syntax errors; the facts may be incomplete.
+    pub has_errors: bool,
+}
+
+/// `requires [transitive] [static] x.y;`
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Requires {
+    pub module: String,
+    pub transitive: bool,
+    pub is_static: bool,
+}
+
+/// `exports p [to a, b];` and `opens p [to a, b];`
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PackageGrant {
+    pub package: String,
+    /// Empty = to everyone.
+    pub to: Vec<String>,
+}
+
+/// `provides Service with Impl1, Impl2;`
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Provides {
+    pub service: String,
+    pub with: Vec<String>,
+}
+
+/// The content of a `module-info.java`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct JpmsFacts {
+    /// The JPMS module name, e.g. `com.atlasbank.domain`.
+    pub name: String,
+    /// `open module …`: every package is open for reflection.
+    pub open: bool,
+    pub file: String,
+    pub requires: Vec<Requires>,
+    pub exports: Vec<PackageGrant>,
+    pub opens: Vec<PackageGrant>,
+    pub uses: Vec<String>,
+    pub provides: Vec<Provides>,
+}
+
+/// A folder holding `.java` files.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SourceRoot {
+    /// Relative to the module folder, `/` separated.
+    pub path: String,
+    pub is_test: bool,
 }
 
 /// Something the scanner could not read fully. Never fatal: the atlas is drawn
@@ -138,6 +271,90 @@ impl ProjectFacts {
     /// Looks a module up by its id.
     pub fn module(&self, id: &str) -> Option<&ModuleFacts> {
         self.modules.iter().find(|m| m.id == id)
+    }
+
+    /// Number of source files over all modules.
+    pub fn file_count(&self) -> usize {
+        self.modules.iter().map(|m| m.files.len()).sum()
+    }
+
+    /// A plain-text dump of the *source* facts (phase 2), module by module.
+    /// Like [`ProjectFacts::describe`], it backs snapshot tests.
+    pub fn describe_sources(&self) -> String {
+        let mut out = String::new();
+        for m in self.modules.iter().filter(|m| !m.aggregator) {
+            let _ = writeln!(out, "{} · {} file(s)", m.id, m.files.len());
+
+            if let Some(j) = &m.jpms {
+                let open = if j.open { "open " } else { "" };
+                let _ = writeln!(out, "  {open}module {}  <{}>", j.name, j.file);
+                for r in &j.requires {
+                    let t = if r.transitive { "transitive " } else { "" };
+                    let st = if r.is_static { "static " } else { "" };
+                    let _ = writeln!(out, "    requires {t}{st}{}", r.module);
+                }
+                for (word, grants) in [("exports", &j.exports), ("opens", &j.opens)] {
+                    for g in grants {
+                        let to = if g.to.is_empty() {
+                            String::new()
+                        } else {
+                            format!(" to {}", g.to.join(", "))
+                        };
+                        let _ = writeln!(out, "    {word} {}{to}", g.package);
+                    }
+                }
+                for u in &j.uses {
+                    let _ = writeln!(out, "    uses {u}");
+                }
+                for p in &j.provides {
+                    let _ = writeln!(out, "    provides {} with {}", p.service, p.with.join(", "));
+                }
+            }
+
+            for f in &m.files {
+                let test = if f.is_test { " [test]" } else { "" };
+                let broken = if f.has_errors { " [syntax errors]" } else { "" };
+                let package = if f.package.is_empty() {
+                    "(default)"
+                } else {
+                    f.package.as_str()
+                };
+                let _ = writeln!(
+                    out,
+                    "  {}{test}{broken}\n    package {package} · {} lines",
+                    f.path, f.lines
+                );
+                for t in &f.types {
+                    let vis = if t.is_public { "public " } else { "" };
+                    let _ = writeln!(
+                        out,
+                        "    {vis}{} {}  L{} +{}",
+                        t.kind, t.name, t.line, t.lines
+                    );
+                }
+                for i in &f.imports {
+                    let st = if i.is_static { "static " } else { "" };
+                    let star = if i.on_demand { ".*" } else { "" };
+                    let _ = writeln!(out, "    import {st}{}{star}  L{}", i.path, i.line);
+                }
+                if !f.references.is_empty() {
+                    let refs: Vec<String> = f
+                        .references
+                        .iter()
+                        .map(|r| {
+                            if r.count > 1 {
+                                format!("{}×{}", r.name, r.count)
+                            } else {
+                                r.name.clone()
+                            }
+                        })
+                        .collect();
+                    let _ = writeln!(out, "    uses {}", refs.join(" "));
+                }
+            }
+            let _ = writeln!(out);
+        }
+        out
     }
 
     /// A plain-text tree of the facts. Used by the `inspect` example and by
@@ -212,6 +429,9 @@ mod tests {
                     path: String::new(),
                     build_file: "build.gradle.kts".into(),
                     aggregator: true,
+                    source_roots: Vec::new(),
+                    jpms: None,
+                    files: Vec::new(),
                     module_deps: vec![],
                     external_deps: vec![],
                 },
@@ -221,6 +441,9 @@ mod tests {
                     path: "app".into(),
                     build_file: "app/build.gradle.kts".into(),
                     aggregator: false,
+                    source_roots: Vec::new(),
+                    jpms: None,
+                    files: Vec::new(),
                     module_deps: vec![],
                     external_deps: vec![ExternalDep {
                         group: "org.slf4j".into(),

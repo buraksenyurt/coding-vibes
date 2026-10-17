@@ -438,6 +438,9 @@ pub fn read(root: &Path) -> Result<ProjectFacts, ScanError> {
                 .unwrap_or_default(),
             // The root only groups the others when it has no sources of its own.
             aggregator: is_root && !includes.is_empty() && !project.dir.join("src").is_dir(),
+            source_roots: Vec::new(),
+            jpms: None,
+            files: Vec::new(),
             module_deps: Vec::new(),
             external_deps: Vec::new(),
         };

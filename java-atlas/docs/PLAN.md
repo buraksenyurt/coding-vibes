@@ -1,10 +1,10 @@
 # java-atlas — Proje Plan Dokümanı
 
 > **Atölye:** Fikirler Atölyesi
-> **Doküman sürümü:** v1.1 — 18 Ekim 2026
+> **Doküman sürümü:** v1.2 — 18 Ekim 2026
 > **Dokümanlar:** bu klasör (`java-atlas/docs`)
 > **Kod:** `coding-vibes/java-atlas`
-> **Durum:** Faz 0–1 tamamlandı — sıradaki: Faz 2
+> **Durum:** Faz 0–2 tamamlandı — sıradaki: Faz 3
 
 ---
 
@@ -76,7 +76,7 @@ easy-git'teki "git'in kafa karıştıran gerçekleri" listesinin karşılığı:
 8. **Gradle bir programlama dilidir.** `build.gradle(.kts)` Groovy/Kotlin kodu; tam anlamıyla okumak için Gradle'ı çalıştırmak gerekir. Biz **sezgisel** okuyacağız: `include(...)`, `project(":x")`, `"g:a:v"` dizgileri ve `libs.versions.toml` sürüm kataloğu. Dinamik yapılandırmalar görünmez — dokümanla açıklanan bir sınır.
 9. **Maven'da sürüm ve özellik kalıtımı.** `<version>${jackson.version}</version>`, sürümü `parent` POM'un `dependencyManagement` bölümünde olan bağımlılıklar. Proje içindeki parent zinciri izlenir; proje dışı parent (ör. Spring Boot parent) çözülmez, sürüm "yönetilen" olarak gösterilir.
 10. **JPMS'siz modüller.** Çoğu proje `module-info.java` kullanmaz. Bu durumda build modülü sınırı "yumuşak" çizilir ve JPMS ihlali kontrolü yapılmaz. `module-info.java` olan modüllerde `requires`, `requires transitive`, `requires static`, `exports ... to` ayrı ayrı modellenir.
-11. **Üretilmiş kaynaklar ve kaynak kökleri.** `target/generated-sources`, Lombok, annotation processor çıktıları. Varsayılan kaynak kökleri `src/main/java` ve `src/test/java`; `target/`, `build/`, `.gradle/`, `node_modules/` taranmaz.
+11. **Üretilmiş kaynaklar ve kaynak kökleri.** `target/generated-sources`, Lombok, annotation processor çıktıları. Varsayılan kaynak kökleri `src/main/java` ve `src/test/java`; Maven `<sourceDirectory>`/`<testSourceDirectory>` okunur (Guava `src/` ve `test/` kullanıyor), Gradle `sourceSets` okunmaz; `target/`, `build/`, `.gradle/`, `node_modules/` taranmaz.
 12. **Büyük projeler.** Binlerce `.java` dosyası. Ayrıştırma `rayon` ile paraleldir; ilerleme ön yüze canlı bildirilir. Şehir ölçeğinde bile görünür alan dışındaki binalar çizilmez (Faz 9).
 
 ---
@@ -389,7 +389,7 @@ MVP = **Faz 0 → Faz 7**. Sonrası cila ve genişleme.
 
 ---
 
-### Faz 2 — Java kaynaklarını okumak
+### Faz 2 — Java kaynaklarını okumak ✅
 `docs/tutorial/02-tree-sitter-ile-java.md`
 
 - tree-sitter temelleri: `Parser`, `Tree`, `Node`, `TreeCursor`, düğüm türleri
@@ -543,10 +543,16 @@ Dosya adlandırma: `NN-konu-adi.md`, `docs/tutorial/` altında. Dokümanlar Tür
 | `atlas-shop-gradle` | `implementation(project(":shop-core"))` | `api(project(":shop-core"))` | `Product` public API'sinde `Sku` var; `implementation` ile `shop-web` derlenmezdi. `ModuleDep.exposed` alanı bu yüzden eklendi |
 | Modül bağımlılığı olgusu | `module_deps: Vec<String>` | `Vec<ModuleDep { target, scope, exposed }>` | Test kapsamlı modül bağımlılıkları ve Gradle `api` bilgisi kaybolmasın |
 | Gradle kök projesi | — | Alt projesi olan ve `src/` klasörü olmayan kök **toplayıcı** sayılır | Maven'daki `packaging=pom` karşılığı |
+| Kaynak klasörleri | Sadece `src/main/java`, `src/test/java` | Maven `<sourceDirectory>`/`<testSourceDirectory>` da okunuyor (kalıtımlı); `ModuleFacts.source_roots` | Guava ile denemede 0 dosya okundu; yaygın bir düzen |
+| Tip adı adayları | `type_identifier` + `scoped_type_identifier` | Ek olarak büyük harfli `method_invocation`/`field_access` nesneleri, method reference'lar, annotation adları | `Money.zero()`, `LoggerFactory.getLogger` gibi statik kullanımlar ağaçta `identifier`; `LOG` gibi yanlış adaylar Faz 3'te eşleşmeyip düşecek |
+| `module-info.java` | Sıradan dosya | Sadece `ModuleFacts.jpms`; `files` listesine girmez | Tip içermez; test kaynağındaki module-info ana olanı ezmez |
+| Ayrıştırılamayan dosya | `ScanError::NoTree` | Uyarı | Tek dosya tüm taramayı durdurmamalı |
+| Gramer sınırı | — | `Object @Nullable ... args` (varargs tip annotation'ı) sözdizimi hatası veriyor | tree-sitter-java 0.23; dosyanın geri kalanı okunuyor, uyarı üretiliyor |
+| Ölçüm | — | Release, 2 çekirdek: Commons Lang 628 dosya ~0,45 sn; Guava 1.556 dosya ~0,85 sn (tek iş parçacığıyla ~2 sn) | Faz 9'daki önbellek ihtiyacı için referans |
 | `quick-xml` | 0.3x API | 0.42: `xml10_content()`, varlıklar `Event::GeneralRef` | İnternetteki örneklerin çoğu eski API'yi kullanıyor |
 
 ---
 
 ## 13. Sonraki Adım
 
-**Faz 2 — Java kaynaklarını okumak** (`docs/tutorial/02-tree-sitter-ile-java.md`): tree-sitter ile `package`, `import`, tip bildirimleri ve `module-info.java`; `rayon` ile paralel ayrıştırma.
+**Faz 3 — Bağımlılık grafı ve analiz** (`docs/tutorial/03-graf-ve-analiz.md`): sembol tablosu, ad çözümleme, dış artifact eşleme, tip → paket → modül toplama, Tarjan ile döngüler, JPMS kontrolleri ve Ca/Ce/I metrikleri.

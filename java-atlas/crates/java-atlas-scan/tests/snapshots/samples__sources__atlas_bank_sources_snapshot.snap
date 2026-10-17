@@ -1,0 +1,139 @@
+---
+source: crates/java-atlas-scan/tests/samples.rs
+expression: facts.describe_sources()
+---
+com.atlasbank:bank-common · 2 file(s)
+  module com.atlasbank.common  <bank-common/src/main/java/module-info.java>
+    exports com.atlasbank.common
+  bank-common/src/main/java/com/atlasbank/common/Ids.java
+    package com.atlasbank.common · 13 lines
+    public class Ids  L5 +9
+    import java.util.UUID  L3
+    uses String×2 UUID
+  bank-common/src/main/java/com/atlasbank/common/Money.java
+    package com.atlasbank.common · 31 lines
+    public record Money  L6 +26
+    import java.math.BigDecimal  L3
+    import java.util.Currency  L4
+    uses BigDecimal×2 Currency×2 IllegalArgumentException Money×9
+
+com.atlasbank:bank-domain · 4 file(s)
+  module com.atlasbank.domain  <bank-domain/src/main/java/module-info.java>
+    requires transitive com.atlasbank.common
+    exports com.atlasbank.domain.model
+    exports com.atlasbank.domain.rules
+  bank-domain/src/main/java/com/atlasbank/domain/model/Account.java
+    package com.atlasbank.domain.model · 33 lines
+    public class Account  L5 +29
+    public enum Account.Status  L8 +1
+    import com.atlasbank.common.Money  L3
+    uses Customer×3 Money×3 Status×4 String×3 Transaction
+  bank-domain/src/main/java/com/atlasbank/domain/model/Customer.java
+    package com.atlasbank.domain.model · 4 lines
+    public record Customer  L3 +2
+    uses String×2
+  bank-domain/src/main/java/com/atlasbank/domain/model/Transaction.java
+    package com.atlasbank.domain.model · 7 lines
+    public record Transaction  L6 +2
+    import com.atlasbank.common.Money  L3
+    import java.time.Instant  L4
+    uses Instant Money String
+  bank-domain/src/main/java/com/atlasbank/domain/rules/TransferRule.java
+    package com.atlasbank.domain.rules · 13 lines
+    public interface TransferRule  L6 +8
+    import com.atlasbank.common.Money  L3
+    import com.atlasbank.domain.model.Account  L4
+    uses Account Money TransferRule
+
+com.atlasbank:bank-persistence · 3 file(s)
+  module com.atlasbank.persistence  <bank-persistence/src/main/java/module-info.java>
+    requires com.atlasbank.domain
+    exports com.atlasbank.persistence
+  bank-persistence/src/main/java/com/atlasbank/persistence/AccountRepository.java
+    package com.atlasbank.persistence · 11 lines
+    public interface AccountRepository  L6 +6
+    import com.atlasbank.domain.model.Account  L3
+    import java.util.Optional  L4
+    uses Account×2 Optional String
+  bank-persistence/src/main/java/com/atlasbank/persistence/Repositories.java
+    package com.atlasbank.persistence · 13 lines
+    public class Repositories  L5 +9
+    import com.atlasbank.persistence.internal.InMemoryAccountStore  L3
+    uses AccountRepository InMemoryAccountStore
+  bank-persistence/src/main/java/com/atlasbank/persistence/internal/InMemoryAccountStore.java
+    package com.atlasbank.persistence.internal · 29 lines
+    public class InMemoryAccountStore  L9 +21
+    import com.atlasbank.domain.model.Account  L3
+    import com.atlasbank.persistence.AccountRepository  L4
+    import java.util.Map  L5
+    import java.util.Optional  L6
+    import java.util.concurrent.ConcurrentHashMap  L7
+    uses Account×3 AccountRepository ConcurrentHashMap Map Optional×2 Override×2 String×2 java.util.concurrent.atomic.AtomicLong×2
+
+com.atlasbank:bank-service · 6 file(s)
+  bank-service/src/main/java/com/atlasbank/service/account/AccountService.java
+    package com.atlasbank.service.account · 29 lines
+    public class AccountService  L9 +21
+    import com.atlasbank.domain.model.*  L3
+    import com.atlasbank.persistence.AccountRepository  L4
+    import com.atlasbank.service.audit.AuditLog  L5
+    import org.slf4j.Logger  L6
+    import org.slf4j.LoggerFactory  L7
+    uses Account AccountRepository×2 AccountService AccountSummary AuditLog×2 LOG Logger LoggerFactory Transaction
+  bank-service/src/main/java/com/atlasbank/service/account/AccountSummary.java
+    package com.atlasbank.service.account · 12 lines
+    public record AccountSummary  L7 +6
+    import com.atlasbank.common.Money  L3
+    import com.atlasbank.domain.model.Account  L4
+    import com.atlasbank.domain.model.Account.Status  L5
+    uses Account AccountSummary×2 Money Status String
+  bank-service/src/main/java/com/atlasbank/service/account/TransferService.java
+    package com.atlasbank.service.account · 29 lines
+    public class TransferService  L10 +20
+    import static com.atlasbank.common.Money.zero  L3
+    import com.atlasbank.common.Money  L5
+    import com.atlasbank.domain.model.Transaction  L6
+    import com.atlasbank.domain.rules.TransferRule  L7
+    import java.time.Instant  L8
+    uses AccountService×2 Instant×2 Money×2 String×2 Transaction×2 TransferRule×3
+  bank-service/src/main/java/com/atlasbank/service/audit/AuditEntry.java
+    package com.atlasbank.service.audit · 4 lines
+    public record AuditEntry  L3 +2
+    uses String×2
+  bank-service/src/main/java/com/atlasbank/service/audit/AuditLog.java
+    package com.atlasbank.service.audit · 19 lines
+    public class AuditLog  L8 +12
+    import com.atlasbank.service.account.AccountSummary  L3
+    import java.util.ArrayList  L4
+    import java.util.List  L5
+    uses AccountSummary ArrayList AuditEntry×3 List×3
+  bank-service/src/test/java/com/atlasbank/service/account/AccountSummaryTest.java [test]
+    package com.atlasbank.service.account · 20 lines
+    class AccountSummaryTest  L12 +9
+    import static org.junit.jupiter.api.Assertions.assertEquals  L3
+    import com.atlasbank.common.Money  L5
+    import com.atlasbank.domain.model.Account  L6
+    import com.atlasbank.domain.model.Customer  L7
+    import java.math.BigDecimal  L8
+    import java.util.Currency  L9
+    import org.junit.jupiter.api.Test  L10
+    uses Account×2 AccountSummary BigDecimal Currency Customer Money×2 Test
+
+com.atlasbank:bank-api · 2 file(s)
+  bank-api/src/main/java/com/atlasbank/api/AccountController.java
+    package com.atlasbank.api · 39 lines
+    public class AccountController  L11 +29
+    import com.atlasbank.persistence.internal.InMemoryAccountStore  L3
+    import com.atlasbank.service.account.AccountService  L4
+    import com.atlasbank.service.account.AccountSummary  L5
+    import com.atlasbank.service.audit.AuditLog  L6
+    import com.fasterxml.jackson.databind.ObjectMapper  L7
+    import org.slf4j.Logger  L8
+    import org.slf4j.LoggerFactory  L9
+    uses AccountController AccountService×3 AccountSummary×2 AuditLog Exception×2 IllegalStateException InMemoryAccountStore×2 LOG Logger LoggerFactory ObjectMapper×2 String×3
+  bank-api/src/test/java/com/atlasbank/api/AccountControllerTest.java [test]
+    package com.atlasbank.api · 13 lines
+    class AccountControllerTest  L7 +7
+    import static org.junit.jupiter.api.Assertions.assertEquals  L3
+    import org.junit.jupiter.api.Test  L5
+    uses AccountController Exception Test

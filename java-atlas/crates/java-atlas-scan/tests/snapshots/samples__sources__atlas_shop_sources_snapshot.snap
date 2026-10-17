@@ -1,0 +1,42 @@
+---
+source: crates/java-atlas-scan/tests/samples.rs
+expression: facts.describe_sources()
+---
+:shop-core · 1 file(s)
+  shop-core/src/main/java/com/atlasshop/core/Sku.java
+    package com.atlasshop.core · 10 lines
+    public record Sku  L5 +6
+    import com.google.common.base.Preconditions  L3
+    uses Preconditions String
+
+:shop-catalog · 2 file(s)
+  shop-catalog/src/main/java/com/atlasshop/catalog/Catalog.java
+    package com.atlasshop.catalog · 24 lines
+    public class Catalog  L7 +18
+    import com.atlasshop.core.Sku  L3
+    import com.fasterxml.jackson.databind.ObjectMapper  L4
+    import java.util.List  L5
+    uses Exception List×3 ObjectMapper×2 Product×3 Sku String
+  shop-catalog/src/main/java/com/atlasshop/catalog/Product.java
+    package com.atlasshop.catalog · 6 lines
+    public record Product  L5 +2
+    import com.atlasshop.core.Sku  L3
+    uses Sku String
+
+:shop-web · 2 file(s)
+  shop-web/src/main/java/com/atlasshop/web/ShopServer.java
+    package com.atlasshop.web · 21 lines
+    public class ShopServer  L10 +12
+    import com.atlasshop.catalog.Catalog  L3
+    import com.atlasshop.core.Sku  L4
+    import io.javalin.Javalin  L5
+    import java.util.List  L6
+    import org.slf4j.Logger  L7
+    import org.slf4j.LoggerFactory  L8
+    uses Catalog×2 Javalin LOG List Logger LoggerFactory ShopServer Sku String
+  shop-web/src/test/java/com/atlasshop/web/ShopServerTest.java [test]
+    package com.atlasshop.web · 13 lines
+    class ShopServerTest  L7 +7
+    import static org.junit.jupiter.api.Assertions.assertNotNull  L3
+    import org.junit.jupiter.api.Test  L5
+    uses ShopServer Test
