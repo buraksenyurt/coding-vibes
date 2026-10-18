@@ -3,7 +3,8 @@
   import { project } from "./lib/project.svelte";
   import Toolbar from "./lib/Toolbar.svelte";
   import ScanOverlay from "./lib/ScanOverlay.svelte";
-  import ReportPanel from "./lib/panels/ReportPanel.svelte";
+  import SidePanel from "./lib/panels/SidePanel.svelte";
+  import DetailsPanel from "./lib/panels/DetailsPanel.svelte";
   import AtlasView from "./lib/atlas/AtlasView.svelte";
 
   let info = $state<AppInfo | null>(null);
@@ -24,13 +25,20 @@
 
   <main>
     {#if project.summary}
-      <div class="workspace" class:full={!project.showReport}>
-        {#if project.showReport}
-          <ReportPanel />
+      <div class="workspace" class:with-side={project.showSide}>
+        {#if project.showSide}
+          <SidePanel />
         {/if}
-        {#if project.country}
-          <AtlasView />
-        {/if}
+        <!-- The details drawer floats over the map instead of squeezing it:
+             the map must not move under the pointer between two clicks. -->
+        <div class="map-area">
+          {#if project.country}
+            <AtlasView />
+          {/if}
+          {#if project.selection}
+            <div class="drawer"><DetailsPanel /></div>
+          {/if}
+        </div>
       </div>
     {:else}
       <div class="sea">
@@ -66,8 +74,13 @@
 <style>
   .shell { display: grid; grid-template-rows: auto 1fr auto; height: 100%; }
   main { position: relative; min-height: 0; }
-  .workspace { display: grid; grid-template-columns: minmax(320px, 400px) 1fr; height: 100%; min-height: 0; }
-  .workspace.full { grid-template-columns: 1fr; }
+  /* Side panel | map | details drawer; the map takes whatever is left. */
+  .workspace { display: grid; grid-template-columns: 1fr; height: 100%; min-height: 0; }
+  .workspace.with-side { grid-template-columns: minmax(260px, 340px) 1fr; }
+  .workspace > :global(*) { min-width: 0; min-height: 0; }
+  .map-area { position: relative; min-width: 0; min-height: 0; }
+  /* Same width as AtlasView's `covered`: min(380px, 45%). */
+  .drawer { position: absolute; top: 0; right: 0; bottom: 0; width: min(380px, 45%); display: grid; box-shadow: -8px 0 24px rgb(0 0 0 / 0.12); z-index: 10; }
   .sea { display: grid; place-items: center; height: 100%; }
   .map { width: min(90%, 900px); height: auto; }
   .land { fill: var(--land); stroke: var(--land-edge); stroke-width: 2; }

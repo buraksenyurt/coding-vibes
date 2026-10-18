@@ -22,7 +22,7 @@
 <style>
   .legend {
     position: absolute;
-    right: 14px;
+    right: calc(var(--covered, 0px) + 14px);
     bottom: 14px;
     padding: 6px 10px 8px;
     background: var(--panel);

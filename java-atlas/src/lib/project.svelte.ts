@@ -3,6 +3,10 @@
 // that component update when the field changes (Svelte 5 runes).
 import * as api from "./api";
 import type { AtlasViewDto } from "./bindings/AtlasViewDto";
+import type { EvidenceDto } from "./bindings/EvidenceDto";
+import type { NodeDetailsDto } from "./bindings/NodeDetailsDto";
+import type { TreeDto } from "./bindings/TreeDto";
+import type { ViewEdgeDto } from "./bindings/ViewEdgeDto";
 import type { NodeDto } from "./bindings/NodeDto";
 import type { RectDto } from "./bindings/RectDto";
 import type { ScaleDto } from "./bindings/ScaleDto";
@@ -24,6 +28,22 @@ export interface Crumb {
 
 const COUNTRY: Crumb = { scale: "country", key: null, name: "Ülke", rect: null };
 
+function crumbOf(node: NodeDto): Crumb {
+  return { scale: node.kind === "module" ? "region" : "city", key: node.key, name: node.name, rect: node.rect };
+}
+
+/** What the details panel shows. */
+export type Selection =
+  | { kind: "node"; details: NodeDetailsDto }
+  | { kind: "road"; edge: ViewEdgeDto; from: NodeDto; to: NodeDto; evidence: EvidenceDto[] };
+
+/** A request for the map's camera; `seq` makes repeated requests distinct. */
+export interface Flight {
+  rect: RectDto;
+  margin: number;
+  seq: number;
+}
+
 class ProjectStore {
   status = $state<Status>("idle");
   /** The latest progress event while scanning. */
@@ -39,8 +59,13 @@ class ProjectStore {
   error = $state<string | null>(null);
   filters = $state<ViewFiltersDto>({ tests: false, jdk: false, external: true });
 
-  /** The report panel next to the map; hidden to give the map the whole window. */
-  showReport = $state(true);
+  /** The side panel next to the map; hidden to give the map the whole window. */
+  showSide = $state(true);
+  sideTab = $state<"atlas" | "report">("atlas");
+  tree = $state<TreeDto | null>(null);
+  selection = $state<Selection | null>(null);
+  flight = $state<Flight | null>(null);
+  private flightSeq = 0;
 
   /** Path of the project being scanned or shown. */
   path = $state<string | null>(null);
@@ -62,11 +87,16 @@ class ProjectStore {
     this.status = "scanning";
     this.error = null;
     this.progress = null;
-    if (path !== this.path) this.crumbs = [COUNTRY];
+    if (path !== this.path) {
+      this.crumbs = [COUNTRY];
+      this.selection = null;
+    }
     this.path = path;
     try {
       this.summary = await api.openProject(path, (event) => (this.progress = event));
+      this.tree = await api.getTree();
       await this.refreshView();
+      await this.refreshSelection();
       this.status = "ready";
     } catch (e) {
       this.error = api.errorMessage(e);
@@ -99,17 +129,93 @@ class ProjectStore {
 
   /** Zooms into a region (module) or a city (package). */
   async enter(node: NodeDto) {
-    const scale: ScaleDto | null = node.kind === "module" ? "region" : node.kind === "package" ? "city" : null;
-    if (!scale) return;
-    // Entering a region from a city of another region: rebuild the path.
-    const base = this.crumbs.filter((c) => c.scale === "country" || (scale === "city" && c.scale === "region"));
-    const crumb = { scale, key: node.key, name: node.name, rect: node.rect };
-    if (scale === "city" && base.length === 1 && node.parent) {
+    if (node.kind !== "module" && node.kind !== "package") return;
+    const crumbs: Crumb[] = [COUNTRY];
+    if (node.kind === "package" && node.parent) {
       const region = this.country?.members.find((m) => m.key === node.parent);
-      if (region) base.push({ scale: "region", key: region.key, name: region.name, rect: region.rect });
+      if (region) crumbs.push(crumbOf(region));
     }
-    this.crumbs = [...base, crumb];
+    crumbs.push(crumbOf(node));
+    this.crumbs = crumbs;
     await this.loadView();
+  }
+
+  /** Asks the map to fly the camera to `rect`. */
+  fly(rect: RectDto | null, margin = 0.04) {
+    if (rect) this.flight = { rect, margin, seq: ++this.flightSeq };
+  }
+
+  /** Shows a node's details without moving the map. */
+  async select(key: string) {
+    try {
+      this.selection = { kind: "node", details: await api.getNodeDetails(key) };
+    } catch (e) {
+      this.error = api.errorMessage(e);
+    }
+  }
+
+  async selectRoad(edge: ViewEdgeDto, from: NodeDto, to: NodeDto) {
+    const evidence = await api.getEdgeEvidence(edge.from, edge.to).catch(() => []);
+    this.selection = { kind: "road", edge, from, to, evidence };
+  }
+
+  clearSelection() {
+    this.selection = null;
+  }
+
+  /**
+   * Shows a node wherever it is: picks the scale where it is drawn, loads
+   * that view, selects the node and flies the camera there. Used by the
+   * tree, the search box, the report and the details panel's links.
+   */
+  async goToNode(key: string) {
+    let details: NodeDetailsDto;
+    try {
+      details = await api.getNodeDetails(key);
+    } catch (e) {
+      this.error = api.errorMessage(e);
+      return;
+    }
+    const node = details.node;
+    const [module, pkg] = details.path;
+    let target = node.rect;
+    let margin = 0.04;
+    switch (node.kind) {
+      case "module":
+        this.crumbs = [COUNTRY];
+        margin = 0.6; // the region and its neighbours
+        break;
+      case "package":
+        this.crumbs = [COUNTRY, crumbOf(module)];
+        margin = 0.6;
+        break;
+      case "type":
+        this.crumbs = [COUNTRY, crumbOf(module), crumbOf(pkg)];
+        target = pkg.rect; // the whole city, the building highlighted inside
+        break;
+      default:
+        // Islands and ports live in the base map; the mainland needs the JDK filter.
+        if (node.kind === "jdk" && !this.filters.jdk) this.filters = { ...this.filters, jdk: true };
+        this.crumbs = [COUNTRY];
+        margin = 3;
+    }
+    await this.refreshView();
+    this.selection = { kind: "node", details };
+    this.fly(target, margin);
+  }
+
+  /** After a rescan, refresh what the details panel shows (or drop it). */
+  private async refreshSelection() {
+    const sel = this.selection;
+    if (sel?.kind !== "node") {
+      this.selection = null;
+      return;
+    }
+    try {
+      this.selection = { kind: "node", details: await api.getNodeDetails(sel.details.node.key) };
+    } catch {
+      this.selection = null;
+    }
   }
 
   /** Goes back to the crumb at `index` (0 = country). */

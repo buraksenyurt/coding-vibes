@@ -2,9 +2,9 @@
 
 Java projelerindeki modül, paket ve dış kütüphane bağımlılıklarını **ülke haritası** gibi çizen, salt okunur, çapraz platform (Windows · Linux · macOS) masaüstü uygulaması.
 
-![atlas-bank haritası](docs/images/faz6-ulke-hover.png)
+![atlas-bank haritası](docs/images/faz7-ayrintilar.png)
 
-Tekerlekle yakınlaştıkça ülke ▸ bölge (modül) ▸ şehir (paket) ölçekleri arasında geçilir; çift tıklama o bölgeye uçar, Esc geri döner.
+Tekerlekle yakınlaştıkça ülke ▸ bölge (modül) ▸ şehir (paket) ölçekleri arasında geçilir; tek tık ayrıntıları açar, çift tık o bölgeye uçar, Esc geri döner. Bir yola tıklayınca bağımlılığın kanıtı (`dosya:satır`) listelenir; `/` ile her modül, paket, tip ve kütüphane aranabilir.
 
 - **Bölge** = build modülü (Maven/Gradle) · **Gümrüklü sınır** = JPMS modülü
 - **Şehir** = paket · **Bina** = tip
@@ -45,6 +45,7 @@ Gereksinimler ve platforma özel notlar: [docs/tutorial/00-kurulum-ve-iskelet.md
 - [Faz 4 — Tauri köprüsü](docs/tutorial/04-tauri-kopru.md)
 - [Faz 5 — Harita yerleşimi ve ilk çizim](docs/tutorial/05-treemap-ve-cizim.md)
 - [Faz 6 — Yollar ve semantik zoom](docs/tutorial/06-yollar-ve-zoom.md)
+- [Faz 7 — Etkileşim ve bilgi panelleri](docs/tutorial/07-etkilesim-ve-paneller.md) *(MVP)*
 
 Build dosyalarından ne okunduğunu görmek için:
 

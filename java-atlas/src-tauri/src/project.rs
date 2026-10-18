@@ -122,6 +122,14 @@ fn method_name(m: MatchMethod) -> &'static str {
     }
 }
 
+fn grant(g: &java_atlas_core::facts::PackageGrant) -> String {
+    if g.to.is_empty() {
+        g.package.clone()
+    } else {
+        format!("{} → {}", g.package, g.to.join(", "))
+    }
+}
+
 fn rect(r: Rect) -> RectDto {
     RectDto {
         x: r.x,
@@ -495,14 +503,137 @@ impl OpenProject {
             ),
             _ => (None, Vec::new()),
         };
+        let path = {
+            let mut chain = Vec::new();
+            let mut current = Some(id);
+            while let Some(c) = current {
+                chain.push(self.node_dto(c));
+                current = self.atlas.node(c).parent;
+            }
+            chain.reverse();
+            chain
+        };
+        let jpms = match &node.kind {
+            NodeKind::Module { jpms: Some(j), .. } => Some(JpmsDto {
+                name: j.name.clone(),
+                open: j.open,
+                requires: j
+                    .requires
+                    .iter()
+                    .map(|r| {
+                        let mut s = String::new();
+                        if r.transitive {
+                            s.push_str("transitive ");
+                        }
+                        if r.is_static {
+                            s.push_str("static ");
+                        }
+                        s + &r.module
+                    })
+                    .collect(),
+                exports: j.exports.iter().map(grant).collect(),
+                opens: j.opens.iter().map(grant).collect(),
+                uses: j.uses.clone(),
+                provides: j
+                    .provides
+                    .iter()
+                    .map(|p| format!("{} ← {}", p.service, p.with.join(", ")))
+                    .collect(),
+            }),
+            _ => None,
+        };
+        let key = self.atlas.key(id);
+        let s = &self.summary;
+        let cycles = s
+            .cycles
+            .iter()
+            .filter(|c| {
+                c.packages.iter().any(|p| {
+                    p.key == key || self.parent_key(&p.key).as_deref() == Some(key.as_str())
+                })
+            })
+            .cloned()
+            .collect();
+        let violations = s
+            .violations
+            .iter()
+            .filter(|v| v.from_module.key == key || v.to_package.key == key)
+            .cloned()
+            .collect();
+        let findings = s
+            .findings
+            .iter()
+            .filter(|f| f.module.key == key || f.target.key == key)
+            .cloned()
+            .collect();
+
         Ok(NodeDetailsDto {
             node: self.node_dto(id),
+            path,
+            jpms,
+            cycles,
+            violations,
+            findings,
             outgoing,
             incoming,
             children,
             file,
             packages,
         })
+    }
+
+    fn parent_key(&self, key: &str) -> Option<String> {
+        let id = self.keys.get(key)?;
+        self.atlas.node(*id).parent.map(|p| self.atlas.key(p))
+    }
+
+    /// Modules with their packages, and the islands, for the side bar.
+    pub fn tree(&self) -> TreeDto {
+        let mut modules: Vec<TreeModuleDto> = Vec::new();
+        for n in &self.atlas.nodes {
+            match n.kind {
+                NodeKind::Module { .. } => modules.push(TreeModuleDto {
+                    module: self.node_dto(n.id),
+                    packages: Vec::new(),
+                }),
+                NodeKind::Package { .. } => {
+                    let parent = n.parent.map(|p| self.atlas.key(p));
+                    if let Some(m) = modules
+                        .iter_mut()
+                        .find(|m| Some(&m.module.key) == parent.as_ref())
+                    {
+                        m.packages.push(self.node_dto(n.id));
+                    }
+                }
+                _ => {}
+            }
+        }
+        for m in &mut modules {
+            m.packages.sort_by(|a, b| a.name.cmp(&b.name));
+        }
+        let islands = self
+            .atlas
+            .nodes
+            .iter()
+            .filter(|n| matches!(n.kind, NodeKind::Library { .. } | NodeKind::Unknown))
+            .map(|n| self.node_dto(n.id))
+            .collect();
+        TreeDto { modules, islands }
+    }
+
+    pub fn search(&self, query: &str) -> Vec<SearchHitDto> {
+        self.atlas
+            .search(query, 30)
+            .into_iter()
+            .map(|id| SearchHitDto {
+                node: self.node_dto(id),
+                context: self
+                    .atlas
+                    .node(id)
+                    .parent
+                    .map(|p| self.atlas.node(p).name.clone()),
+            })
+            .collect()
     }
 
     pub fn evidence(&self, from: &str, to: &str) -> Result<Vec<EvidenceDto>, AppError> {
@@ -654,6 +785,58 @@ mod tests {
     }
 
     #[test]
+    fn details_know_their_place_and_their_problems() {
+        let p = bank();
+        let d = p
+            .details("p:com.atlasbank:bank-persistence|com.atlasbank.persistence.internal")
+            .unwrap();
+        let path: Vec<&str> = d.path.iter().map(|n| n.name.as_str()).collect();
+        assert_eq!(
+            path,
+            ["bank-persistence", "com.atlasbank.persistence.internal"]
+        );
+        assert_eq!(d.cycles.len(), 1);
+        assert_eq!(d.violations.len(), 1, "bank-api smuggles into this package");
+        assert_eq!(d.node.exported, Some(false));
+
+        let m = p.details("m:com.atlasbank:bank-domain").unwrap();
+        let jpms = m.jpms.unwrap();
+        assert_eq!(jpms.requires, ["transitive com.atlasbank.common"]);
+        assert_eq!(
+            jpms.exports,
+            ["com.atlasbank.domain.model", "com.atlasbank.domain.rules"]
+        );
+
+        let service = p.details("m:com.atlasbank:bank-service").unwrap();
+        assert_eq!(
+            service.cycles.len(),
+            1,
+            "the account/audit cycle lives here"
+        );
+        assert_eq!(
+            service.findings.len(),
+            1,
+            "bank-common used but not declared"
+        );
+    }
+
+    #[test]
+    fn tree_and_search() {
+        let p = bank();
+        let t = p.tree();
+        assert_eq!(t.modules.len(), 5);
+        assert_eq!(t.modules.iter().map(|m| m.packages.len()).sum::<usize>(), 8);
+        assert_eq!(t.islands.len(), 4);
+
+        let hits = p.search("auditlog");
+        assert_eq!(hits[0].node.fqn, "com.atlasbank.service.audit.AuditLog");
+        assert_eq!(
+            hits[0].context.as_deref(),
+            Some("com.atlasbank.service.audit")
+        );
+    }
+
+    #[test]
     fn details_and_evidence() {
         let p = bank();
         let d = p
@@ -707,28 +890,60 @@ mod fixtures {
             .unwrap();
         };
         write("summary", serde_json::to_value(&p.summary).unwrap());
-        let views = [
-            ("country", ScaleDto::Country, None),
-            (
-                "region-bank-service",
-                ScaleDto::Region,
-                Some("m:com.atlasbank:bank-service"),
-            ),
-            (
-                "city-account",
-                ScaleDto::City,
-                Some("p:com.atlasbank:bank-service|com.atlasbank.service.account"),
-            ),
-        ];
-        for (name, scale, focus) in views {
+        write("tree", serde_json::to_value(p.tree()).unwrap());
+
+        // Every view the UI can ask for with default filters, keyed "scale|focus".
+        let mut views = serde_json::Map::new();
+        let mut evidence = serde_json::Map::new();
+        let mut requests = vec![(ScaleDto::Country, None)];
+        for n in &p.atlas.nodes {
+            match n.kind {
+                NodeKind::Module { .. } => {
+                    requests.push((ScaleDto::Region, Some(p.atlas.key(n.id))))
+                }
+                NodeKind::Package { .. } => {
+                    requests.push((ScaleDto::City, Some(p.atlas.key(n.id))))
+                }
+                _ => {}
+            }
+        }
+        for (scale, focus) in requests {
             let view = p
                 .view(&ViewRequest {
                     scale,
-                    focus: focus.map(str::to_owned),
+                    focus: focus.clone(),
                     filters,
                 })
                 .unwrap();
-            write(name, serde_json::to_value(&view).unwrap());
+            for e in &view.edges {
+                let ev = p.evidence(&e.from, &e.to).unwrap();
+                evidence.insert(
+                    format!("{}>{}", e.from, e.to),
+                    serde_json::to_value(ev).unwrap(),
+                );
+            }
+            let key = format!(
+                "{}|{}",
+                serde_json::to_value(scale).unwrap().as_str().unwrap(),
+                focus.unwrap_or_default()
+            );
+            views.insert(key, serde_json::to_value(&view).unwrap());
         }
+        write("views", serde_json::Value::Object(views));
+        write("evidence", serde_json::Value::Object(evidence));
+
+        let details: serde_json::Map<String, serde_json::Value> = p
+            .atlas
+            .nodes
+            .iter()
+            .map(|n| {
+                let key = p.atlas.key(n.id);
+                (
+                    key.clone(),
+                    serde_json::to_value(p.details(&key).unwrap()).unwrap(),
+                )
+            })
+            .collect();
+        write("details", serde_json::Value::Object(details));
     }
 }

@@ -1,6 +1,6 @@
 # Faz 6 — Yollar ve Semantik Zoom
 
-> **Önceki:** [05 — Harita yerleşimi ve ilk çizim](05-treemap-ve-cizim.md) · **Sonraki:** 07 — Etkileşim ve paneller *(yazılacak)*
+> **Önceki:** [05 — Harita yerleşimi ve ilk çizim](05-treemap-ve-cizim.md) · **Sonraki:** [07 — Etkileşim ve bilgi panelleri](07-etkilesim-ve-paneller.md)
 
 ## 1. Bu bölümde ne yapacağız
 

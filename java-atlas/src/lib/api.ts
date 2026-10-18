@@ -11,6 +11,8 @@ import type { NodeDetailsDto } from "./bindings/NodeDetailsDto";
 import type { ProjectSummary } from "./bindings/ProjectSummary";
 import type { RecentProject } from "./bindings/RecentProject";
 import type { ScanEvent } from "./bindings/ScanEvent";
+import type { SearchHitDto } from "./bindings/SearchHitDto";
+import type { TreeDto } from "./bindings/TreeDto";
 import type { ViewRequest } from "./bindings/ViewRequest";
 
 export interface AppInfo {
@@ -49,6 +51,14 @@ export function getNodeDetails(key: string): Promise<NodeDetailsDto> {
 
 export function getEdgeEvidence(from: string, to: string): Promise<EvidenceDto[]> {
   return invoke<EvidenceDto[]>("get_edge_evidence", { from, to });
+}
+
+export function getTree(): Promise<TreeDto> {
+  return invoke<TreeDto>("get_tree");
+}
+
+export function search(query: string): Promise<SearchHitDto[]> {
+  return invoke<SearchHitDto[]>("search", { query });
 }
 
 export function recentProjects(): Promise<RecentProject[]> {

@@ -44,7 +44,13 @@
     <h2>Döngüler <span class="badge" class:bad={s.cycles.length > 0}>{s.cycles.length}</span></h2>
     {#each s.cycles as c, i (i)}
       <div class="item">
-        <div class="mono">⟲ {c.packages.map((p) => p.name).join(" ⇄ ")}</div>
+        <div class="mono links">
+          ⟲
+          {#each c.packages as p, k (p.key)}
+            {#if k > 0}<span class="sep">⇄</span>{/if}
+            <button class="inline" onclick={() => project.goToNode(p.key)}>{p.name}</button>
+          {/each}
+        </div>
         <div class="hint">
           En zayıf halka: <span class="mono">{c.weakestFrom.name} → {c.weakestTo.name}</span> ({c.weakestWeight} kullanım)
         </div>
@@ -58,7 +64,10 @@
     <h2>JPMS ihlalleri <span class="badge" class:bad={s.violations.length > 0}>{s.violations.length}</span></h2>
     {#each s.violations as v, i (i)}
       <div class="item">
-        <div class="mono">✗ {v.fromModule.name} → {v.toPackage.name}</div>
+        <div class="mono">
+          ✗ <button class="inline" onclick={() => project.goToNode(v.fromModule.key)}>{v.fromModule.name}</button>
+          → <button class="inline" onclick={() => project.goToNode(v.toPackage.key)}>{v.toPackage.name}</button>
+        </div>
         <div class="hint">
           {v.kind === "notExported" ? "Paket export edilmiyor" : "Modül requires edilmemiş"}
         </div>
@@ -77,7 +86,10 @@
     <h2><span><span lang="en">Build</span> dosyası ↔ kod</span> <span class="badge" class:warn={s.findings.length > 0}>{s.findings.length}</span></h2>
     {#each s.findings as f, i (i)}
       <div class="item">
-        <div class="mono">{f.module.name} → {f.target.name}</div>
+        <div class="mono">
+          <button class="inline" onclick={() => project.goToNode(f.module.key)}>{f.module.name}</button>
+          → <button class="inline" onclick={() => project.goToNode(f.target.key)}>{f.target.name}</button>
+        </div>
         <div class="hint">{findingText[f.kind]} {findingNote(f) ? `(${findingNote(f)})` : ""}</div>
       </div>
     {:else}
@@ -99,12 +111,12 @@
 </aside>
 
 <style>
-  .report {
-    overflow: auto;
-    padding: 14px;
-    background: var(--panel);
-    border-right: 1px solid var(--border);
-  }
+  .report { overflow: auto; padding: 14px; background: var(--panel); }
+  /* Every name is a link: it flies the map there and opens its details. */
+  .inline { background: none; border: none; padding: 0; color: var(--accent); font: inherit; cursor: pointer; text-align: left; overflow-wrap: anywhere; }
+  .inline:hover { text-decoration: underline; }
+  .links { display: flex; flex-wrap: wrap; gap: 4px; align-items: baseline; }
+  .sep { color: var(--muted); }
   .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
   .tile { padding: 10px; border: 1px solid var(--border); border-radius: 8px; }
   .value { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }

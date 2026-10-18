@@ -1,6 +1,7 @@
 <script lang="ts">
   import { project } from "./project.svelte";
   import { baseName } from "./format";
+  import SearchBox from "./SearchBox.svelte";
   import { applyTheme, loadTheme, nextTheme, themeLabel } from "./theme";
 
   let theme = $state(loadTheme());
@@ -47,8 +48,9 @@
       <strong>{project.summary.name}</strong>
       <span class="muted">{project.summary.buildSystem} · {project.summary.modules} modül · {project.summary.packages} paket</span>
     </div>
+    <SearchBox />
     <div class="group filters" role="group" aria-label="Filtreler">
-      <button class="ghost" class:active={project.showReport} onclick={() => (project.showReport = !project.showReport)} aria-pressed={project.showReport}>Rapor</button>
+      <button class="ghost" class:active={project.showSide} onclick={() => (project.showSide = !project.showSide)} aria-pressed={project.showSide} title="Atlas ağacı ve rapor">Panel</button>
       <label><input type="checkbox" checked={project.filters.tests} onchange={(e) => project.setFilters({ tests: e.currentTarget.checked })} /> Test</label>
       <label><input type="checkbox" checked={project.filters.jdk} onchange={(e) => project.setFilters({ jdk: e.currentTarget.checked })} /> JDK</label>
       <label><input type="checkbox" checked={project.filters.external} onchange={(e) => project.setFilters({ external: e.currentTarget.checked })} /> Dış</label>

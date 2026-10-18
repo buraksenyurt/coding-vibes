@@ -9,6 +9,16 @@ export interface Box {
   h: number;
 }
 
+/**
+ * The map element in pixels, and how much of its right side is covered
+ * (by the details drawer): fitting keeps the target in the visible part.
+ */
+export interface Viewport {
+  width: number;
+  height: number;
+  covered: number;
+}
+
 export class Camera {
   box = $state<Box>({ x: 0, y: 0, w: 1000, h: 700 });
   /** Zoom limits, relative to the world's width. */
@@ -20,11 +30,23 @@ export class Camera {
     this.maxW = world.w * 4;
   }
 
-  /** Shows `r` with a margin; the SVG's "meet" keeps the aspect ratio. */
-  fit(r: RectDto, margin = 0.04) {
-    const mx = r.w * margin;
-    const my = r.h * margin;
-    this.box = { x: r.x - mx, y: r.y - my, w: r.w + 2 * mx, h: r.h + 2 * my };
+  /**
+   * Shows `r` with a margin. Without a viewport the SVG's "meet" keeps the
+   * aspect ratio; with one, the box gets the element's own aspect ratio and
+   * `r` is centred in the part the drawer leaves visible.
+   */
+  fit(r: RectDto, margin = 0.04, view?: Viewport) {
+    const w = r.w * (1 + 2 * margin);
+    const h = r.h * (1 + 2 * margin);
+    const visible = view ? view.width - view.covered : 0;
+    if (!view || visible <= 0 || view.height <= 0) {
+      this.box = { x: r.x + r.w / 2 - w / 2, y: r.y + r.h / 2 - h / 2, w, h };
+      return;
+    }
+    const perPixel = Math.max(w / visible, h / view.height);
+    const cx = r.x + r.w / 2;
+    const cy = r.y + r.h / 2;
+    this.box = { x: cx - (perPixel * visible) / 2, y: cy - (perPixel * view.height) / 2, w: perPixel * view.width, h: perPixel * view.height };
   }
 
   /** Zooms by `factor` (< 1 = closer) keeping the world point `p` under the pointer. */
@@ -46,9 +68,9 @@ export class Camera {
    * Glides to `r`. Position moves linearly, size geometrically: halving the
    * width takes as long at any zoom, which is how flying over a map feels.
    */
-  flyTo(r: RectDto, ms = 450, margin = 0.04) {
+  flyTo(r: RectDto, ms = 450, margin = 0.04, view?: Viewport) {
     const from = { ...this.box };
-    this.fit(r, margin);
+    this.fit(r, margin, view);
     const to = { ...this.box };
     const reduced = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduced || ms <= 0) return;

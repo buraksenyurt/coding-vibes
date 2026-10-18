@@ -385,3 +385,42 @@ mod layout {
         assert_eq!(first, second);
     }
 }
+
+// ---------------------------------------------------------------------------
+// Phase 7: search
+// ---------------------------------------------------------------------------
+
+mod search {
+    use super::*;
+
+    fn names(a: &Atlas, q: &str) -> Vec<String> {
+        a.search(q, 10)
+            .into_iter()
+            .map(|id| a.node(id).name.clone())
+            .collect()
+    }
+
+    #[test]
+    fn exact_then_prefix_then_contains() {
+        let a = atlas("atlas-bank");
+        let found = names(&a, "account");
+        // "Account" (exact, type) before "AccountService" (prefix) before "InMemoryAccountStore" (contains).
+        let pos = |n: &str| found.iter().position(|f| f == n).unwrap_or(usize::MAX);
+        assert!(pos("Account") < pos("AccountService"), "{found:?}");
+        assert!(
+            pos("AccountService") < pos("InMemoryAccountStore"),
+            "{found:?}"
+        );
+    }
+
+    #[test]
+    fn full_names_match_too_and_case_does_not_matter() {
+        let a = atlas("atlas-bank");
+        assert!(
+            names(&a, "PERSISTENCE.INTERNAL")
+                .contains(&"com.atlasbank.persistence.internal".to_owned())
+        );
+        assert!(names(&a, "  ").is_empty());
+        assert_eq!(a.search("a", 3).len(), 3, "limit is honoured");
+    }
+}

@@ -304,11 +304,37 @@ pub struct LinkDto {
     pub test: u32,
 }
 
+/// The `module-info.java` of a module, as readable lines.
+#[derive(Debug, Clone, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct JpmsDto {
+    pub name: String,
+    pub open: bool,
+    /// `transitive com.x.core`, `static lombok`, `com.x.util`
+    pub requires: Vec<String>,
+    /// `com.x.api`, `com.x.spi → com.x.plugin`
+    pub exports: Vec<String>,
+    pub opens: Vec<String>,
+    pub uses: Vec<String>,
+    /// `Service ← Impl1, Impl2`
+    pub provides: Vec<String>,
+}
+
 #[derive(Debug, Clone, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct NodeDetailsDto {
     pub node: NodeDto,
+    /// From the module down to the node itself: where it sits on the map.
+    pub path: Vec<NodeDto>,
+    pub jpms: Option<JpmsDto>,
+    /// Cycles the node is part of (a package) or contains (a module).
+    pub cycles: Vec<CycleDto>,
+    /// JPMS violations starting in this module or ending in this package.
+    pub violations: Vec<ViolationDto>,
+    /// Build-file findings about this module or library.
+    pub findings: Vec<FindingDto>,
     /// What this node depends on, at its own level, heaviest first.
     pub outgoing: Vec<LinkDto>,
     /// Who depends on it.
@@ -319,6 +345,32 @@ pub struct NodeDetailsDto {
     pub file: Option<String>,
     /// Libraries: the packages attributed to them and how.
     pub packages: Vec<LibraryPackageDto>,
+}
+
+/// The side bar: modules with their packages, and the islands.
+#[derive(Debug, Clone, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct TreeDto {
+    pub modules: Vec<TreeModuleDto>,
+    pub islands: Vec<NodeDto>,
+}
+
+#[derive(Debug, Clone, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct TreeModuleDto {
+    pub module: NodeDto,
+    pub packages: Vec<NodeDto>,
+}
+
+#[derive(Debug, Clone, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct SearchHitDto {
+    pub node: NodeDto,
+    /// Where it lives: the module of a package, the package of a type.
+    pub context: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, TS)]

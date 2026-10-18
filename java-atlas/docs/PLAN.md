@@ -1,10 +1,10 @@
 # java-atlas — Proje Plan Dokümanı
 
 > **Atölye:** Fikirler Atölyesi
-> **Doküman sürümü:** v1.6 — 19 Ekim 2026
+> **Doküman sürümü:** v1.7 — 19 Ekim 2026
 > **Dokümanlar:** bu klasör (`java-atlas/docs`)
 > **Kod:** `coding-vibes/java-atlas`
-> **Durum:** Faz 0–6 tamamlandı — sıradaki: Faz 7 (MVP'nin son fazı)
+> **Durum:** Faz 0–7 tamamlandı — **MVP hazır**; sıradaki: Faz 8 (canlı izleme)
 
 ---
 
@@ -337,6 +337,8 @@ Beklenen sayılar (modül, paket, tip, kenar, döngü, ihlal) Faz 1–3 doküman
 
 Üstteki **ekmek kırıntısı** (`Ülke ▸ bank-service ▸ account`) hangi ölçekte olunduğunu gösterir ve bir üst ölçeğe tek tıkla dönülür.
 
+> **Uygulamada (Faz 7):** alttaki şerit yerine sağda haritanın üstünde yüzen bir **detay çekmecesi** var; kenar çubuğu *Atlas* ve *Rapor* sekmelerinden oluşuyor, arama kutusu araç çubuğunda. Gerekçe §12'de.
+
 ---
 
 ## 7. Bilgilendirici Detaylar
@@ -458,7 +460,7 @@ MVP = **Faz 0 → Faz 7**. Sonrası cila ve genişleme.
 
 ---
 
-### Faz 7 — Etkileşim ve bilgi panelleri *(MVP tamamlanır)*
+### Faz 7 — Etkileşim ve bilgi panelleri ✅ *(MVP tamamlandı)*
 `docs/tutorial/07-etkilesim-ve-paneller.md`
 
 - Hover vurgulama (gelen/giden), tooltip
@@ -502,18 +504,18 @@ Dosya adlandırma: `NN-konu-adi.md`, `docs/tutorial/` altında. Dokümanlar Tür
 
 ## 10. MVP Kabul Kriterleri
 
-- [ ] Klasör seçici ile yerel bir Java projesi açılabiliyor; Java projesi olmayan klasörde anlaşılır mesaj veriliyor
-- [ ] Maven (`atlas-bank`) ve Gradle (`atlas-shop-gradle`) örnekleri doğru modül grafıyla okunuyor
-- [ ] Tarama sırasında ilerleme gösteriliyor
-- [ ] Ülke ölçeğinde bölgeler, otoyollar, adalar ve feribot hatları görünüyor
-- [ ] Bölge ve şehir ölçeklerine yakınlaşılabiliyor; ekmek kırıntısıyla geri dönülebiliyor
-- [ ] `service.account ↔ service.audit` ve `persistence ↔ persistence.internal` döngüleri kırmızı; `bank-api → persistence.internal` kaçak geçiş olarak işaretli
-- [ ] `commons-lang3` kullanılmayan bağımlılık olarak soluk
-- [ ] Bir yola tıklayınca kanıt listesi (`dosya:satır`) görünüyor
-- [ ] Ca / Ce / I metrikleri detay panelinde
-- [ ] `cargo test --workspace` yeşil (core birim + örnek proje snapshot testleri)
-- [ ] Uygulama Windows 11 ve Ubuntu'da çalışıyor
-- [ ] Faz 0–7 dokümanları yazılmış
+- [x] Klasör seçici ile yerel bir Java projesi açılabiliyor; Java projesi olmayan klasörde anlaşılır mesaj veriliyor
+- [x] Maven (`atlas-bank`) ve Gradle (`atlas-shop-gradle`) örnekleri doğru modül grafıyla okunuyor
+- [x] Tarama sırasında ilerleme gösteriliyor
+- [x] Ülke ölçeğinde bölgeler, otoyollar, adalar ve feribot hatları görünüyor
+- [x] Bölge ve şehir ölçeklerine yakınlaşılabiliyor; ekmek kırıntısıyla geri dönülebiliyor
+- [x] `service.account ↔ service.audit` ve `persistence ↔ persistence.internal` döngüleri kırmızı; `bank-api → persistence.internal` kaçak geçiş olarak işaretli
+- [x] `commons-lang3` kullanılmayan bağımlılık olarak soluk
+- [x] Bir yola tıklayınca kanıt listesi (`dosya:satır`) görünüyor
+- [x] Ca / Ce / I metrikleri detay panelinde
+- [x] `cargo test --workspace` yeşil (core birim + örnek proje snapshot testleri)
+- [ ] Uygulama Windows 11 ve Ubuntu'da çalışıyor — Ubuntu'da (WebKitGTK, Xvfb) doğrulandı; Windows 11 denemesi senin makinende bekliyor
+- [x] Faz 0–7 dokümanları yazılmış
 
 ---
 
@@ -575,10 +577,20 @@ Dosya adlandırma: `NN-konu-adi.md`, `docs/tutorial/` altında. Dokümanlar Tür
 | Tema | Sistem | Sistem / Açık / Koyu (`data-theme`), `localStorage` | Kullanıcı seçimi |
 | UI denemesi | Masaüstü uygulamasıyla | `scripts/ui-check.mjs`: Playwright + sahte `__TAURI_INTERNALS__` + Rust'tan üretilen fikstürler | Hızlı döngü; konsol hataları görünür |
 | Kalabalık bölgeler | — | 60'tan fazla yolda `.dense`: yollar inceltilip soluklaştırılıyor | Guava'nın `guava` bölgesi okunmaz hâldeydi; gerçek çözüm Faz 9'da kenar demetleme |
+| Detay paneli | Ekranın altında şerit | Sağda, haritanın **üstünde yüzen** çekmece (`min(380px, 45%)`) | Panel haritayı daraltsaydı ilk tıklamada harita kayar, çift tıklamanın ikinci tıkı başka yere düşerdi. Kamera uçuşları örtülen kısmı hesaba katıyor (`Viewport.covered`) |
+| Tıklama | Tek tık: detay | Tek tık seçer (detay), 400 ms içindeki ikinci tık **içeri girer**; bina/ada/liman sadece seçilir; boş denize tık seçimi kaldırır; Esc önce seçimi, sonra ölçeği bırakır | Aynı jest iki işi karıştırmadan yapıyor |
+| Kenar çubuğu | Ağaç + filtreler | **Atlas / Rapor** sekmeleri; filtreler araç çubuğunda kaldı; Rapor düğmesi → **Panel** | Rapor da gezinme aracı: her ad tıklanabilir |
+| Her yere gitmek | — | `project.goToNode(key)`: düğümün çizildiği ölçeği seçer, görünümü yükler, seçer ve kamerayı uçurur; JDK paketi için JDK filtresini açar | Ağaç, arama, rapor ve detay panelindeki bütün bağlantılar aynı yoldan |
+| Arama | Ön yüzde | Core'da `Atlas::search` (tam ad > önek > içerir > FQN; sonra tür, uzunluk); `/` veya Ctrl+F, 120 ms debounce, eski cevap yenisini ezmiyor | Büyük projede bütün adları ön yüze taşımamak |
+| Komutlar (Faz 7) | — | `get_tree`, `search`; `NodeDetailsDto`'ya `path`, `jpms`, `cycles`, `violations`, `findings` | Panel tek istekle dolsun |
+| Kanıt sayısı | Kullanım = kanıt | Bir satırdaki birden çok kullanım tek kanıt; panel bunu not olarak yazıyor | `5 kullanım / 4 kanıt` kafa karıştırmasın |
+| Kopyalama | `navigator.clipboard` | Başarısız olursa gizli `textarea` + `execCommand("copy")` | Bazı webview'larda Clipboard API yok ya da reddediliyor |
 | `quick-xml` | 0.3x API | 0.42: `xml10_content()`, varlıklar `Event::GeneralRef` | İnternetteki örneklerin çoğu eski API'yi kullanıyor |
 
 ---
 
 ## 13. Sonraki Adım
 
-**Faz 7 — Etkileşim ve bilgi panelleri** (`docs/tutorial/07-etkilesim-ve-paneller.md`): ayrıntı paneli (metrikler, kanıt listesi `dosya:satır`, tıklanabilir komşular), yola tıklayınca kanıt, kenar çubuğunda modül/paket ağacı ve rozetler, arama ile bir tipe/pakete uçma; rapordaki öğelerden haritaya gitme. MVP tamamlanır.
+MVP tamamlandı. Önce **Windows 11'de bir deneme** (`npm run tauri dev`, kendi Java projelerinden biriyle) — kabul kriterlerinde açık kalan tek madde bu.
+
+Sonra **Faz 8 — Canlı izleme** (`docs/tutorial/08-canli-izleme.md`): `notify` ile `.java` ve build dosyalarını izlemek, debounce, sadece değişen dosyayı yeniden ayrıştırıp atlası yeniden kurmak, ön yüze `Channel` ile "atlas değişti" haberi; kamera, ölçek ve seçim kararlı anahtarlar sayesinde yerinde kalacak.

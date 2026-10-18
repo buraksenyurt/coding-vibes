@@ -22,6 +22,8 @@ pub fn run() {
             commands::get_atlas_view,
             commands::get_node_details,
             commands::get_edge_evidence,
+            commands::get_tree,
+            commands::search,
             commands::recent_projects,
             commands::forget_recent_project,
         ])

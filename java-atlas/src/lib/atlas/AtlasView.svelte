@@ -48,6 +48,13 @@
   const ports = $derived(view.neighbours.filter((n) => n.kind === "jdk"));
   const mainland = $derived(view.mainland ?? (project.filters.jdk ? base.mainland : null));
 
+  /** Pixels on the right covered by the details drawer (see App.svelte). */
+  const covered = $derived(project.selection ? Math.min(380, width * 0.45) : 0);
+  /** Every flight keeps its target out from under the drawer. */
+  function flyTo(r: RectDto, margin = 0.04) {
+    camera.flyTo(r, 450, margin, { width, height, covered });
+  }
+
   /** World units per screen pixel ("meet" fits the box inside the element). */
   const unit = $derived(Math.max(camera.box.w / width, camera.box.h / height));
 
@@ -65,16 +72,33 @@
     }),
   );
 
-  /** Hover: outgoing roads blue, incoming orange, the rest faded. */
+  // -- selection ----------------------------------------------------------------
+
+  const selectedKey = $derived(project.selection?.kind === "node" ? project.selection.details.node.key : null);
+  const selectedRoad = $derived(project.selection?.kind === "road" ? project.selection.edge : null);
+  /** The selected node as drawn here, or as the details panel knows it (a type at region scale). */
+  const selectedNode = $derived(
+    project.selection?.kind === "node" ? (nodes.get(project.selection.details.node.key) ?? project.selection.details.node) : null,
+  );
+
+  function isSelectedRoad(e: ViewEdgeDto): boolean {
+    return selectedRoad !== null && selectedRoad.from === e.from && selectedRoad.to === e.to;
+  }
+
+  /**
+   * Hover: outgoing roads blue, incoming orange, the rest faded. Without a
+   * hover the selected node does the same, a little softer, so that its
+   * roads stay visible while the pointer explores the details panel.
+   */
   function roadState(e: ViewEdgeDto): string {
-    const key = hovered?.key;
-    if (!key) return "";
-    if (e.from === key || (hovered && contains(hovered, e.from))) return "out";
-    if (e.to === key || (hovered && contains(hovered, e.to))) return "in";
-    return "faded";
+    const n = hovered ?? selectedNode;
+    if (!n) return selectedRoad ? (isSelectedRoad(e) ? "" : "dim") : "";
+    if (e.from === n.key || contains(n, e.from)) return "out";
+    if (e.to === n.key || contains(n, e.to)) return "in";
+    return hovered ? "faded" : "dim";
   }
   /** Is `key` the node itself or something inside it (a type of a hovered city)? */
-  function contains(n: NodeDto, key: string): boolean {
+  function contains(n: { key: string }, key: string): boolean {
     let current = nodes.get(key);
     while (current) {
       if (current.key === n.key) return true;
@@ -99,6 +123,16 @@
       fittedWorld = key;
       camera.setWorld(base.world);
       camera.fit(base.world, 0);
+    }
+  });
+
+  // Requests from the tree, the search box, the report and the details panel.
+  let flown = 0;
+  $effect(() => {
+    const f = project.flight;
+    if (f && f.seq !== flown) {
+      flown = f.seq;
+      flyTo(f.rect, f.margin);
     }
   });
 
@@ -140,7 +174,7 @@
 
   /** Flies to a node and makes it the focus. */
   function enter(n: NodeDto) {
-    if (n.rect) camera.flyTo(n.rect);
+    if (n.rect) flyTo(n.rect);
     project.enter(n);
     // The tile that had focus disappears at the new scale; keep keys working.
     svg?.focus();
@@ -149,7 +183,7 @@
   /** Goes up one or more scales and flies back out. */
   function goTo(index: number) {
     const target = project.crumbs[index];
-    camera.flyTo(target?.rect ?? base.world, 450, target?.rect ? 0.04 : 0);
+    flyTo(target?.rect ?? base.world, target?.rect ? 0.04 : 0);
     project.goTo(index);
   }
 
@@ -159,9 +193,13 @@
   let press: { x: number; y: number; id: number } | null = null;
   let drag = $state<{ x: number; y: number } | null>(null);
 
+  /** Set when the last press became a drag: the click that follows it is not a click. */
+  let dragged = false;
+
   function onPointerDown(e: PointerEvent) {
     if (e.button !== 0) return;
     press = { x: e.clientX, y: e.clientY, id: e.pointerId };
+    dragged = false;
   }
   function onPointerMove(e: PointerEvent) {
     const box = container?.getBoundingClientRect();
@@ -171,6 +209,7 @@
       if (Math.hypot(e.clientX - press.x, e.clientY - press.y) < DRAG_THRESHOLD) return;
       svg.setPointerCapture(press.id);
       drag = { x: press.x, y: press.y };
+      dragged = true;
     }
     const scaleFactor = svg.getScreenCTM()?.a ?? 1;
     camera.panBy((e.clientX - drag.x) / scaleFactor, (e.clientY - drag.y) / scaleFactor);
@@ -183,15 +222,34 @@
 
   // Double clicks are detected by hand: WebKitGTK does not deliver `dblclick`
   // to SVG groups reliably.
+  // One click selects (details panel), a second one within 400 ms enters.
   let lastClick: { key: string; at: number } | null = null;
   function tileClick(n: NodeDto) {
+    if (dragged) return;
     const now = performance.now();
     if (lastClick?.key === n.key && now - lastClick.at < 400) {
       enter(n);
       lastClick = null;
     } else {
       lastClick = { key: n.key, at: now };
+      if (selectedKey !== n.key) project.select(n.key);
     }
+  }
+
+  /** Buildings, islands and ports cannot be entered: a click only selects. */
+  function pick(n: NodeDto) {
+    if (!dragged && selectedKey !== n.key) project.select(n.key);
+  }
+
+  function roadClick(e: ViewEdgeDto) {
+    const from = nodes.get(e.from);
+    const to = nodes.get(e.to);
+    if (!dragged && from && to) project.selectRoad(e, from, to);
+  }
+
+  /** A click on open sea or empty land closes the details panel. */
+  function backgroundClick() {
+    if (!dragged) project.clearSelection();
   }
 
   function zoomButton(factor: number) {
@@ -212,6 +270,7 @@
     if (e.key === "+" || e.key === "=") zoomButton(0.8);
     else if (e.key === "-") zoomButton(1.25);
     else if (e.key === "0") goTo(0);
+    else if (e.key === "Escape" && project.selection) project.clearSelection();
     else if (e.key === "Escape" && project.crumbs.length > 1) goTo(project.crumbs.length - 2);
     else return;
     e.preventDefault();
@@ -271,7 +330,7 @@
 
 <svelte:window onkeydown={onWindowKey} />
 
-<div class="atlas" bind:this={container} bind:clientWidth={width} bind:clientHeight={height}>
+<div class="atlas" style:--covered="{covered}px" bind:this={container} bind:clientWidth={width} bind:clientHeight={height}>
   <!-- The map is a pan/zoom surface: it needs focus for + − 0 Esc and pointer handlers. -->
   <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
   <svg
@@ -301,7 +360,8 @@
       </filter>
     </defs>
 
-    <rect class="sea" x={base.world.x - base.world.w * 4} y={base.world.y - base.world.h * 4} width={base.world.w * 9} height={base.world.h * 9} />
+    <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+    <rect class="sea" onclick={backgroundClick} x={base.world.x - base.world.w * 4} y={base.world.y - base.world.h * 4} width={base.world.w * 9} height={base.world.h * 9} />
 
     <!-- Mainland (JDK) -->
     {#if mainland}
@@ -309,7 +369,8 @@
       <text class="coast-name" x={mainland.x + 10} y={mainland.y + 20} font-size="12">JDK</text>
       {#each ports as p (p.key)}
         {#if p.rect}
-          <g class="port" role="img" aria-label={p.name} onpointerover={() => (hovered = p)}>
+          <!-- svelte-ignore a11y_click_events_have_key_events -->
+          <g class="port" class:selected={selectedKey === p.key} role="img" aria-label={p.name} onpointerover={() => (hovered = p)} onclick={() => pick(p)}>
             <rect x={p.rect.x} y={p.rect.y} width={p.rect.w} height={p.rect.h} rx="3" />
             <text x={p.rect.x + 6} y={p.rect.y + p.rect.h * 0.68} font-size={Math.min(10, p.rect.h * 0.55)}>{p.name}</text>
           </g>
@@ -317,7 +378,8 @@
       {/each}
     {/if}
 
-    <rect class="land" x={base.land.x} y={base.land.y} width={base.land.w} height={base.land.h} rx="14" filter="url(#land-shadow)" />
+    <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+    <rect class="land" onclick={backgroundClick} x={base.land.x} y={base.land.y} width={base.land.w} height={base.land.h} rx="14" filter="url(#land-shadow)" />
 
     <!-- Regions: always the whole country; outside the focus they are context. -->
     {#each regions as r (r.key)}
@@ -328,6 +390,7 @@
           class="region"
           class:context={focusRegion !== null && !inFocus}
           class:hovered={hovered?.key === r.key}
+          class:selected={selectedKey === r.key}
           style:--fill="var(--region-{colour.get(r.key)})"
           onpointerover={() => (hovered = r)}
           onclick={() => tileClick(r)}
@@ -341,7 +404,7 @@
           {#if !inFocus || scale === "city"}
             {#each base.outlines.filter((o) => o.parent === r.key && !(scale === "city" && o.key === focusKey)) as c (c.key)}
               {@const ct = label(c.rect, shortPackage(cityName(c.key)))}
-              <rect class="city-outline" class:test={c.isTest} x={c.rect.x} y={c.rect.y} width={c.rect.w} height={c.rect.h} rx="3" />
+              <rect class="city-outline" class:test={c.isTest} class:selected={selectedKey === c.key} x={c.rect.x} y={c.rect.y} width={c.rect.w} height={c.rect.h} rx="3" />
               {#if ct.size >= 5}
                 <text class="city-name" x={ct.x} y={ct.y} font-size={ct.size}>{ct.text}</text>
               {/if}
@@ -367,6 +430,7 @@
           class:test={c.isTest}
           class:cycle={c.inCycle}
           class:hovered={hovered?.key === c.key}
+          class:selected={selectedKey === c.key}
           onpointerover={() => (hovered = c)}
           onclick={() => tileClick(c)}
           onkeydown={(e) => e.key === "Enter" && enter(c)}
@@ -377,7 +441,7 @@
         >
           <rect class="city-fill" x={c.rect.x} y={c.rect.y} width={c.rect.w} height={c.rect.h} rx="4" />
           {#each view.outlines.filter((o) => o.parent === c.key) as b (b.key)}
-            <rect class="building-outline" x={b.rect.x + b.rect.w * 0.1} y={b.rect.y + b.rect.h * 0.1} width={b.rect.w * 0.8} height={b.rect.h * 0.8} rx="1.5" />
+            <rect class="building-outline" class:selected={selectedKey === b.key} x={b.rect.x + b.rect.w * 0.1} y={b.rect.y + b.rect.h * 0.1} width={b.rect.w * 0.8} height={b.rect.h * 0.8} rx="1.5" />
           {/each}
           {#if c.exported === false}
             <!-- Not exported by its JPMS module: a locked city. -->
@@ -403,8 +467,12 @@
           class="building {b.typeKind}"
           class:test={b.isTest}
           class:hovered={hovered?.key === b.key}
+          class:selected={selectedKey === b.key}
           onpointerover={() => (hovered = b)}
-          role="img"
+          onclick={() => pick(b)}
+          onkeydown={(e) => e.key === "Enter" && pick(b)}
+          role="button"
+          tabindex="0"
           aria-label="{b.name} ({b.typeKind ? typeText[b.typeKind] : ''})"
         >
           {#if shape.tag === "rect"}
@@ -435,8 +503,12 @@
           class:unknown={i.kind === "unknown"}
           class:context={scale !== "country" && !connected.has(i.key)}
           class:hovered={hovered?.key === i.key}
+          class:selected={selectedKey === i.key}
           onpointerover={() => (hovered = i)}
-          role="img"
+          onclick={() => pick(i)}
+          onkeydown={(e) => e.key === "Enter" && pick(i)}
+          role="button"
+          tabindex="0"
           aria-label={i.name}
         >
           <ellipse cx={s.cx} cy={s.cy} rx={s.rx} ry={s.ry} />
@@ -454,10 +526,14 @@
           class:cycle={r.edge.inCycle}
           class:violation={r.edge.violation}
           class:test-only={r.edge.main === 0}
-          role="img"
-          aria-label="{nodes.get(r.edge.from)?.name} → {nodes.get(r.edge.to)?.name}"
+          class:selected={isSelectedRoad(r.edge)}
+          role="button"
+          tabindex="-1"
+          aria-label="{nodes.get(r.edge.from)?.name} → {nodes.get(r.edge.to)?.name}; tıkla: kanıtlar"
           onpointerover={() => (hoveredRoad = r.edge)}
           onpointerout={() => (hoveredRoad = null)}
+          onclick={() => roadClick(r.edge)}
+          onkeydown={(e) => e.key === "Enter" && roadClick(r.edge)}
         >
           {#if r.kind === "road"}
             <path class="casing" d={r.geometry.d} style:stroke-width="{r.width + 2.5}px" />
@@ -480,7 +556,8 @@
   </div>
 
   {#if (hovered || hoveredRoad) && !drag}
-    <div class="tooltip" style:left="{pointer.x + 14}px" style:top="{pointer.y + 14}px">
+    <!-- Near the right edge (or the drawer) the tooltip opens to the left of the pointer. -->
+    <div class="tooltip" class:flip={pointer.x + 330 > width - covered} style:left="{pointer.x + 14}px" style:top="{pointer.y + 14}px">
       {#if hoveredRoad}
         {@const from = nodes.get(hoveredRoad.from)}
         {@const to = nodes.get(hoveredRoad.to)}
@@ -488,6 +565,7 @@
         <div>{hoveredRoad.main} kullanım{hoveredRoad.test ? ` · +${hoveredRoad.test} testte` : ""}</div>
         {#if hoveredRoad.violation}<div class="bad">Kaçak geçiş: paket export edilmemiş</div>{/if}
         {#if hoveredRoad.inCycle}<div class="bad">Döngünün parçası</div>{/if}
+        <div class="muted">Tıkla: hangi satırlar?</div>
       {:else if hovered}
         <strong>{hovered.name}</strong>
         {#if hovered.kind === "module" || hovered.kind === "package"}
@@ -497,7 +575,7 @@
           {/if}
           {#if hovered.exported === false}<div>🔒 Modülü bu paketi export etmiyor</div>{/if}
           {#if hovered.inCycle}<div class="bad">{hovered.kind === "module" ? "Paket döngüsü içeriyor" : "Bir döngünün parçası"}</div>{/if}
-          <div class="muted">Çift tıkla: yaklaş · <span class="out">mavi</span> giden, <span class="in">turuncu</span> gelen yollar</div>
+          <div class="muted">Tıkla: ayrıntılar · çift tıkla: yaklaş · <span class="out">mavi</span> giden, <span class="in">turuncu</span> gelen yollar</div>
         {:else if hovered.kind === "type"}
           <div>{hovered.typeKind ? typeText[hovered.typeKind] : ""} · {count(hovered.size)} satır{hovered.isTest ? " · test" : ""}</div>
           <div class="muted">{hovered.fqn}</div>
@@ -589,12 +667,28 @@
   .road.in .line { stroke: var(--in); opacity: 1; }
   .road.in .arrow { fill: var(--in); }
   .road.faded { opacity: 0.12; }
+  .road.dim { opacity: 0.3; }
+  .road.selected .line { stroke: var(--accent); opacity: 1; }
+  .road.selected .arrow { fill: var(--accent); }
+  .road { cursor: pointer; }
+  .road:focus, .building:focus, .island:focus { outline: none; }
+
+  /* Selection: an accent ring that survives hover elsewhere. */
+  .region.selected .border { stroke: var(--accent); stroke-width: 3.5; stroke-dasharray: none; }
+  .city-outline.selected { stroke: var(--accent); stroke-width: 2.5; }
+  .city.selected .city-fill { stroke: var(--accent); stroke-width: 3; }
+  .building-outline.selected { fill: var(--accent); opacity: 0.7; }
+  .building.selected rect, .building.selected polygon { stroke: var(--accent); stroke-width: 3; fill: color-mix(in srgb, var(--accent) 22%, var(--land)); }
+  .island.selected ellipse, .port.selected rect { stroke: var(--accent); stroke-width: 3; }
+  .island.selected { opacity: 1; }
+  .building, .island, .port { cursor: pointer; }
+
   /* Many roads at once (a big region): thinner ink, so the tiles stay readable. */
   svg.dense .road:not(.out):not(.in) .line { opacity: 0.4; }
   svg.dense .road .casing { display: none; }
   .road .hit { stroke: transparent; stroke-width: 12px; pointer-events: stroke; }
 
-  .controls { position: absolute; right: 14px; top: 14px; display: flex; flex-direction: column; gap: 4px; }
+  .controls { position: absolute; right: calc(var(--covered, 0px) + 14px); top: 14px; display: flex; flex-direction: column; gap: 4px; }
   .controls button { width: 32px; height: 32px; padding: 0; background: var(--panel); font-size: 16px; }
 
   .tooltip {
@@ -611,6 +705,7 @@
     z-index: 5;
     overflow-wrap: anywhere;
   }
+  .tooltip.flip { transform: translateX(calc(-100% - 28px)); }
   .muted { color: var(--muted); }
   .bad { color: var(--bad); }
   .out { color: var(--out); font-weight: 600; }

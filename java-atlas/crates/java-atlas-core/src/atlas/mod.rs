@@ -16,6 +16,7 @@ mod analysis;
 mod describe;
 mod layout;
 mod resolve;
+mod search;
 mod view;
 
 pub use layout::{Archipelago, LAND, Layout};

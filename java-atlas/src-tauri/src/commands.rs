@@ -12,7 +12,7 @@ use tauri::{AppHandle, State};
 
 use crate::dto::{
     AtlasViewDto, EvidenceDto, NodeDetailsDto, ProjectSummary, RecentProject, ScanEvent,
-    ViewRequest,
+    SearchHitDto, TreeDto, ViewRequest,
 };
 use crate::error::{AppError, ErrorKind};
 use crate::project::{self, OpenProject};
@@ -123,6 +123,25 @@ pub async fn get_edge_evidence(
     tauri::async_runtime::spawn_blocking(move || project.evidence(&from, &to))
         .await
         .map_err(join_error)?
+}
+
+#[tauri::command]
+pub async fn get_tree(state: State<'_, AppState>) -> Result<TreeDto, AppError> {
+    let project = open(&state)?;
+    tauri::async_runtime::spawn_blocking(move || project.tree())
+        .await
+        .map_err(join_error)
+}
+
+#[tauri::command]
+pub async fn search(
+    query: String,
+    state: State<'_, AppState>,
+) -> Result<Vec<SearchHitDto>, AppError> {
+    let project = open(&state)?;
+    tauri::async_runtime::spawn_blocking(move || project.search(&query))
+        .await
+        .map_err(join_error)
 }
 
 #[tauri::command]
