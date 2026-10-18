@@ -22,6 +22,11 @@
       <th>Scor(10 Üzerinden)</th>
    </tr>
    <tr>
+   <td valign="top"><strong>JDepend</strong></td>
+      <td valign="top"><strong>Tarih:</strong> Ekim 2026<br><strong>Tanım:</strong>Özellikle birden fazla modül, paket vs içeren java uygulamalarındaki bağımlılıkların haritasını resmeden bir masaüstü uygulama<br><strong>Geliştirici:</strong> Claude Opus 5.5 Medium <br><strong>Dil:</strong> Rust, Tauri <br><strong>Zorluk:</strong> Orta<br><strong> Ayrılan Süre:</strong> ~2.5 saat </td>
+      <td valign="top">Java derslerinde kullandığım projelerde modül ve paketler arası bağımlılıklar sık sık kafa karışıklığına neden olabiliyor. Bağımlılıkların bir haritasını gösteren bir uygulama geliştirmek istedim.</td>
+      <td>9</td>
+   </tr>
    <td valign="top"><strong>GitDash (Zig CLI)</strong></td>
       <td valign="top"><strong>Tarih:</strong> Ekim 2026<br><strong>Tanım:</strong> Copilot CLI'daki aktivite takvimi görünümünden esinlenen yerel Git tabanlı bir CLI uygulaması<br><strong>Geliştirici:</strong> GPT 6, High Effort <br><strong>Dil:</strong> Zig, 0.17<br><strong>Zorluk:</strong> Basit<br><strong> Ayrılan Süre:</strong> ~2 Saat  </td>
       <td valign="top">Hazırlanan öğretiyi birebir takip ederek uygulamayı geliştirdim. Hatasız çalıştığını ifade edebilirim. Basit bir öğreti gibi görünmesine rağmen içerisinde Zig dilinin önemli özellikleri *(allocator kullanımı, error handling, defer gibi)* barındırıyor.</td>

@@ -607,3 +607,8 @@ Thumbs.db
 # Zig Cache folders and outputs
 .zig-cache/
 zig-out/
+
+# Gradle
+.gradle/
+build/
+**/build/
