@@ -12,6 +12,10 @@
   --warn: #e0b341;
   --hover: #eef2f5;
   --border-ink: #6d6250;
+  --road: #8b7355;
+  --ferry: #4f7fa3;
+  --out: #2563eb;
+  --in: #e07b1f;
   /* Region fills: soft "political map" pastels of similar lightness. */
   --region-0: #efd9b4;
   --region-1: #cfe3b8;
@@ -26,8 +30,10 @@
   font-size: 14px;
 }
 
+/* Dark tokens apply when the system asks for them (unless the user picked
+   light), or when the user picked dark explicitly. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --sea: #14202b;
     --land: #2b2a26;
     --land-edge: #4a463d;
@@ -41,6 +47,10 @@
     --warn: #e6c25a;
     --hover: #24323e;
     --border-ink: #b9ad95;
+    --road: #c2a985;
+    --ferry: #7fb0d6;
+    --out: #6ea8ff;
+    --in: #ffa45c;
     --region-0: #5a4a33;
     --region-1: #3f5236;
     --region-2: #5c3e33;
@@ -50,6 +60,37 @@
     --region-6: #2f5048;
     --region-7: #553c3c;
   }
+}
+
+:root[data-theme="light"] { color-scheme: light; }
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --sea: #14202b;
+  --land: #2b2a26;
+  --land-edge: #4a463d;
+  --ink: #e3e8ec;
+  --muted: #8e9ba5;
+  --panel: #1b2731;
+  --border: #2c3a46;
+  --accent: #6aa9d8;
+  --ok: #5cc28a;
+  --bad: #ff6b6b;
+  --warn: #e6c25a;
+  --hover: #24323e;
+  --border-ink: #b9ad95;
+  --road: #c2a985;
+  --ferry: #7fb0d6;
+  --out: #6ea8ff;
+  --in: #ffa45c;
+  --region-0: #5a4a33;
+  --region-1: #3f5236;
+  --region-2: #5c3e33;
+  --region-3: #34495a;
+  --region-4: #4d3d55;
+  --region-5: #5a5030;
+  --region-6: #2f5048;
+  --region-7: #553c3c;
 }
 
 * { box-sizing: border-box; }

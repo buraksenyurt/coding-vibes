@@ -317,6 +317,32 @@ impl OpenProject {
 
     // -- views ----------------------------------------------------------------
 
+    /// The cycle a node's package belongs to (types inherit their package's).
+    fn cycle_of_node(&self, id: NodeId) -> Option<usize> {
+        let mut current = Some(id);
+        while let Some(c) = current {
+            if let Some(&cycle) = self.cycle_of.get(&c) {
+                return Some(cycle);
+            }
+            current = self.atlas.node(c).parent;
+        }
+        None
+    }
+
+    /// Does the road connect two *different* packages of the same cycle?
+    /// At city scale that is a type → type or type → package road.
+    fn same_cycle(&self, from: NodeId, to: NodeId) -> bool {
+        let package = |id: NodeId| {
+            let mut current = id;
+            while !matches!(self.atlas.node(current).kind, NodeKind::Package { .. }) {
+                current = self.atlas.node(current).parent?;
+            }
+            Some(current)
+        };
+        matches!((self.cycle_of_node(from), self.cycle_of_node(to)), (Some(a), Some(b)) if a == b)
+            && package(from) != package(to)
+    }
+
     /// Does the road `from → to` carry a JPMS violation?
     fn crosses_border(&self, from: NodeId, to: NodeId) -> bool {
         self.atlas.violations.iter().any(|v| {
@@ -347,10 +373,7 @@ impl OpenProject {
                 to: self.atlas.key(e.to),
                 main: e.weight.main,
                 test: e.weight.test,
-                in_cycle: matches!(
-                    (self.cycle_of.get(&e.from), self.cycle_of.get(&e.to)),
-                    (Some(a), Some(b)) if a == b
-                ),
+                in_cycle: self.same_cycle(e.from, e.to),
                 violation: self.crosses_border(e.from, e.to),
             })
             .collect();
@@ -604,6 +627,33 @@ mod tests {
     }
 
     #[test]
+    fn city_view_marks_type_roads_inside_a_cycle() {
+        let p = bank();
+        let request = ViewRequest {
+            scale: ScaleDto::City,
+            focus: Some("p:com.atlasbank:bank-service|com.atlasbank.service.audit".into()),
+            filters: ViewFiltersDto {
+                tests: false,
+                jdk: false,
+                external: true,
+            },
+        };
+        let view = p.view(&request).unwrap();
+        let red: Vec<(&str, &str)> = view
+            .edges
+            .iter()
+            .filter(|e| e.in_cycle)
+            .map(|e| (e.from.as_str(), e.to.as_str()))
+            .collect();
+        // AuditLog → the account city, and the account city → AuditLog.
+        assert_eq!(red.len(), 2, "{red:?}");
+        assert!(
+            view.edges.iter().any(|e| !e.in_cycle),
+            "AuditLog → AuditEntry stays inside one city"
+        );
+    }
+
+    #[test]
     fn details_and_evidence() {
         let p = bank();
         let d = p
@@ -625,5 +675,60 @@ mod tests {
             .unwrap();
         assert_eq!(ev.len(), 2);
         assert!(p.details("p:nope").is_err());
+    }
+}
+
+/// Writes the IPC answers for the atlas-bank sample as JSON, for driving the
+/// front end in a plain browser (Playwright) without the Tauri shell:
+///
+///     FIXTURE_DIR=/tmp/fixtures cargo test -p java-atlas dump_fixtures -- --ignored
+#[cfg(test)]
+mod fixtures {
+    use super::*;
+
+    #[test]
+    #[ignore = "writes files; run on demand"]
+    fn dump_fixtures() {
+        let dir = std::path::PathBuf::from(std::env::var("FIXTURE_DIR").expect("set FIXTURE_DIR"));
+        std::fs::create_dir_all(&dir).unwrap();
+        let root =
+            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../samples/atlas-bank");
+        let p = scan(&root, &|_| {}).unwrap();
+        let filters = ViewFiltersDto {
+            tests: false,
+            jdk: false,
+            external: true,
+        };
+        let write = |name: &str, value: serde_json::Value| {
+            std::fs::write(
+                dir.join(format!("{name}.json")),
+                serde_json::to_string_pretty(&value).unwrap(),
+            )
+            .unwrap();
+        };
+        write("summary", serde_json::to_value(&p.summary).unwrap());
+        let views = [
+            ("country", ScaleDto::Country, None),
+            (
+                "region-bank-service",
+                ScaleDto::Region,
+                Some("m:com.atlasbank:bank-service"),
+            ),
+            (
+                "city-account",
+                ScaleDto::City,
+                Some("p:com.atlasbank:bank-service|com.atlasbank.service.account"),
+            ),
+        ];
+        for (name, scale, focus) in views {
+            let view = p
+                .view(&ViewRequest {
+                    scale,
+                    focus: focus.map(str::to_owned),
+                    filters,
+                })
+                .unwrap();
+            write(name, serde_json::to_value(&view).unwrap());
+        }
     }
 }

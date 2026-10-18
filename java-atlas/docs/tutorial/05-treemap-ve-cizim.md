@@ -1,6 +1,6 @@
 # Faz 5 — Harita Yerleşimi ve İlk Çizim
 
-> **Önceki:** [04 — Tauri köprüsü](04-tauri-kopru.md) · **Sonraki:** 06 — Yollar ve semantik zoom *(yazılacak)*
+> **Önceki:** [04 — Tauri köprüsü](04-tauri-kopru.md) · **Sonraki:** [06 — Yollar ve semantik zoom](06-yollar-ve-zoom.md)
 
 ## 1. Bu bölümde ne yapacağız
 

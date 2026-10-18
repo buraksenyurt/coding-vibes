@@ -29,7 +29,7 @@
           <ReportPanel />
         {/if}
         {#if project.country}
-          <AtlasView view={project.country} />
+          <AtlasView />
         {/if}
       </div>
     {:else}

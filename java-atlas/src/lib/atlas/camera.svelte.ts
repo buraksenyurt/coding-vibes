@@ -29,6 +29,7 @@ export class Camera {
 
   /** Zooms by `factor` (< 1 = closer) keeping the world point `p` under the pointer. */
   zoomAt(p: { x: number; y: number }, factor: number) {
+    this.land();
     const w = Math.min(this.maxW, Math.max(this.minW, this.box.w * factor));
     const f = w / this.box.w;
     this.box = {
@@ -39,8 +40,44 @@ export class Camera {
     };
   }
 
+  private flight = 0;
+
+  /**
+   * Glides to `r`. Position moves linearly, size geometrically: halving the
+   * width takes as long at any zoom, which is how flying over a map feels.
+   */
+  flyTo(r: RectDto, ms = 450, margin = 0.04) {
+    const from = { ...this.box };
+    this.fit(r, margin);
+    const to = { ...this.box };
+    const reduced = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced || ms <= 0) return;
+
+    const id = ++this.flight;
+    const started = performance.now();
+    const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
+    const step = (now: number) => {
+      if (id !== this.flight) return; // a newer flight or a user action took over
+      const t = ease(Math.min(1, (now - started) / ms));
+      const w = from.w * (to.w / from.w) ** t;
+      const h = from.h * (to.h / from.h) ** t;
+      const cx = from.x + from.w / 2 + (to.x + to.w / 2 - from.x - from.w / 2) * t;
+      const cy = from.y + from.h / 2 + (to.y + to.h / 2 - from.y - from.h / 2) * t;
+      this.box = { x: cx - w / 2, y: cy - h / 2, w, h };
+      if (t < 1) requestAnimationFrame(step);
+    };
+    this.box = from;
+    requestAnimationFrame(step);
+  }
+
+  /** Stops a flight in progress (the user grabbed the map). */
+  land() {
+    this.flight++;
+  }
+
   /** Moves the camera by a distance in world units. */
   panBy(dx: number, dy: number) {
+    this.land();
     this.box = { ...this.box, x: this.box.x - dx, y: this.box.y - dy };
   }
 

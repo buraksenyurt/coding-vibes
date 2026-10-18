@@ -1,6 +1,13 @@
 <script lang="ts">
   import { project } from "./project.svelte";
   import { baseName } from "./format";
+  import { applyTheme, loadTheme, nextTheme, themeLabel } from "./theme";
+
+  let theme = $state(loadTheme());
+  function cycleTheme() {
+    theme = nextTheme(theme);
+    applyTheme(theme);
+  }
 
   let menu = $state<HTMLDetailsElement | null>(null);
 
@@ -50,6 +57,7 @@
   {:else}
     <span class="muted">Henüz proje seçilmedi</span>
   {/if}
+  <button class="ghost theme" onclick={cycleTheme} title="Tema: {themeLabel[theme]}" aria-label="Tema: {themeLabel[theme]}">◐ {themeLabel[theme]}</button>
 </header>
 
 <style>
@@ -67,6 +75,8 @@
   .muted { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .filters label { display: flex; align-items: center; gap: 4px; color: var(--muted); font-size: 13px; cursor: pointer; }
   .filters { margin-left: auto; gap: 12px; }
+  .theme { margin-left: auto; white-space: nowrap; }
+  .filters + .theme { margin-left: 0; }
   .ghost.active { background: var(--hover); border-color: var(--accent); }
 
   .menu { position: relative; }

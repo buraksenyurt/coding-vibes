@@ -1,10 +1,10 @@
 # java-atlas — Proje Plan Dokümanı
 
 > **Atölye:** Fikirler Atölyesi
-> **Doküman sürümü:** v1.5 — 18 Ekim 2026
+> **Doküman sürümü:** v1.6 — 19 Ekim 2026
 > **Dokümanlar:** bu klasör (`java-atlas/docs`)
 > **Kod:** `coding-vibes/java-atlas`
-> **Durum:** Faz 0–5 tamamlandı — sıradaki: Faz 6
+> **Durum:** Faz 0–6 tamamlandı — sıradaki: Faz 7 (MVP'nin son fazı)
 
 ---
 
@@ -445,7 +445,7 @@ MVP = **Faz 0 → Faz 7**. Sonrası cila ve genişleme.
 
 ---
 
-### Faz 6 — Yollar ve semantik zoom
+### Faz 6 — Yollar ve semantik zoom ✅
 `docs/tutorial/06-yollar-ve-zoom.md`
 
 - Otoyol, karayolu, feribot hattı çizimi; kalınlık ölçeği; yön okları
@@ -568,10 +568,17 @@ Dosya adlandırma: `NN-konu-adi.md`, `docs/tutorial/` altında. Dokümanlar Tür
 | Alt paketler | Mahalle olarak iç içe | MVP'de düz (her paket bir şehir) | Faz 5 "Kendin dene" görevi |
 | Çift tıklama | `dblclick` | Kendi algılama (400 ms) + sürükleme eşiği (4 px) ile pointer capture | WebKitGTK'da `dblclick` SVG grubuna gelmedi; erken capture tıklamaları `<svg>`'ye yönlendiriyordu |
 | Rapor paneli | Sabit | Araç çubuğundaki **Rapor** düğmesiyle gizlenebiliyor | Harita tüm pencereyi kullanabilsin |
+| Yol çizimi | Merkezden merkeze | Sınırdan sınıra, gidiş yönünün **sağına** bükülen ikinci derece Bézier; ok başı ayrı `path`, boyutu ekran pikselinde sabit | A → B ile B → A ayrı şeritler; döngüler görünür. `context-stroke` WebKitGTK'da yok |
+| Ölçek geçişi | Eşikte ölçek değişir | İki eşik (içeri %55, dışarı 2,6×) + tekerlek durduktan 220 ms sonra karar | Titremeyi önleyen histerezis |
+| Ölçekler arası çizim | Ölçek başına sahne | **Taban harita** (ülke) hep çizili; odak katmanı üstte; odak dışı bölgeler ve bağlantısız adalar soluk | Ölçek değişince hiçbir şey yerinden oynamıyor |
+| Döngü işareti | Paket kenarlarında | Tip ve karışık seviyeli kenarlarda da (paket atasından) | Şehir ölçeğinde döngü yolları da kırmızı |
+| Tema | Sistem | Sistem / Açık / Koyu (`data-theme`), `localStorage` | Kullanıcı seçimi |
+| UI denemesi | Masaüstü uygulamasıyla | `scripts/ui-check.mjs`: Playwright + sahte `__TAURI_INTERNALS__` + Rust'tan üretilen fikstürler | Hızlı döngü; konsol hataları görünür |
+| Kalabalık bölgeler | — | 60'tan fazla yolda `.dense`: yollar inceltilip soluklaştırılıyor | Guava'nın `guava` bölgesi okunmaz hâldeydi; gerçek çözüm Faz 9'da kenar demetleme |
 | `quick-xml` | 0.3x API | 0.42: `xml10_content()`, varlıklar `Event::GeneralRef` | İnternetteki örneklerin çoğu eski API'yi kullanıyor |
 
 ---
 
 ## 13. Sonraki Adım
 
-**Faz 6 — Yollar ve semantik zoom** (`docs/tutorial/06-yollar-ve-zoom.md`): otoyol/karayolu/feribot çizimi, kalınlık ölçeği ve yön okları; ülke → bölge → şehir geçişleri ve "uçarak" yaklaşma animasyonu, ekmek kırıntısı; döngü ve kaçak geçiş görselleri, lejant.
+**Faz 7 — Etkileşim ve bilgi panelleri** (`docs/tutorial/07-etkilesim-ve-paneller.md`): ayrıntı paneli (metrikler, kanıt listesi `dosya:satır`, tıklanabilir komşular), yola tıklayınca kanıt, kenar çubuğunda modül/paket ağacı ve rozetler, arama ile bir tipe/pakete uçma; rapordaki öğelerden haritaya gitme. MVP tamamlanır.
