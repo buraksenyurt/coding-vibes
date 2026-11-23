@@ -72,7 +72,7 @@ public class GenerateCommand : Command<GenerateCommand.Settings>
 
             generator.Generate(config);
             
-            AnsiConsole.MarkupLine($"[green]✅ Docker Compose file generated successfully at: {settings.OutputPath}[/]");
+            AnsiConsole.MarkupLine($"[green]✅ Docker Compose file generated successfully at: {Markup.Escape(Path.GetFullPath(settings.OutputPath))}[/]");
             return 0;
         }
         catch (Exception ex)
