@@ -1,7 +1,6 @@
 using Spectre.Console;
 using Spectre.Console.Cli;
 using System.ComponentModel;
-using System.Text.Json;
 
 namespace DockyApp;
 
@@ -11,8 +10,8 @@ public class ListModelsCommand : AsyncCommand<ListModelsCommand.Settings>
     {
         [CommandOption("--hub-url")]
         [Description("DockyHub API URL")]
-        [DefaultValue("http://localhost:5000")]
-        public string HubUrl { get; set; } = "http://localhost:5000";
+        [DefaultValue(DockyHubClient.DefaultUrl)]
+        public string HubUrl { get; set; } = DockyHubClient.DefaultUrl;
 
         [CommandOption("--detailed")]
         [Description("Show detailed information")]
@@ -26,12 +25,8 @@ public class ListModelsCommand : AsyncCommand<ListModelsCommand.Settings>
 
         try
         {
-            using var httpClient = new HttpClient();
-            var response = await httpClient.GetStringAsync($"{settings.HubUrl}/api/models");
-            var models = JsonSerializer.Deserialize<ModelInfo[]>(response, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
+            var models = await DockyHubClient.TryGetAsync<ModelInfo>(settings.HubUrl, "api/models")
+                ?? BuiltInCatalog.ToModelInfos();
 
             if (models == null || !models.Any())
             {

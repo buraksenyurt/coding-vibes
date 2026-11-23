@@ -10,90 +10,12 @@ public class DockerComposeGenerator
         var services = new Dictionary<string, string>();
 
         // Model-based service configurations
-        switch (config.Model.ToLower())
+        var model = BuiltInCatalog.FindModel(config.Model)
+            ?? throw new ArgumentException($"Unknown model: {config.Model}. Available models: {BuiltInCatalog.ModelNames}");
+
+        foreach (var name in model.Services)
         {
-            case "base":
-                services.Add("postgresql", GetPostgreSQLService());
-                services.Add("pgadmin", GetPgAdminService());
-                break;
-
-            case "full":
-                services.Add("postgresql", GetPostgreSQLService());
-                services.Add("pgadmin", GetPgAdminService());
-                services.Add("elasticsearch", GetElasticsearchService());
-                services.Add("kibana", GetKibanaService());
-                services.Add("redis", GetRedisService(6379));
-                services.Add("rabbitmq", GetRabbitMQService());
-                services.Add("sonarqube", GetSonarQubeService());
-                break;
-
-            case "microservices":
-                services.Add("postgresql", GetPostgreSQLService());
-                services.Add("redis", GetRedisService(6379));
-                services.Add("rabbitmq", GetRabbitMQService());
-                services.Add("kong-gateway", GetKongService());
-                services.Add("consul", GetConsulService());
-                services.Add("prometheus", GetPrometheusService());
-                services.Add("grafana", GetGrafanaService());
-                services.Add("jaeger", GetJaegerService());
-                break;
-
-            case "ai-ml":
-                services.Add("jupyter", GetJupyterService());
-                services.Add("mlflow", GetMLflowService());
-                services.Add("minio", GetMinIOService());
-                services.Add("postgresql", GetPostgreSQLService());
-                services.Add("redis", GetRedisService(6379));
-                break;
-
-            case "frontend":
-                services.Add("nodejs", GetNodeJSService());
-                services.Add("redis", GetRedisService(6379));
-                services.Add("nginx", GetNginxService());
-                services.Add("postgresql", GetPostgreSQLService());
-                break;
-
-            case "security":
-                services.Add("vault", GetVaultService());
-                services.Add("owasp-zap", GetOWASPZapService());
-                services.Add("prometheus", GetPrometheusService());
-                services.Add("grafana", GetGrafanaService());
-                services.Add("postgresql", GetPostgreSQLService());
-                break;
-
-            case "analytics":
-                services.Add("kafka", GetKafkaService());
-                services.Add("zookeeper", GetZookeeperService());
-                services.Add("clickhouse", GetClickHouseService());
-                services.Add("grafana", GetGrafanaService());
-                services.Add("minio", GetMinIOService());
-                services.Add("redis", GetRedisService(6379));
-                break;
-
-            case "mobile":
-                services.Add("postgresql", GetPostgreSQLService());
-                services.Add("redis", GetRedisService(6379));
-                services.Add("minio", GetMinIOService());
-                services.Add("rabbitmq", GetRabbitMQService());
-                services.Add("firebase-admin", GetFirebaseAdminService());
-                break;
-
-            case "testing":
-                services.Add("selenium-hub", GetSeleniumHubService());
-                services.Add("selenium-chrome", GetSeleniumChromeService());
-                services.Add("selenium-firefox", GetSeleniumFirefoxService());
-                services.Add("wiremock", GetWiremockService());
-                services.Add("postgresql", GetPostgreSQLService());
-                services.Add("redis", GetRedisService(6379));
-                break;
-
-            case "minimal":
-                services.Add("redis", GetRedisService(6379));
-                services.Add("sqlite-web", GetSQLiteWebService());
-                break;
-
-            default:
-                throw new ArgumentException($"Unknown model: {config.Model}. Available models: base, full, microservices, ai-ml, frontend, security, analytics, mobile, testing, minimal");
+            services.Add(name, GetServiceDefinition(name));
         }
 
         // Additional services based on flags
@@ -135,45 +57,12 @@ public class DockerComposeGenerator
         table.AddColumn("Port(s)");
         table.AddColumn("Description");
 
-        var serviceInfo = new Dictionary<string, (string ports, string description)>
-        {
-            ["postgresql"] = ("5432", "PostgreSQL Database"),
-            ["pgadmin"] = ("8080", "PgAdmin Web Interface"),
-            ["elasticsearch"] = ("9200, 9300", "Elasticsearch Search Engine"),
-            ["kibana"] = ("5601", "Kibana Dashboard"),
-            ["redis"] = ("6379", "Redis Cache"),
-            ["rabbitmq"] = ("5672, 15672", "RabbitMQ Message Broker"),
-            ["sonarqube"] = ("9000", "SonarQube Code Quality"),
-            ["opensearch"] = ("9200, 9600", "OpenSearch Search Engine"),
-            ["kong-gateway"] = ("8000, 8001", "Kong API Gateway"),
-            ["consul"] = ("8500", "Consul Service Discovery"),
-            ["prometheus"] = ("9090", "Prometheus Monitoring"),
-            ["grafana"] = ("3000", "Grafana Dashboard"),
-            ["jaeger"] = ("16686", "Jaeger Tracing"),
-            ["jupyter"] = ("8888", "Jupyter Notebook"),
-            ["mlflow"] = ("5000", "MLflow ML Platform"),
-            ["minio"] = ("9000, 9001", "MinIO Object Storage"),
-            ["nodejs"] = ("3000", "Node.js Runtime"),
-            ["nginx"] = ("80", "Nginx Web Server"),
-            ["vault"] = ("8200", "HashiCorp Vault"),
-            ["owasp-zap"] = ("8080", "OWASP ZAP Security Scanner"),
-            ["kafka"] = ("9092", "Apache Kafka"),
-            ["zookeeper"] = ("2181", "Apache Zookeeper"),
-            ["clickhouse"] = ("8123, 9000", "ClickHouse Analytics DB"),
-            ["firebase-admin"] = ("9099", "Firebase Admin Emulator"),
-            ["selenium-hub"] = ("4444", "Selenium Grid Hub"),
-            ["selenium-chrome"] = ("7900", "Selenium Chrome Node"),
-            ["selenium-firefox"] = ("7901", "Selenium Firefox Node"),
-            ["wiremock"] = ("8080", "WireMock API Mock"),
-            ["sqlite-web"] = ("8080", "SQLite Web Interface")
-        };
-
         foreach (var service in services.Keys)
         {
-            if (serviceInfo.ContainsKey(service))
+            var info = BuiltInCatalog.FindService(service);
+            if (info is not null)
             {
-                var info = serviceInfo[service];
-                table.AddRow(service, info.ports, info.description);
+                table.AddRow(service, info.Ports, info.Description);
             }
             else
             {
@@ -185,6 +74,40 @@ public class DockerComposeGenerator
         AnsiConsole.MarkupLine("[bold]📋 Generated Services:[/]");
         AnsiConsole.Write(table);
     }
+
+    private string GetServiceDefinition(string name) => name switch
+    {
+        "postgresql" => GetPostgreSQLService(),
+        "pgadmin" => GetPgAdminService(),
+        "elasticsearch" => GetElasticsearchService(),
+        "kibana" => GetKibanaService(),
+        "redis" => GetRedisService(6379),
+        "rabbitmq" => GetRabbitMQService(),
+        "sonarqube" => GetSonarQubeService(),
+        "opensearch" => GetOpenSearchService(),
+        "kong-gateway" => GetKongService(),
+        "consul" => GetConsulService(),
+        "prometheus" => GetPrometheusService(),
+        "grafana" => GetGrafanaService(),
+        "jaeger" => GetJaegerService(),
+        "jupyter" => GetJupyterService(),
+        "mlflow" => GetMLflowService(),
+        "minio" => GetMinIOService(),
+        "nodejs" => GetNodeJSService(),
+        "nginx" => GetNginxService(),
+        "vault" => GetVaultService(),
+        "owasp-zap" => GetOWASPZapService(),
+        "kafka" => GetKafkaService(),
+        "zookeeper" => GetZookeeperService(),
+        "clickhouse" => GetClickHouseService(),
+        "firebase-admin" => GetFirebaseAdminService(),
+        "selenium-hub" => GetSeleniumHubService(),
+        "selenium-chrome" => GetSeleniumChromeService(),
+        "selenium-firefox" => GetSeleniumFirefoxService(),
+        "wiremock" => GetWiremockService(),
+        "sqlite-web" => GetSQLiteWebService(),
+        _ => throw new ArgumentException($"No built-in definition for service: {name}"),
+    };
 
     private string GenerateDockerComposeContent(Dictionary<string, string> services)
     {

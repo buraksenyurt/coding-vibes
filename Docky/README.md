@@ -92,6 +92,8 @@ docky list-services
 
 ![runtime_03.png](runtime_03.png)
 
+> Bu iki komut listeyi varsayılan olarak `http://localhost:5000` adresindeki DockyHub servisinden alır (`--hub-url` ile değiştirilebilir). DockyHub çalışmıyorsa hata vermek yerine uyarı yazar ve Docky'nin içinde gelen yerleşik model/servis kataloğunu gösterir. `generate` komutu zaten hub'a ihtiyaç duymaz.
+
 ---
 
 **AI için Model Oluşturma(DockeyHub Sürümü)**
